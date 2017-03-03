@@ -1,0 +1,111 @@
+<main id="page-content-wrapper">
+    <div class="page-content-body">
+        <div class="page-intro hidden-xs">
+            <div class="row">
+                <div class="col-xs-6 push-5-t">
+                    <span>{{date Date.now format='DD MMM YYYY'}}</span>
+				</div>
+                <div class="col-xs-5 text-right">
+                    <form role="search" method="get" class="search-form" action="/buscar">
+                        <input class="search-field" required placeholder="Buscar..." value="" name="q" type="search" />
+                    </form>
+                </div>
+                <div class="col-xs-1">
+                    <button class="si si-magnifier search-toggle" data-action="toggle" data-target=".search-form" data-toggle="active"></button>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-11 col-xs-12">
+                <article>
+                    <div class="article-content">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <h2 class="article-title">RESULTADOS DE LA BÚSQUEDA PARA <span class="criteria">"{{q}}"</span></h2>
+								{{#unless searchResults}}
+                                    <p class="push-20-t">No existen resultados para esta búsqueda.</p>
+								{{/unless}}
+								{{#each searchResults}}
+                                    <div class="info-block-wrap">
+                                        <span class="item-link"><a href="{{baseURL}}{{slug}}">{{title}}</a></span>
+                                        <span class="meta-separator">|</span>
+                                        <span class="item-category">
+											{{#compare type 'indicator'}}
+                                                Indicador de {{sector.name}}
+											{{/compare}}
+											{{#compare type 'post'}}
+                                                Noticia
+											{{/compare}}
+                                        </span>
+                                        <span class="meta-separator">|</span>
+                                        <div class="item-meta-info set-inline-block">
+                                            <span style="text-transform: uppercase;">
+												{{#compare type 'indicator'}}
+													{{date startDate format='MMMYYYY'}} - {{date endDate format='MMMYYYY'}}
+												{{/compare}}
+												{{#compare type 'post'}}
+													{{date publishedDate format='MMMYYYY'}}
+												{{/compare}}
+											</span>
+                                            <span class="meta-separator">|</span>
+                                            <i class="si si-bubble"></i>
+                                            <span class="meta-comments-count">
+												{{#ifeq commentsCount 0}}
+                                                    No tiene
+												{{else}}
+													{{commentsCount}}
+												{{/ifeq}}
+											</span>
+                                        </div>
+                                        <span class="meta-separator">|</span>
+                                        <div class="rating-container set-inline-block">
+                                            <select class="rating" required name="user_rating" data-rating="3" data-rating-for="indicator">
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                                <option value="3">3</option>
+                                                <option value="4">4</option>
+                                                <option value="5" selected>5</option>
+                                            </select>
+                                        </div>
+                                        <p class="item-excerpt">
+											{{#compare type 'indicator'}}
+												{{#substring 300 description.html}}{{/substring}}
+											{{/compare}}
+											{{#compare type 'post'}}
+												{{#substring 300 content.brief}}{{/substring}}
+											{{/compare}}
+										</p>
+                                    </div>
+								{{/each}}
+                            </div>
+                        </div>
+                    </div>
+                </article>
+                <div class="pull-right pagination-wrapper push-20-t">
+					{{#compare paginator.totalPages 1 operator=">"}}
+						{{#if paginator.previous}}
+                            <a href="{{paginationPreviousSearchUrl 1 q}}" class="pg-actions pg-actions-left pg-actions-start">
+                                <img src="/assets/img/chevron-left-stop.svg" alt="" width="25" />
+                            </a>
+                            <a href="{{paginationPreviousSearchUrl posts.previous q}}" class="pg-actions pg-actions-left pg-actions-prev">
+                                <img src="/assets/img/chevron-left.svg" alt="" width="25" />
+                            </a>
+						{{/if}}
+                        <ul class="pagination remove-margin">
+							{{{paginationNavigationSearch paginator.pages paginator.currentPage paginator.totalPages q}}}
+                        </ul>
+						{{#if paginator.next}}
+                            <a href="{{paginationNextSearchUrl posts.next posts.totalPages q}}" class="pg-actions pg-actions-right pg-actions-next">
+                                <img src="/assets/img/chevron-right.svg" alt="" width="25">
+                            </a>
+                            <a href="{{paginationNextSearchUrl posts.totalPages posts.totalPages q}}" class="pg-actions pg-actions-right pg-actions-end">
+                                <img src="/assets/img/chevron-right-stop.svg" alt="" width="25">
+                            </a>
+						{{/if}}
+					{{/compare}}
+				</div>
+            </div>
+        </div>
+    </div>
+</main>
+<!-- /#page-content-wrapper -->

@@ -1,0 +1,34 @@
+{{#if posts.results}}
+	{{#each posts.results}}
+        <li class="grid-news-cover cover-promoted" style="background-image: url('/posts/files/{{relatedImage.filename}}')"></li>
+        <li class="grid-news-content grid-promoted">
+            <div class="set-top">
+                <a href="/noticia/{{slug}}" class="item-meta-title hidden-xs">
+					{{#if htmlTitle}}
+						{{{htmlTitle.html}}}
+					{{else}}
+						{{title}}
+					{{/if}}
+                </a>
+                <h2 class="item-meta-title visible-xs">
+                    <a href="/noticia/{{slug}}">{{title}}</a>
+                </h2>
+            </div>
+            <div class="set-bottom">
+                <div class="item-meta-desc hidden-xxs">{{#substring 100 content.brief}}{{/substring}}</div>
+                <div class="item-meta-info">
+                    <span>{{date startDate format='DD MMM YYYY HH:MM'}}</span>
+                    <span class="meta-separator">|</span>
+                    <i class="si si-bubble"></i>
+						<span class="meta-comments-count">
+							{{#ifeq commentsCount 0}}
+                                No tiene
+							{{else}}
+								{{commentsCount}}
+							{{/ifeq}}
+                        </span>
+                </div>
+            </div>
+        </li>
+	{{/each}}
+{{/if}}

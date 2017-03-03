@@ -1,0 +1,38 @@
+{{#if indicators.results}}
+	{{#each indicators.results}}
+        <li class="grid-cover grid-orange" style="background-image: url('/indicators/files/{{relatedImage.filename}}')">
+            <div class="set-bottom hidden-xs">
+                <span class="dotted-wrap item-meta-info">{{title}}</span>
+            </div>
+        </li>
+        <li class="grid-content grid-promoted" data-color-target=".grid-orange">
+            <div class="set-top">
+                <h2 class="item-meta-title visible-xxs" style="text-transform: uppercase;">
+                    <a href="/indicador/{{slug}}">{{htmlTitle}}</a>
+                </h2>
+                <a href="/indicador/{{slug}}" class="item-meta-title hidden-xxs" style="text-transform: uppercase;">
+					{{#if htmlTitle}}
+						{{{htmlTitle.html}}}
+					{{else}}
+						{{title}}
+					{{/if}}
+                </a>
+            </div>
+            <div class="set-bottom">
+				{{#substring 100 target}}{{/substring}}
+                <div class="item-meta-info">
+                    <span>{{date startDate format='MMMYYYY'}} - {{date endDate format='MMMYYYY'}}</span>
+                    <span class="meta-separator">|</span>
+                    <i class="si si-bubble"></i>
+					<span class="meta-comments-count">
+						{{#ifeq commentsCount 0}}
+							No tiene
+						{{else}}
+							{{commentsCount}}
+						{{/ifeq}}
+					</span>
+                </div>
+            </div>
+        </li>
+	{{/each}}
+{{/if}}

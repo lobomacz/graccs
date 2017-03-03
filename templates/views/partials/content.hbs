@@ -1,0 +1,82 @@
+<main id="page-content-wrapper">
+    <div class="page-content-body">
+        <div class="page-intro hidden-xs">
+            <div class="row">
+                <div class="col-xs-6 push-5-t">
+                    <span>{{date Date.now format='DD MMM YYYY'}}</span>
+                </div>
+                <div class="col-xs-5 text-right">
+                    <form role="search" method="get" class="search-form" action="/buscar">
+                        <input class="search-field" required placeholder="Buscar..." value="" name="q" type="search">
+                    </form>
+                </div>
+                <div class="col-xs-1 search-container">
+                    <button class="si si-magnifier search-toggle" 
+							data-action="toggle" data-target=".search-form" data-toggle="active"></button>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-11 col-xs-12">
+                <div class="grid-wrapper">
+                    <ul class="grid">
+						{{#ifeq indicators.results.length 1}}
+							{{>indicator-grid-one}}
+						{{else ifeq indicators.results.length 2}}
+							{{>indicator-grid-two}}
+						{{else ifeq indicators.results.length 3}}
+							{{>indicator-grid-three}}
+						{{/ifeq}}
+                    </ul>
+                </div>
+                <div class="pull-right pagination-wrapper push-20-t">
+					{{#compare indicators.totalPages 1 operator=">"}}
+						{{#if indicators.previous}}
+                            <a href="{{paginationPreviousIndicatorsFilterUrl 1 currentIndicatorsFilter}}" class="pg-actions pg-actions-left pg-actions-start">
+                                <img src="/assets/img/chevron-left-stop.svg" alt="" width="25" />
+                            </a>
+                            <a href="{{paginationPreviousIndicatorsFilterUrl indicators.previous currentIndicatorsFilter}}" class="pg-actions pg-actions-left pg-actions-prev">
+                                <img src="/assets/img/chevron-left.svg" alt="" width="25" />
+                            </a>
+						{{/if}}
+                        <ul class="pagination remove-margin">
+							{{{paginationNavigationIndicatorsFilter indicators.pages indicators.currentPage indicators.totalPages currentIndicatorsFilter}}}
+                        </ul>
+						{{#if indicators.next}}
+                            <a href="{{paginationNextIndicatorsFilterUrl indicators.next indicators.totalPages currentIndicatorsFilter}}" class="pg-actions pg-actions-right pg-actions-next">
+                                <img src="/assets/img/chevron-right.svg" alt="" width="25">
+                            </a>
+                            <a href="{{paginationNextIndicatorsFilterUrl indicators.totalPages indicators.totalPages currentIndicatorsFilter}}" class="pg-actions pg-actions-right pg-actions-end">
+                                <img src="/assets/img/chevron-right-stop.svg" alt="" width="25">
+                            </a>
+						{{/if}}
+					{{/compare}}
+                </div>
+            </div>
+            <div class="col-sm-1 hidden-xs filter-container">
+                <div class="text-rotator">
+                    <div class="grid-filters">
+                        <ul class="nav">
+                            <li {{#if currentIndicatorsClassification}} {{else}}class="active"{{/if}}>
+                                <a href="/indicadores/{{currentIndicatorsFilter}}">Todos</a>
+                            </li>
+                            <li {{#if currentIndicatorsClassification}} {{#compare currentIndicatorsClassification 'adults'}}class="active"{{/compare}}{{/if}} >
+                                <a href="/indicadores/{{currentIndicatorsFilter}}/adults">Adultos</a>
+                            </li>
+                            <li {{#if currentIndicatorsClassification}} {{#compare currentIndicatorsClassification 'youth'}}class="active"{{/compare}}{{/if}} >
+                                <a href="/indicadores/{{currentIndicatorsFilter}}/youth">Jóvenes</a>
+                            </li>
+                            <li {{#if currentIndicatorsClassification}} {{#compare currentIndicatorsClassification 'teenager'}}class="active"{{/compare}}{{/if}} >
+                                <a href="/indicadores/{{currentIndicatorsFilter}}/teenager">Adolescentes</a>
+                            </li>
+                            <li {{#if currentIndicatorsClassification}} {{#compare currentIndicatorsClassification 'children'}}class="active"{{/compare}}{{/if}} >
+                                <a href="/indicadores/{{currentIndicatorsFilter}}/children">Niños</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<!-- /#page-content-wrapper -->

@@ -1,0 +1,82 @@
+<main id="page-content-wrapper">
+    <div class="page-content-body">
+        <div class="page-intro hidden-xs">
+            <div class="row">
+                <div class="col-xs-6 push-5-t">
+                    <span>{{date Date.now format='DD MMM YYYY'}}</span>
+                </div>
+                <div class="col-xs-5 text-right">
+                    <form role="search" method="get" class="search-form" action="/buscar">
+                        <input class="search-field" required placeholder="Buscar..." value="" name="q" type="search" />
+                    </form>
+                </div>
+                <div class="col-xs-1">
+                    <button class="si si-magnifier search-toggle" data-action="toggle" data-target=".search-form" data-toggle="active"></button>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-11 col-xs-12">
+                <div class="grid-wrapper">
+                    <ul class="grid grid-news">
+						{{#ifeq posts.results.length 1}}
+							{{>post-grid-one}}
+						{{else ifeq posts.results.length 2}}
+							{{>post-grid-two}}
+						{{else ifeq posts.results.length 3}}
+							{{>post-grid-three}}
+						{{else ifeq posts.results.length 4}}
+							{{>post-grid-four}}
+						{{else ifeq posts.results.length 5}}
+							{{>post-grid-five}}
+						{{/ifeq}}
+                    </ul>
+                </div>
+                <div class="pull-right pagination-wrapper push-20-t">
+					{{#compare posts.totalPages 1 operator=">"}}
+						{{#if posts.previous}}
+                            <a href="{{paginationPreviousNewsUrl 1}}" class="pg-actions pg-actions-left pg-actions-start">
+                                <img src="/assets/img/chevron-left-stop.svg" alt="" width="25" />
+                            </a>
+                            <a href="{{paginationPreviousNewsUrl posts.previous}}" class="pg-actions pg-actions-left pg-actions-prev">
+                                <img src="/assets/img/chevron-left.svg" alt="" width="25" />
+                            </a>
+						{{/if}}
+                        <ul class="pagination remove-margin">
+							{{{paginationNavigationNews posts.pages posts.currentPage posts.totalPages}}}
+                        </ul>
+						{{#if posts.next}}
+                            <a href="{{paginationNextNewsUrl posts.next posts.totalPages}}" class="pg-actions pg-actions-right pg-actions-next">
+                                <img src="/assets/img/chevron-right.svg" alt="" width="25">
+                            </a>
+                            <a href="{{paginationNextNewsUrl posts.totalPages posts.totalPages}}" class="pg-actions pg-actions-right pg-actions-end">
+                                <img src="/assets/img/chevron-right-stop.svg" alt="" width="25">
+                            </a>
+						{{/if}}
+					{{/compare}}                  
+                </div>
+            </div>
+            <div class="col-sm-1 hidden-xs filter-container">
+                <div class="text-rotator">
+                    <div class="grid-filters">
+                        <ul class="nav">
+                            <li {{#compare currentNewsFilter 'todas'}} class="active" {{/compare}}>
+                                <a href="/noticias-filtradas/todas">Todas</a>
+                            </li>
+                            <li {{#compare currentNewsFilter 'relevantes'}} class="active" {{/compare}}>
+								<a href="/noticias-filtradas/relevantes">Relevantes</a>
+                            </li>
+                            <li {{#compare currentNewsFilter 'anual'}} class="active" {{/compare}}>
+								<a href="/noticias-filtradas/anual">Este Año</a>
+                            </li>
+                            <li {{#compare currentNewsFilter 'mensual'}} class="active" {{/compare}}>
+								<a class="active" href="/noticias-filtradas/mensual">Este Mes</a>
+							</li>
+						</ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<!-- /#page-content-wrapper -->

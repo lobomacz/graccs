@@ -1,0 +1,96 @@
+<main id="page-content-wrapper">
+    <div class="page-content-body">
+        <div class="contact-form-wrapper">
+            <div class="contact-left-wrapper" style="">
+                <div class="contact-left">
+                    <h4 class="text-right contact-label hidden-xs">CONTÁCTENOS</h4>
+					{{#if messages}}
+                        <div id="flash-messages" class="container">
+							{{#if messages.info}}
+                                <div class="alert alert-info">
+									{{{flashMessages messages.info}}}
+                                </div>
+							{{/if}}
+							{{#if messages.success}}
+                                <div class="alert alert-success">
+									{{{flashMessages messages.success}}}
+                                </div>
+							{{/if}}
+							{{#if messages.warning}}
+                                <div class="alert alert-warning">
+									{{{flashMessages messages.warning}}}
+                                </div>
+							{{/if}}
+							{{#if messages.error}}
+                                <div class="alert alert-danger">
+									{{{flashMessages messages.error}}}
+                                </div>
+							{{/if}}
+                        </div>
+					{{/if}}
+                    <form action="/send" method="post" class="contact-form">
+                        <div class="form-group col-lg-6">
+                            <label for="name">Nombre</label>
+                            <input name="name" id="name" type="text" class="form-control" required />
+                        </div>
+                        <div class="form-group col-lg-6">
+                            <label for="territory">Territorio</label>
+                            <input name="territory" id="territory" type="text" class="form-control" required />
+                        </div>
+						<div class="form-group col-lg-6">
+                            <label for="email">E-mail</label>
+                            <input name="email" id="email" type="email" class="form-control" required />
+                        </div>
+                        <div class="form-group col-lg-6">
+                            <label for="subject">Asunto</label>
+                            <input name="subject" id="subject" type="text" class="form-control" required />
+                        </div>
+                        <div class="form-group col-lg-12">
+                            <label class="block" for="message">Mensaje</label>
+							<textarea class="form-control" id="message" name="message" rows="4" required></textarea>
+                        </div>
+                        <div class="form-group col-lg-12">
+                            <button type="submit" class="btn btn-default pull-right">Enviar Comentario</button>
+                        </div>
+                    </form>
+                </div>
+			</div>
+            <div class="contact-right-wrapper">
+                <ul class="social-links-square">
+                    <li class="text-center">
+                        <a class="va-container">
+                            <div class="va-middle">
+                                <i class="si si-social-facebook social-icon"></i>
+                                <span class="social-text"><b>Nuestra </b>Página</span>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="text-center">
+                        <a class="va-container">
+                            <div class="va-middle">
+                                <i class="si si-social-twitter social-icon"></i>
+                                <span class="social-text">Sígue<b>nos</b></span>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="text-center">
+                        <a class="va-container">
+                            <div class="va-middle">
+                                <i class="si si-social-youtube social-icon"></i>
+                                <span class="social-text"><b>Nuestro </b>Canal</span>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="text-center">
+                        <a class="va-container">
+                            <div class="va-middle">
+                                <i class="si si-camera social-icon"></i>
+                                <span class="social-text"><b>Tus </b>Fotos</span>
+                            </div>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</main>

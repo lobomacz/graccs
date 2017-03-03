@@ -1,0 +1,214 @@
+<main id="page-content-wrapper">
+    <div class="page-content-body">
+        <div class="page-intro hidden-xs">
+            <div class="row">
+                <div class="col-xs-6 push-10-t">
+                    <span>{{date Date.now format='DD MMM YYYY'}}</span>
+                </div>
+                <div class="col-xs-5 text-right">
+                    <form role="search" method="get" class="search-form" action="/buscar">
+                        <input class="search-field" required placeholder="Buscar..." value="" name="q" type="search" />
+                    </form>
+                </div>
+                <div class="col-xs-1">
+                    <button class="si si-magnifier search-toggle" data-action="toggle" data-target=".search-form" data-toggle="active"></button>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-8">
+                <article>
+                    <div class="article-content">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <img class="img-responsive" src="/posts/files/{{post.relatedImage.filename}}" alt="">
+                                <div class="va-container push-30-t push-20-b">
+                                    <div class="va-middle">
+                                        <h2 class="article-title">{{post.title}}</h2>
+                                    </div>
+                                    <div class="va-middle">
+                                        <div class="rating-container-wrap">
+                                            <div class="rating-container" title="{{post.rating.value}}">
+                                                <select id="rating" required name="user_rating" data-rating="{{post.rating.value}}" data-post-id="{{post.id}}" data-rating-for="indicator">
+                                                    <option value="1">1</option>
+                                                    <option value="2">2</option>
+                                                    <option value="3">3</option>
+                                                    <option value="4">4</option>
+                                                    <option value="5" selected>5</option>
+                                                </select>
+                                                 <span class="rating-tip animated fadeIn" data-success="Valorado!" data-error="Error :("></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="item-meta-info push-20-b">
+                                    <span>{{date post.publishedDate format='DD MMM YYYY'}}</span>
+                                    <span class="meta-separator">|</span>
+                                    <i class="si si-bubble"></i>
+                                    <span class="meta-comments-count">
+										{{#ifeq post.commentsCount 0}} No tiene
+										{{else}} {{post.commentsCount}} {{/ifeq}}
+									</span>
+                                </div>
+                                <p class="article-text">{{{post.content.extended}}}</p>
+                            </div>
+                        </div>
+                    </div>
+					{{#if messages}}
+                        <div id="flash-messages">
+							{{#if messages.info}}
+                                <div class="alert alert-info">
+									{{{flashMessages messages.info}}}
+                                </div>
+							{{/if}}
+							{{#if messages.success}}
+                                <div class="alert alert-success">
+									{{{flashMessages messages.success}}}
+                                </div>
+							{{/if}}
+							{{#if messages.warning}}
+                                <div class="alert alert-warning">
+									{{{flashMessages messages.warning}}}
+                                </div>
+							{{/if}}
+							{{#if messages.error}}
+                                <div class="alert alert-danger">
+									{{{flashMessages messages.error}}}
+                                </div>
+							{{/if}}
+                        </div>
+					{{/if}}
+                    <div class="article-content bg-white">
+                        <h3 class="comment-label">Comentarios</h3>
+                        <form method="post" role="form" class="contact-form">
+                            <input type="hidden" name="action" value="create-comment" />
+                            <input type="hidden" name="post" value="{{post.id}}" />
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="row">
+                                        <div class="form-group col-lg-6">
+                                            <label for="contact_name">Nombre</label>
+                                            <input name="author" id="contact_name" type="text" class="form-control" required />
+                                        </div>
+                                        <div class="form-group col-lg-6">
+                                            <label for="contact_email">E-mail</label>
+                                            <input name="email" id="contact_email" type="email" class="form-control" required />
+                                        </div>
+                                        <div class="form-group col-lg-12">
+                                            <label class="block" for="contact_comment">Comentario</label>
+                                            <textarea required class="form-control" id="contact_comment" name="content" rows="4"></textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-lg-6 col-xs-12 col-sm-6 captcha-image">
+												{{{captcha}}}
+											</div>
+                                            <div class="col-lg-6 col-xs-12">
+                                                <button id="contact_btn_send"  type="submit" class="btn btn-default pull-right">Enviar Comentario</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="article-content comment-list">
+                        <div class="row">
+                            <div class="col-lg-12">
+								{{#if post.comments}}
+									{{#each post.comments}}
+                                        <div class="user-comment push-50-t">
+                                            <div class="comment-wrap">
+                                                <ul class="comment-thumb">
+                                                    <li>
+                                                        <a id="vote-positive-button" href="#" title="Me gusta" data-comment-id="{{id}}">
+															<span style="font-size: 14px;">{{positiveVotes}}</span>
+                                                            <i data-toggle="tooltip" class="si si-like"></i>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a id="vote-negative-button" href="#" title="No me gusta" data-comment-id="{{id}}">
+                                                            <i data-toggle="tooltip" class="si si-dislike"></i>
+                                                            <span style="font-size: 14px;">{{negativeVotes}}</span>
+														</a>
+                                                    </li>
+                                                </ul>
+                                                <div class="comment-name">{{author}}</div>
+                                                <div class="comment-text">{{{content}}}</div>
+                                                <div class="comment-date">
+                                                    <i class="si si-action-undo"></i>
+                                                    <span class="meta-comments-count">{{date createdAt format='DD MMM YYYY HH:MM'}}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+									{{/each}}
+								{{/if}}
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+            <div class="col-sm-4">
+                <div class="block bg-gray">
+                    <div class="block-content">
+                        <h4 class="block-label">
+                            ÚLTIMAS<br>NOTICIAS
+                        </h4>
+                        <ul class="nav nav-pills nav-stacked">
+							{{#if lastNews}}
+								{{#each lastNews}}
+                                    <li>
+                                        <a href="/noticia/{{slug}}">{{title}}</a>
+                                        <div class="item-meta-info push-5-b">
+                                            <span>{{date publishedDate format='DD MMM YYYY'}}</span>
+                                            <span class="meta-separator">|</span>
+                                            <i class="si si-bubble"></i>
+                                            <span class="meta-comments-count">
+												{{#ifeq commentsCount 0}}
+                                                    No tiene
+												{{else}}
+													{{commentsCount}}
+												{{/ifeq}}
+											</span>
+                                        </div>
+                                    </li>
+								{{/each}}
+							{{/if}}
+                        </ul>
+                    </div>
+                </div>
+                <div class="block bg-gray hidden-xs">
+                    <div class="block-content block-content-two-column">
+                        <h4 class="block-label">
+                            VEA<br>TAMBIÉN
+                        </h4>
+                        <ul class="nav nav-pills nav-stacked">
+							{{#if relatedNews}}
+								{{#each relatedNews}}
+                                    <li>
+                                        <div class="image col-xs-12">
+                                            <img class="pull-left" src="/posts/files/{{relatedImage.filename}}" alt="">
+                                            <a href="/noticia/{{slug}}">{{title}}</a>
+                                            <div class="item-meta-info push-5-t">
+                                                <span>{{date publishedDate format='DD MMM YYYY'}}</span>
+                                                <span class="meta-separator">|</span>
+                                                <i class="si si-bubble"></i>
+                                                <span class="meta-comments-count">
+													{{#ifeq commentsCount 0}}
+                                                        No tiene
+													{{else}}
+														{{commentsCount}}
+													{{/ifeq}}
+												</span>
+                                            </div>
+                                        </div>
+                                    </li>
+								{{/each}}
+							{{/if}}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<!-- /#page-content-wrapper -->

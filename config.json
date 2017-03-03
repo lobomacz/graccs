@@ -1,0 +1,28 @@
+{
+  "nodemailer": {
+    "host": "127.0.0.1",
+    "port": 25,
+    "user": "rosa@localhost.com",
+    "password": "password",
+    "secureConnection": false
+  },
+  "recaptcha": {
+    "publicKey": "6Le7rR4TAAAAAI_SsAAwW_S9Z0rIKly9UM1GZdWB",
+    "privateKey": "6Le7rR4TAAAAANlIeDTqY3Y04fWgXXFKKHzD9CBL"
+  },
+  "admin": {
+    "email": "admin@graccs.gov.ni"
+  },
+  "mongodb":{
+    "host":"localhost",
+    "port":"27017",
+    "database": "graccs",
+    "user": "",
+    "password": ""
+  },
+  "google-maps": {
+    "googleAPIKey": "",
+    "googleServerAPIKey": "",
+    "defaultRegion": "ni"
+  }
+}

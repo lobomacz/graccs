@@ -1,0 +1,68 @@
+{{#if indicators.results}}
+	{{#each indicators.results}}
+		{{#ifeq @index 0 }}
+            <li class="grid-cover grid-blue" style="background-image: url('/indicators/files/{{relatedImage.filename}}')">
+                <div class="set-bottom">
+                    <span class="dotted-wrap item-meta-info">{{title}}</span>
+                </div>
+            </li>
+            <li class="grid-content" data-color-target=".grid-blue">
+                <div class="set-top">
+                    <h2 class="item-meta-title" style="text-transform: uppercase;">
+                        <a href="/indicador/{{slug}}">{{title}}</a>
+                    </h2>
+					{{#substring 100 target}}{{/substring}}
+				</div>
+                <div class="set-bottom">
+                    <div class="item-meta-info">
+                        <span>{{date startDate format='MMM YYYY'}} - {{date endDate format='MMM YYYY'}}</span>
+                        <span class="meta-separator">|</span>
+                        <i class="si si-bubble"></i>
+						<span class="meta-comments-count">
+							{{#ifeq commentsCount 0}}
+                                No tiene
+							{{else}}
+								{{commentsCount}}
+							{{/ifeq}}
+                        </span>
+                    </div>
+                </div>
+            </li>
+		{{/ifeq}}
+		{{#ifeq @index 1}}
+            <li class="grid-cover grid-orange" style="background-image: url('/indicators/files/{{relatedImage.filename}}')">
+                <div class="set-bottom">
+					<span class="dotted-wrap item-meta-info">{{title}}</span>
+                </div>
+            </li>
+            <li class="grid-content grid-promoted" data-color-target=".grid-orange">
+                <div class="set-top visible-xxs">
+                    <h2 class="item-meta-title" style="text-transform: uppercase;">
+                        <a href="/indicador/{{slug}}">{{title}}</a>
+                    </h2>
+                </div>
+                <div class="set-bottom">
+                    <a href="/indicador/{{slug}}" class="item-meta-title hidden-xxs">
+						{{#if htmlTitle}}
+							{{{htmlTitle.html}}}
+						{{else}}
+							{{title}}
+						{{/if}}
+                    </a>
+                    <div class="item-meta-info">
+                        <span>{{date startDate format='MMM YYYY'}} - {{date endDate format='MMM YYYY'}}</span>
+                        <span class="meta-separator">|</span>
+                        <i class="si si-bubble"></i>
+						<span class="meta-comments-count">
+							{{#ifeq commentsCount 0}}
+                                No tiene
+							{{else}}
+								{{commentsCount}}
+							{{/ifeq}}
+						</span>
+                    </div>
+                </div>
+            </li>
+		{{/ifeq}}
+	{{/each}}
+{{/if}}
