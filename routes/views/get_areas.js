@@ -21,16 +21,21 @@ exports = module.exports = function (req, res) {
 			break;
 	}
 
-	q.exec(function (err, results) {
-		if (!err && results) {
-			res.send(null);
-		}
-		else {
-			var areas = _.map(results, function (item) {
-				return _.pick(item.toJSON(), '_id', 'name');
-			});
+    if (q) {
+        q.exec(function (err, results) {
+            if (err || !results) {
+                res.send(null);
+            }
+            else {
+                var areas = _.map(results, function (item) {
+                    return _.pick(item.toJSON(), '_id', 'name');
+                });
 
-			res.send(areas);
-		}
-	});
+                res.send(areas);
+            }
+        });
+    }
+    else {
+        res.send(null);
+    }
 };

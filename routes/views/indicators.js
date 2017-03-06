@@ -53,44 +53,39 @@ exports = module.exports = function (req, res) {
 
 		sector_query.exec(function (err, sector) {
 			if (!err && sector) {
-				locals.currentIndicatorsFilter = sector.id;
+				locals.currentIndicatorsFilter = sector._id;
 
-				if (sector) {
-					// Get indicators 
-					var q = keystone.list('Indicator').paginate({
-							page: req.query.page || 1,
-							perPage: 3,
-							maxPages: 5
-						})
-						.where('sector', sector.id)
-						.where('state', 'published')
-						.sort('createdAt');
+				// Get indicators 
+				var q = keystone.list('Indicator').paginate({
+						page: req.query.page || 1,
+						perPage: 3,
+						maxPages: 5
+					})
+					.where('sector', locals.currentIndicatorsFilter)
+					.where('state', 'published')
+					.sort('createdAt');
 
-					q.exec(function (err, indicators) {
-						if (indicators && !err) {
-							locals.indicators = indicators;
+				q.exec(function (err, indicators) {
+					if (!err && indicators) {
+						locals.indicators = indicators;
 
-							// Load the comments count for each indicator
-							async.each(locals.indicators.results, 
-								function (indicator, callback) {
-									keystone.list('IndicatorComment').model.count().where('indicator', indicator.id).exec(function (err, count) {
-										indicator.commentsCount = count;
-										callback(err);
-									});
-								},
-								function (err) {
-									next(err);
-								}
-							);
-						}
-						else {
-							next(err);
-						}
-					});
-				}
-				else {
-					next(err);
-				}
+						// Load the comments count for each indicator
+						async.each(locals.indicators.results,
+							function (indicator, callback) {
+								keystone.list('IndicatorComment').model.count().where('indicator', indicator._id).exec(function (err, count) {
+									indicator.commentsCount = count;
+									callback(err);
+								});
+							},
+							function (err) {
+								next(err);
+							}
+						);
+					}
+					else {
+						next(err);
+					}
+				});
 			}
 			else {
 				next(err);

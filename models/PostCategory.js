@@ -1,4 +1,5 @@
 var keystone = require('keystone');
+var Types = keystone.Field.Types;
 
 /**
  * ==================
@@ -14,7 +15,7 @@ var PostCategory = new keystone.List('PostCategory', {
 });
 
 PostCategory.add({
-	name: { label: 'Nombre', type: String, required: true, unique: true }
+	name: { label: 'Nombre', type: Types.Text, required: true, unique: true }
 });
 
 /*Relationships*/

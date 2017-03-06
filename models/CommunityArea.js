@@ -16,13 +16,13 @@ var CommunityArea = new keystone.List('CommunityArea', {
 });
 
 CommunityArea.add({
-	name: { label: 'Nombre', type: String, required: true, unique: true, initial: true },
-	parent: { label: 'Desagregación a la que pertenece', type: Types.Relationship, ref: 'MunicipalArea', many: false }
+	name: { label: 'Nombre', type: Types.Text, required: true, unique: true, initial: true },
+	parent: { label: 'Desagregación a la que pertenece', type: Types.Relationship, ref: 'MunicipalArea', many: false, initial: true }
 });
 
 /**
  * Registration
  */
-CommunityArea.defaultSort = 'parent, name';
+CommunityArea.defaultSort = 'name';
 CommunityArea.defaultColumns = 'parent, name';
 CommunityArea.register();

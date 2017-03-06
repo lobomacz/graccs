@@ -1,0 +1,217 @@
+<main id="page-content-wrapper">
+    <div class="page-content-body">
+        <div class="page-intro hidden-xs">
+            <div class="row">
+                <div class="col-xs-6 push-5-t">
+                    <span>{{date Date.now format='DD MMM YYYY'}}</span>
+                    <label id="current_indicator_id" hidden>{{indicator.id}}</label>
+				</div>
+                <div class="col-xs-5 text-right">
+                    <form role="search" method="get" class="search-form" action="/buscar">
+                        <input class="search-field" placeholder="Buscar..." value="" name="query" type="search" required />
+                    </form>
+                </div>
+                <div class="col-xs-1">
+                    <button class="si si-magnifier search-toggle" data-action="toggle" data-target=".search-form" data-toggle="active"></button>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-11 col-xs-12">
+                <article>
+                    <div class="article-content">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <img class="floated-img img-responsive" src="/indicators/files/{{indicator.relatedImage.filename}}" alt="" />
+                                <h2 class="article-title" style="text-transform: uppercase;">{{indicator.title}}</h2>
+                                <div class="info-block-wrap">
+                                    <div class="meta-info-wrap">
+                                        <div class="item-meta-info">
+                                            <span style="text-transform: uppercase;">{{date indicator.startDate format='MMMYYYY'}} - {{date indicator.endDate format='MMMYYYY'}}</span>
+                                            <span class="meta-separator">|</span>
+                                            <i class="si si-bubble"></i>
+                                            <span class="meta-comments-count">
+												{{#ifeq indicator.commentsCount 0}}
+                                                    No tiene
+												{{else}}
+													{{indicator.commentsCount}}
+												{{/ifeq}}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="rating-container-wrap">
+                                        <div class="rating-container" title="{{indicator.rating.value}}">
+                                            <select id="indicator_rating" name="user_rating" data-rating="{{indicator.rating.value}}" data-indicator-id="{{indicator.id}}" data-rating-for="indicator">
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                                <option value="3">3</option>
+                                                <option value="4">4</option>
+                                                <option value="5" selected>5</option>
+                                            </select>
+                                            <span class="rating-tip animated fadeIn" data-success="Valorado!" data-error="Error :("></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="article-text">{{{indicator.target}}}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="article-content bg-gray">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="row push-20-b">
+                                    <div class="col-lg-5">
+										<dl>
+											<dt>
+												<label for="areaTypes">Tipos de Desagregaciones</label>
+											</dt>
+											<dd>
+                                                <select id="areaTypes" class="form-control select">
+                                                    <option></option>
+                                                    <option value="national">Desagregación nacional</option>
+                                                    <option value="regional">Desagregación regional</option>
+                                                    <option value="municipal">Desagregación municipal</option>
+                                                    <option value="community">Desagregación urbano-rural</option>
+                                                </select>
+											</dd>
+										</dl>
+                                    </div>
+                                    <div class="col-lg-5">
+										<dl>
+											<dt>
+                                                <label for="areas">Desagregaciones</label>
+											</dt>
+											<dd>
+                                                <select id="areas" class="form-control select">
+                                                </select>
+											</dd>
+										</dl>
+                                    </div>
+                                    <div class="col-lg-2">
+                                        <button id="bGraph" class="btn btn-default" style="margin-top: 24px;">Graficar</button>
+                                    </div>
+                                </div>
+								
+                                <div class="indicator-wrap">
+                                    <span class="indicator-name">PRESUPUESTO PARA INFANCIA</span>
+                                    <div class="indicator-content">
+                                        <span class="indicator-info">Retraso del Plan</span>
+                                        <span class="indicator-value">- $1300</span>
+                                    </div>
+                                </div>
+                                <div id="chartdiv" style="width:100%; height:400px;"></div>
+                            </div>
+                        </div>
+                    </div>
+					{{#if messages}}
+                        <div id="flash-messages">
+							{{#if messages.info}}
+                                <div class="alert alert-info">
+									{{{flashMessages messages.info}}}
+                                </div>
+							{{/if}}
+							{{#if messages.success}}
+                                <div class="alert alert-success">
+									{{{flashMessages messages.success}}}
+                                </div>
+							{{/if}}
+							{{#if messages.warning}}
+                                <div class="alert alert-warning">
+									{{{flashMessages messages.warning}}}
+                                </div>
+							{{/if}}
+							{{#if messages.error}}
+                                <div class="alert alert-danger">
+									{{{flashMessages messages.error}}}
+                                </div>
+							{{/if}}
+                        </div>
+					{{/if}}
+                    <div class="article-content bg-white">
+                        <h3 class="comment-label">Comentarios</h3>
+                        <form method="post" class="contact-form">
+                            <input type="hidden" name="action" value="create-comment" />
+                            <input type="hidden" name="indicator" value="{{indicator.id}}" />
+                            <div class="row">
+                                <div class="col-lg-8">
+                                    <div class="row">
+                                        <div class="form-group col-lg-6">
+                                            <label for="nombre">Nombre</label>
+                                            <input name="author" id="nombre" type="text" class="form-control" required />
+                                        </div>
+                                        <div class="form-group col-lg-6">
+                                            <label for="email">E-mail</label>
+                                            <input name="email" id="email" type="email" class="form-control" required />
+                                        </div>
+                                        <div class="form-group col-lg-12">
+                                            <label class="block" for="comentario">Comentario</label>
+                                            <textarea required class="form-control" id="comentario" name="content" rows="4"></textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-lg-6 col-xs-12 col-sm-6 captcha-image">
+												{{{captcha}}}
+                                            </div>
+                                            <div class="col-lg-6 col-xs-12 col-sm-6">
+                                                <button id="contact_btn_send" type="submit" class="btn btn-default pull-right">Enviar Comentario</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="article-content comment-list">
+                        <div class="row">
+                            <div class="col-lg-8">
+								{{#if indicator.comments}}
+									{{#each indicator.comments}}
+                                        <div class="user-comment push-50-t">
+                                            <div class="comment-wrap">
+                                                <ul class="comment-thumb">
+                                                    <li>
+                                                        <a id="vote-indicator-positive-button" href="#" title="Me gusta" data-comment-id="{{id}}">
+                                                            <span style="font-size: 14px;">{{positiveVotes}}</span>
+                                                            <i data-toggle="tooltip" class="si si-like"></i>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a id="vote-indicator-negative-button" href="#" title="No me gusta" data-comment-id="{{id}}">
+                                                            <i data-toggle="tooltip" class="si si-dislike"></i>
+                                                            <span style="font-size: 14px;">{{negativeVotes}}</span>
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                                <div class="comment-name">{{author}}</div>
+                                                <div class="comment-text">{{{content}}}</div>
+                                                <div class="comment-date">
+                                                    <i class="si si-action-undo"></i>
+                                                    <span class="meta-comments-count">{{date createdAt format='DD MMM YYYY HH:MM'}}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+									{{/each}}
+								{{/if}}
+							</div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+            <div class="col-sm-1 hidden-xs filter-container">
+                <div class="text-rotator">
+                    <div class="grid-filters">
+                        <ul class="nav">
+                            <li class="active">
+                                <a href="/indicadores/{{currentIndicatorsFilter}}/{{indicator.classification}}">
+									{{#compare indicator.classification 'children'}}Niños{{/compare}}
+									{{#compare indicator.classification 'teenager'}}Adolescentes{{/compare}}
+									{{#compare indicator.classification 'youth'}}Jóvenes{{/compare}}
+								</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<!-- /#page-content-wrapper -->

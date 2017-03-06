@@ -17,8 +17,8 @@ var ContactMessage = new keystone.List('ContactMessage', {
 ContactMessage.add({
 	name: {label: 'Nombre', type: Types.Text, required: true},
 	email: {label: 'Correo Electrónico',type: Types.Email, required: true},
-	type: {label: 'Motivo', type: String, required: true},
-	subject: {label: 'Asunto', type: String, required: true},
+	type: {label: 'Motivo', type: Types.Text, required: true},
+	subject: {label: 'Asunto', type: Types.Text, required: true},
 	message: {label: 'Mensaje', type: Types.Markdown, required: true},
 	createdAt: {label: 'Fecha', type: Date, default: Date.now, noedit: true}
 });

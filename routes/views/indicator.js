@@ -70,28 +70,22 @@ exports = module.exports = function (req, res) {
 		q.exec(function (err, indicator) {
 			if (!err && indicator) {
 				locals.indicator = indicator;
+				
+				var q = keystone.list('IndicatorComment').model.find()
+					.where('indicator', indicator._id)
+					.sort('createdAt');
 
-				if (indicator) {
-					async.parallel(
-						function (callback) {
-							// Get comments
-							keystone.list('IndicatorComment').model.find().where('indicator', indicator.id).limit(5)
-								.sort('-createdAt').exec(function (err, comments) {
-									locals.indicator.comments = comments;
-									locals.indicator.commentsCount = comments.length;
-	
-									callback(err);
-								}
-							);
-						},
-						function (err) {
-							next(err);
-						}
-					);
-				}
-				else {
-					next(err);
-				}
+				q.exec(function (err, comments) {
+					if (!err && comments) {
+						locals.indicator.comments = comments;
+						locals.indicator.commentsCount = comments.length;
+
+						next(err);
+					}
+					else {
+						next(err);
+					}
+				});
 			}
 			else {
 				next(err);

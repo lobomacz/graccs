@@ -1,6 +1,6 @@
 // Simulate config options from your production environment by
 // customising the .env file in your project's root folder.
-require('dotenv').config();
+require('dotenv').load();
 
 // Require keystone
 var keystone = require('keystone');
@@ -106,8 +106,8 @@ keystone.set('locals', {
 keystone.set('routes', require('./routes'));
 
 // Switch Keystone Email defaults to handlebars
-keystone.Email.defaults.templateExt = 'hbs';
-keystone.Email.defaults.templateEngine = require('handlebars');
+//keystone.Email.defaults.templateExt = 'hbs';
+//keystone.Email.defaults.templateEngine = require('handlebars');
 
 
 // Configure the navigation bar in Keystone's Admin UI

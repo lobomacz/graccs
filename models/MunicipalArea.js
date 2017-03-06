@@ -16,13 +16,13 @@ var MunicipalArea = new keystone.List('MunicipalArea', {
 });
 
 MunicipalArea.add({
-	name: { label: 'Nombre', type: String, required: true, unique: true, initial: true },
+	name: { label: 'Nombre', type: Types.Text, required: true, unique: true, initial: true },
 	parent: { label: 'Desagregación a la que pertenece', type: Types.Relationship, ref: 'DepartmentalArea', many: false, initial: true }
 });
 
 /**
  * Registration
  */
-MunicipalArea.defaultSort = 'parent, name';
+MunicipalArea.defaultSort = 'name';
 MunicipalArea.defaultColumns = 'parent, name';
 MunicipalArea.register();

@@ -46,8 +46,8 @@ exports = module.exports = function (app) {
 	app.get('/buscar', routes.views.search);
 
 	// Votes
-	app.post('/post-comment/:id/vote', routes.views.post_comment_vote);
-	app.post('/indicator-comment/:id', routes.views.indicator_comment_vote);
+	app.post('/post-comment/:id/vote', middleware.requireUser, routes.views.post_comment_vote);
+	app.post('/indicator-comment/:id', middleware.requireUser, routes.views.indicator_comment_vote);
 
 	// Rating
 	app.post('/post-rating', routes.views.post_rating);
@@ -55,8 +55,8 @@ exports = module.exports = function (app) {
 	
 	// Ajax calls
 	app.get('/get-areas', routes.views.get_areas);
-	app.get('/get-graph-points', routes.views.get_graph_points);
-
+	app.get('/get-points', routes.views.get_points);
+	
 	// Contact
 	app.all('/contacto', routes.views.contact);
 

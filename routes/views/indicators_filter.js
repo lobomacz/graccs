@@ -64,23 +64,18 @@ exports = module.exports = function (req, res) {
 			if (!err && indicators) {
 				locals.indicators = indicators;
 
-				if (indicators) {
-					// Load the comments count for each indicator
-					async.each(locals.indicators.results, 
-						function (indicator, callback) {
-							keystone.list('IndicatorComment').model.count().where('indicator', indicator.id).exec(function (err, count) {
-								indicator.commentsCount = count;
-								callback(err);
-							});
-						},
-						function (err) {
-							next(err);
-						}
-					);
-				}
-				else {
-					next(err);
-				}
+				// Load the comments count for each indicator
+				async.each(locals.indicators.results,
+					function (indicator, callback) {
+						keystone.list('IndicatorComment').model.count().where('indicator', indicator._id).exec(function (err, count) {
+							indicator.commentsCount = count;
+							callback(err);
+						});
+					},
+					function (err) {
+						next(err);
+					}
+				);
 			}
 			else {
 				next(err);

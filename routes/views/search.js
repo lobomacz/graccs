@@ -62,30 +62,33 @@ exports = module.exports = function (req, res) {
 						.limit(perCollection);
 		
 					q.exec(function (err, results) {
-						// Load the comments count for each post
-						async.each(results, 
-							function (post, callback) {
-								keystone.list('PostComment').model.count().where('post', post.id).exec(function (err, count) {
-									post.commentsCount = count;
-									callback(err);
-								});
-							}, 
-							function (err) {
-								if (results) {
+						if (!err && results) {
+							// Load the comments count for each post
+							async.each(results,
+								function (post, callback) {
+									keystone.list('PostComment').model.count().where('post', post.id).exec(function (err, count) {
+										post.commentsCount = count;
+										callback(err);
+									});
+								},
+								function (err) {
 									// set result type, heading, url and append result to searchResults
 									for (var i = 0; i < results.length; i++) {
 										var obj = results[i];
 										obj.type = 'post';
 										obj.heading = 'Noticia';
 										obj.baseURL = '/noticia/';
-										
+
 										searchResults.push(obj);
 									}
+
+									callback(err);
 								}
-								
-								callback(err);
-							}
-						);
+							);	
+						}
+						else {
+							callback(err);
+						}
 					});
 				}, 
 				function (callback) {
@@ -95,13 +98,17 @@ exports = module.exports = function (req, res) {
 					var q = keystone.list('Post').model.count(query).where('state', 'published');
 		
 					q.exec(function (err, count) {
-						total += count;
-						callback(err);
+						if (!err && count) {
+							total += count;
+							callback(err);
+						}
+						else {
+							callback(err);
+						}
 					});
 				}, 
 				function (callback) {
 					// search indicators
-					console.log('q: ' + req.query.q);
 					var query = {$text: {$search: req.query.q, $language: "es"}};
 					var score = {score: {$meta: "textScore"}};
 					
@@ -114,17 +121,16 @@ exports = module.exports = function (req, res) {
 						.limit(perCollection);
 		
 					q.exec(function (err, results) {
-						console.log(results);
-						// Load the comments count for each indicator
-						async.each(results, 
-							function (indicator, callback) {
-								keystone.list('IndicatorComment').model.count().where('indicator', indicator.id).exec(function (err, count) {
-									indicator.commentsCount = count;
-									callback(err);
-								});
-							}, 
-							function (err) {
-								if (results) {
+						if (!err && results) {
+							// Load the comments count for each indicator
+							async.each(results,
+								function (indicator, callback) {
+									keystone.list('IndicatorComment').model.count().where('indicator', indicator.id).exec(function (err, count) {
+										indicator.commentsCount = count;
+										callback(err);
+									});
+								},
+								function (err) {
 									// set result type, heading, url and append result to searchResults
 									for (var i = 0; i < results.length; i++) {
 										var obj = results[i];
@@ -133,11 +139,14 @@ exports = module.exports = function (req, res) {
 										obj.baseURL = '/indicador/';
 										searchResults.push(obj);
 									}
+
+									callback(err);
 								}
-								
-								callback(err);
-							}
-						);
+							);
+						}
+						else {
+							callback(err);
+						}
 					});
 				}, 
 				function (callback) {
@@ -146,8 +155,13 @@ exports = module.exports = function (req, res) {
 					var q = keystone.list('Indicator').model.count(query).where('state', 'published');
 		
 					q.exec(function (err, count) {
-						total += count;
-						callback(err);
+						if (!err && count) {
+							total += count;
+							callback(err);
+						}
+						else {
+							callback(err);
+						}
 					});
 				}], 
 				function (err) {

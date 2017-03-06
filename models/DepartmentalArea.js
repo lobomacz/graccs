@@ -16,13 +16,13 @@ var DepartmentalArea = new keystone.List('DepartmentalArea', {
 });
 
 DepartmentalArea.add({
-	name: { label: 'Nombre', type: String, required: true, unique: true, initial: true },
-	parent: { label: 'Desagregación a la que pertenece', type: Types.Relationship, ref: 'NationalArea', many: false }
+	name: { label: 'Nombre', type: Types.Text, required: true, unique: true, initial: true },
+	parent: { label: 'Desagregación a la que pertenece', type: Types.Relationship, ref: 'NationalArea', many: false, initial: true }
 });
 
 /**
  * Registration
  */
-DepartmentalArea.defaultSort = 'parent, name';
+DepartmentalArea.defaultSort = 'name';
 DepartmentalArea.defaultColumns = 'parent, name';
 DepartmentalArea.register();

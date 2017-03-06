@@ -20,7 +20,7 @@ var Indicator = new keystone.List('Indicator', {
 Indicator.add(
 	{
 		title: { label: 'Nombre', type: Types.Text, required: true },
-		htmlTitle: { label: 'Nombre con estilo', type: Types.Markdown, wysiwyg: true, note: 'Debe coincidir con el nombre original' },
+		htmlTitle: { label: 'Nombre con estilo', type: Types.Markdown, wysiwyg: true, required: true, default: '<p></p>', note: 'Debe coincidir con el nombre original' },
 		code: { label: 'Código', type: Types.Number, default: 1, min: 1, unique: true, required: true, initial: true },
 		sector: { label: 'Sector', type: Types.Relationship, ref: 'IndicatorSector', required: true, many: false, initial: true },
 		version: { label: 'Versión', type: Types.Number, default: 1.0, min: 1.0, required: true },
@@ -56,6 +56,8 @@ Indicator.add(
 		relatedImage: {
 			label: 'Imagen relacionada',
 			type: Types.LocalFile,
+			require: true,
+			default: 'indicator-default.jpg',
 			dest: 'public/indicators/files/',
 			prefix: '/indicators/files/',
 			allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml'],
@@ -63,11 +65,11 @@ Indicator.add(
 				return 'indicator-' + item.id + '.' + file.extension;
 			},
 			format: function (item, file) {
-				return '<img src="/indices/files/' + file.filename + '" style="max-width: 300px">';
+				return '<img src="/indicators/files/' + file.filename + '" style="max-width: 300px">';
 			}
 		},
 		source: { label: 'Fuente de información', type: Types.Text, trim: true },
-		target: { label: 'Objetivo', type: Types.Html, wysiwyg: true, height: 150, collapse: true },
+		target: { label: 'Objetivo', type: Types.Html, default: '<p></p>', wysiwyg: true, height: 150, collapse: true },
 		realValue: {
 			label: 'Etiqueta a mostrar para el valor ejecutado', type: Types.Text, trim: true, required: true, default: 'Valor ejecutado',
 			note: 'Depende del indicador: valor ejecutado, valor alcanzado, ...'
@@ -108,16 +110,16 @@ Indicator.add(
 	},
 	'Responsables del proceso', {
 		responsible: {
-			collector: { label: 'Recolectar la información', type: Types.Text, trim: true },
-			analizer: { label: 'Analizar la información', type: Types.Text, trim: true },
-			authorizer: { label: 'Autorizar la información', type: Types.Text, trim: true },
-			publisher: { label: 'Publicar la información', type: Types.Text, trim: true }
+			collector: { label: 'Recolectar la información', type: Types.Text, default: '', trim: true },
+			analizer: { label: 'Analizar la información', type: Types.Text, default: '', trim: true },
+			authorizer: { label: 'Autorizar la información', type: Types.Text, default: '', trim: true },
+			publisher: { label: 'Publicar la información', type: Types.Text, default: '', trim: true }
 		}
 	},
 	'Apoyo legal', {
 		legalBackup: {
-			cdn: { label: 'Derecho CDN', type: Types.Text, trim: true },
-			institutionalMark: { label: 'Marco Institucional', type: Types.Text, trim: true },
+			cdn: { label: 'Derecho CDN', type: Types.Text, default: '', trim: true },
+			institutionalMark: { label: 'Marco Institucional', type: Types.Text, default: '', trim: true },
 			relatedFile: {
 				label: 'Archivo relacionado al Marco Institucional',
 				type: Types.LocalFile,

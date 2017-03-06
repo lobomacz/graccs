@@ -56,24 +56,26 @@
             <div class="col-sm-1 hidden-xs filter-container">
                 <div class="text-rotator">
                     <div class="grid-filters">
-                        <ul class="nav">
-                            <li {{#if currentIndicatorsClassification}} {{else}}class="active"{{/if}}>
-                                <a href="/indicadores/{{currentIndicatorsFilter}}">Todos</a>
-                            </li>
-                            <li {{#if currentIndicatorsClassification}} {{#compare currentIndicatorsClassification 'adults'}}class="active"{{/compare}}{{/if}} >
-                                <a href="/indicadores/{{currentIndicatorsFilter}}/adults">Adultos</a>
-                            </li>
-                            <li {{#if currentIndicatorsClassification}} {{#compare currentIndicatorsClassification 'youth'}}class="active"{{/compare}}{{/if}} >
-                                <a href="/indicadores/{{currentIndicatorsFilter}}/youth">Jóvenes</a>
-                            </li>
-                            <li {{#if currentIndicatorsClassification}} {{#compare currentIndicatorsClassification 'teenager'}}class="active"{{/compare}}{{/if}} >
-                                <a href="/indicadores/{{currentIndicatorsFilter}}/teenager">Adolescentes</a>
-                            </li>
-                            <li {{#if currentIndicatorsClassification}} {{#compare currentIndicatorsClassification 'children'}}class="active"{{/compare}}{{/if}} >
-                                <a href="/indicadores/{{currentIndicatorsFilter}}/children">Niños</a>
-                            </li>
-                        </ul>
-                    </div>
+                    	<ul class="nav">
+							{{#if currentIndicatorsFilter}}
+									<li {{#if currentIndicatorsClassification}} {{else}}class="active"{{/if}}>
+										<a href="/indicadores/{{currentIndicatorsFilter}}">Todos</a>
+									</li>
+									<li {{#if currentIndicatorsClassification}} {{#compare currentIndicatorsClassification 'adults'}}class="active"{{/compare}}{{/if}} >
+										<a href="/indicadores/{{currentIndicatorsFilter}}/adults">Adultos</a>
+									</li>
+									<li {{#if currentIndicatorsClassification}} {{#compare currentIndicatorsClassification 'youth'}}class="active"{{/compare}}{{/if}} >
+										<a href="/indicadores/{{currentIndicatorsFilter}}/youth">Jóvenes</a>
+									</li>
+									<li {{#if currentIndicatorsClassification}} {{#compare currentIndicatorsClassification 'teenager'}}class="active"{{/compare}}{{/if}} >
+										<a href="/indicadores/{{currentIndicatorsFilter}}/teenager">Adolescentes</a>
+									</li>
+									<li {{#if currentIndicatorsClassification}} {{#compare currentIndicatorsClassification 'children'}}class="active"{{/compare}}{{/if}} >
+										<a href="/indicadores/{{currentIndicatorsFilter}}/children">Niños</a>
+									</li>
+							{{/if}}
+                    	</ul>
+					</div>
                 </div>
             </div>
         </div>

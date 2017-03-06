@@ -16,7 +16,7 @@ var IndicatorSector = new keystone.List('IndicatorSector', {
 });
 
 IndicatorSector.add({
-	name: { label: 'Nombre', type: String, required: true, unique: true, initial: true },
+	name: { label: 'Nombre', type: Types.Text, required: true, unique: true, initial: true },
 	icono: {
 		label: 'Icono relacionado',
 		type: Types.LocalFile,

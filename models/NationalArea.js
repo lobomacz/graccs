@@ -16,11 +16,12 @@ var NationalArea = new keystone.List('NationalArea', {
 });
 
 NationalArea.add({
-	name: { label: 'Nombre', type: String, required: true, unique: true, initial: true }
+	name: { label: 'Nombre', type: Types.Text, required: true, unique: true, initial: true }
 });
 
 /**
  * Registration
  */
+NationalArea.defaultSort = 'name';
 NationalArea.defaultColumns = 'name';
 NationalArea.register();
