@@ -60,12 +60,12 @@ exports = module.exports = function (req, res) {
 	});
 
 	// load template data
-	view.on('init', function (next) {
+	view.on('init', function (next) {		
 		// Get indicator by slug key
 		var q = keystone.list('Indicator').model.findOne({
 			slug: locals.filters.name,
 			state: 'published'
-		}).populate('comments');
+		}).populate('comments ');
 
 		q.exec(function (err, indicator) {
 			if (!err && indicator) {
@@ -91,8 +91,42 @@ exports = module.exports = function (req, res) {
 				next(err);
 			}
 		});
+		
+		if (locals.indicator) {
+			locals.indicator.inside = true;
+			
+			var q_national = keystone.list('IndicatorValue').model.find()
+					.where('indicator', indicator._id)
+					.where('areaType', 'national')
+					.sort('createdAt');
+					
+			q_national.exec(function (err, values) {
+				if (!err && values) {
+					locals.indicator.national_values = values;
+					next(err);
+				}
+				else {
+					next(err);
+				}
+			});
+			
+			var q_municipal = keystone.list('IndicatorValue').model.find()
+					.where('indicator', indicator._id)
+					.where('areaType', 'municipal')
+					.sort('createdAt');
+					
+			q_municipal.exec(function (err, values) {
+				if (!err && values) {
+					locals.indicator.municipal_values = values;
+					next(err);
+				}
+				else {
+					next(err);
+				}
+			});
+		}
 	});
-
+	
 	// Indicator comment
 	view.on('post', {action: 'create-comment'}, function (next) {
 		

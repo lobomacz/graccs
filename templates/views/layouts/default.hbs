@@ -423,6 +423,126 @@
 				}
             });
             
+            function get_indicator_initial_data() {
+                var indicator = $('#current_indicator_id').text();
+                
+                if (indicator) {
+                    var req = $.ajax({
+                        url: '/get-indicator-initial-data',
+                        data: { indicator_id: indicator, type: 'national' }
+                    });
+
+                    req.done(function (results) {
+                        console.log(results);
+                        
+                        var points = [];
+                        
+                        if (results.data && results.data.length > 0) {
+                            points = build_points(results.data);
+                            drawGraph(points);
+                        }
+                        else {
+                            var req = $.ajax({
+                                url: '/get-indicator-initial-data',
+                                data: { indicator_id: indicator, type: 'department' }
+                            });
+
+                            req.done(function (results) {
+                                console.log(results);
+                                
+                                if (results.data && results.data.length > 0) {
+                                    points = build_points(results.data);
+                                    drawGraph(points);
+                                } 
+                                else {
+                                    var req = $.ajax({
+                                        url: '/get-indicator-initial-data',
+                                        data: { indicator_id: indicator, type: 'municipal' }
+                                    });
+
+                                    req.done(function (results) {
+                                        console.log(results);
+                                        
+                                        if (results.data && results.data.length > 0) {
+                                            points = build_points(results.data);
+                                            console.log(points);
+                                            drawGraph(points);
+                                        }
+                                        else {
+                                            var req = $.ajax({
+                                                url: '/get-indicator-initial-data',
+                                                data: { indicator_id: indicator, type: 'community' }
+                                            });
+
+                                            req.done(function (results) {
+                                                console.log(results);
+                                                
+                                                if (results.data && results.data.length > 0) {
+                                                    points = build_points(results.data);
+                                                    drawGraph(points);
+                                                }
+                                            });
+
+                                            req.fail(function (res) {
+                                                console.log('Getting initial data has failed', res);
+                                            });
+                                        }
+                                    });
+
+                                    req.fail(function (res) {
+                                        console.log('Getting initial data has failed', res);
+                                    });                                                                  
+                                }
+                            });
+
+                            req.fail(function (res) {
+                                console.log('Getting initial data has failed', res);
+                            });
+                        }
+                    });
+
+                    req.fail(function (res) {
+                        console.log('Getting initial data has failed', res);
+                    });
+				}
+            }
+            
+            function build_points(data) {
+                var points = [];
+                            
+                $.each(data, function (key,val)
+                {   
+                    var point = { "year": val.startYear, "value": val.realValue, "value_2": val.targetValue }
+                    points.push(point);
+                });
+                
+                return points;
+            }
+            
+            function get_data(indicator, type) {
+                if (indicator) {
+                    var req = $.ajax({
+                        url: '/get-indicator-initial-data',
+                        data: { indicator_id: indicator, type: type }
+                    });
+
+                    req.done(function (results) {
+                        console.log('Getting initial data successfully: ', results.data);
+                        
+                        if (results) return results.data;
+                        else return null;
+                    });
+
+                    req.fail(function (res) {
+                        console.log('Getting initial data has failed', res);
+                        return null;
+                    });
+				}
+                else {
+                    return null;
+                }
+            }
+            
             function get_areas() {
                 var type = $types.val();
                 
@@ -555,6 +675,8 @@
                 // WRITE
                 chart.write("chartdiv");
             }   
+            
+            get_indicator_initial_data();
         });
     </script>
     <!--javascript-->

@@ -56,6 +56,7 @@ exports = module.exports = function (app) {
 	// Ajax calls
 	app.get('/get-areas', routes.views.get_areas);
 	app.get('/get-points', routes.views.get_points);
+	app.get('/get-indicator-initial-data', routes.views.get_indicator_initial_data);
 	
 	// Contact
 	app.all('/contacto', routes.views.contact);
