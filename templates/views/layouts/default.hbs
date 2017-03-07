@@ -387,6 +387,41 @@
                     $('#select2-areas-container').html(name);
                 }
 			});
+                        
+            $('#bGraph').click(function(e) {
+                $('#chartdiv').empty();
+                
+                var type = $types.val();
+                var area = $areas.val();
+                var indicator = $('#current_indicator_id').text();
+                
+				if (type) {
+                    var req = $.ajax({
+                        url: '/get-points',
+                        data: { area_type: type, area_id: area, indicator_id: indicator }
+                    });
+
+                    req.done(function (results) {
+                        console.log('Getting points successfully: ', results);
+                        
+                        if (results && results.points) {
+                            var points = [];
+                            
+                            $.each(results.points, function (key,val)
+                            {   
+                                var point = { "year": val.startYear, "value": val.realValue, "value_2": val.targetValue }
+                                points.push(point);
+                            });
+                            
+                            drawGraph(points);
+                        }
+                    });
+
+                    req.fail(function (res) {
+                        console.log('Getting points has failed', res);
+                    });
+				}
+            });
             
             function get_areas() {
                 var type = $types.val();
@@ -427,128 +462,99 @@
 				}
             }
             
-            $('#bGraph').click(function(e) {
-                var type = $types.val();
-                var area = $areas.val();
-                var indicator = $('#current_indicator_id').text();
+            function drawGraph(points) {
+                var chart;
+                var graph, graph_2;
                 
-				if (type) {
-                    var req = $.ajax({
-                        url: '/get-points',
-                        data: { area_type: type, area_id: area, indicator_id: indicator }
-                    });
+                var chartData = [
+                    {
+                        "year": "2014",
+                        "value": 6000
+                    },
+                    {
+                        "year": "2015",
+                        "value": 12000
+                    },
+                    {
+                        "year": "2016",
+                        "value": 24000
+                    },
+                    {
+                        "year": "2017",
+                        "value": 48000
+                    }
+                ];
 
-                    req.done(function (results) {
-                        console.log('Getting points successfully: ', results);
-                        
-                        if (results && results.points) {
-                            var points = [];
-                            
-                            $.each(results.points, function (key,val)
-                            {   
-                                var point = { "year": val.startYear, "value": val.realValue }
-                                points.push(point);
-                            });
-                            
-                            console.log('Getting points successfully: ', results);
-                            
-                            var chart;
-                            var graph;
-                            
-                            var chartData = [
-                                {
-                                    "year": "2014",
-                                    "value": 6000
-                                },
-                                {
-                                    "year": "2015",
-                                    "value": 12000
-                                },
-                                {
-                                    "year": "2016",
-                                    "value": 24000
-                                },
-                                {
-                                    "year": "2017",
-                                    "value": 48000
-                                }
-                            ];
+                // SERIAL CHART
+                chart = new AmCharts.AmSerialChart();
 
-                            if (window.AmCharts) {
-                                AmCharts.ready(function () {
-                                    // SERIAL CHART
-                                    chart = new AmCharts.AmSerialChart();
+                chart.dataProvider = points;
+                chart.marginLeft = 10;
+                chart.categoryField = "year";
+                chart.dataDateFormat = "YYYY";
 
-                                    chart.dataProvider = chartData;
-                                    chart.marginLeft = 10;
-                                    chart.categoryField = "year";
-                                    chart.dataDateFormat = "YYYY";
+                // AXES
+                // category
+                var categoryAxis = chart.categoryAxis;
+                categoryAxis.parseDates = true; // as our data is date-based, we set parseDates to true
+                categoryAxis.minPeriod = "YYYY"; // our data is yearly, so we set minPeriod to YYYY
+                categoryAxis.dashLength = 3;
+                categoryAxis.minorGridEnabled = true;
+                categoryAxis.minorGridAlpha = 0.1;
 
-                                    // listen for "dataUpdated" event (fired when chart is inited) and call zoomChart method when it happens
-                                    // chart.addListener("dataUpdated", zoomChart);
+                // value
+                var valueAxis = new AmCharts.ValueAxis();
+                valueAxis.axisAlpha = 0;
+                valueAxis.inside = true;
+                valueAxis.dashLength = 3;
+                chart.addValueAxis(valueAxis);
 
-                                    // AXES
-                                    // category
-                                    var categoryAxis = chart.categoryAxis;
-                                    categoryAxis.parseDates = true; // as our data is date-based, we set parseDates to true
-                                    categoryAxis.minPeriod = "YYYY"; // our data is yearly, so we set minPeriod to YYYY
-                                    categoryAxis.dashLength = 3;
-                                    categoryAxis.minorGridEnabled = true;
-                                    categoryAxis.minorGridAlpha = 0.1;
+                // GRAPH
+                graph = new AmCharts.AmGraph();
+                graph.type = "smoothedLine"; // this line makes the graph smoothed line.
+                graph.lineColor = "#FFA92E";
+                graph.negativeLineColor = "#637bb6"; // this line makes the graph to change color when it drops below 0
+                graph.bullet = "round";
+                graph.bulletSize = 8;
+                graph.bulletBorderColor = "#FFFFFF";
+                graph.bulletBorderAlpha = 1;
+                graph.bulletBorderThickness = 2;
+                graph.lineThickness = 2;
+                graph.valueField = "value";
+                /* graph.balloonText = "[[category]]<br><b><span style='font-size:14px;'>[[value]]</span></b>";*/
+                chart.addGraph(graph);
+                
+                // GRAPH
+                graph_2 = new AmCharts.AmGraph();
+                graph_2.type = "smoothedLine"; // this line makes the graph smoothed line.
+                graph_2.lineColor = "#162A59";
+                graph_2.negativeLineColor = "#637bb6"; // this line makes the graph to change color when it drops below 0
+                graph_2.bullet = "round";
+                graph_2.bulletSize = 8;
+                graph_2.bulletBorderColor = "#FFFFFF";
+                graph_2.bulletBorderAlpha = 1;
+                graph_2.bulletBorderThickness = 2;
+                graph_2.lineThickness = 2;
+                graph_2.valueField = "value_2";
+                /* graph.balloonText = "[[category]]<br><b><span style='font-size:14px;'>[[value]]</span></b>";*/
+                chart.addGraph(graph_2);
 
-                                    // value
-                                    var valueAxis = new AmCharts.ValueAxis();
-                                    valueAxis.axisAlpha = 0;
-                                    valueAxis.inside = true;
-                                    valueAxis.dashLength = 3;
-                                    chart.addValueAxis(valueAxis);
+                // CURSOR
+                /*  var chartCursor = new AmCharts.ChartCursor();
+                    chartCursor.cursorAlpha = 0;
+                    chartCursor.cursorPosition = "mouse";
+                    chartCursor.categoryBalloonDateFormat = "YYYY";
+                    chart.addChartCursor(chartCursor);*/
 
-                                    // GRAPH
-                                    graph = new AmCharts.AmGraph();
-                                    graph.type = "smoothedLine"; // this line makes the graph smoothed line.
-                                    graph.lineColor = "#d1655d";
-                                    graph.negativeLineColor = "#637bb6"; // this line makes the graph to change color when it drops below 0
-                                    graph.bullet = "round";
-                                    graph.bulletSize = 8;
-                                    graph.bulletBorderColor = "#FFFFFF";
-                                    graph.bulletBorderAlpha = 1;
-                                    graph.bulletBorderThickness = 2;
-                                    graph.lineThickness = 2;
-                                    graph.valueField = "value";
-                                    /* graph.balloonText = "[[category]]<br><b><span style='font-size:14px;'>[[value]]</span></b>";*/
-                                    chart.addGraph(graph);
+                // SCROLLBAR
+                /*  var chartScrollbar = new AmCharts.ChartScrollbar();
+                    chart.addChartScrollbar(chartScrollbar);*/
 
-                                    // CURSOR
-                                    /*  var chartCursor = new AmCharts.ChartCursor();
-                                        chartCursor.cursorAlpha = 0;
-                                        chartCursor.cursorPosition = "mouse";
-                                        chartCursor.categoryBalloonDateFormat = "YYYY";
-                                        chart.addChartCursor(chartCursor);*/
+                chart.creditsPosition = "bottom-right";
 
-                                    // SCROLLBAR
-                                    /*  var chartScrollbar = new AmCharts.ChartScrollbar();
-                                        chart.addChartScrollbar(chartScrollbar);*/
-
-                                    chart.creditsPosition = "bottom-right";
-
-                                    // WRITE
-                                    chart.write("chartdiv");
-                                });   
-                            }
-
-                            // this method is called when chart is first inited as we listen for "dataUpdated" event
-                            function zoomChart() {
-                                // different zoom methods can be used - zoomToIndexes, zoomToDates, zoomToCategoryValues
-                                chart.zoomToDates(new Date(1972, 0), new Date(1984, 0));
-                            }  
-                        }
-                    });
-
-                    req.fail(function (res) {
-                        console.log('Getting points has failed', res);
-                    });
-				}
-            });
+                // WRITE
+                chart.write("chartdiv");
+            }   
         });
     </script>
     <!--javascript-->

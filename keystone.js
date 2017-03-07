@@ -17,11 +17,11 @@ nconf.argv().env().file({file: './config.json'});
 
 // Mongo DB configurations
 var mongoURI = 'mongodb://';
-var host = nconf.get('mongodb:host') || 'localhost';
+var host = nconf.get('mongodb:host') || '127.0.0.1';
 var post = nconf.get('mongodb:post') || '27017';
 var user = nconf.get('mongodb:user');
 var password = nconf.get('mongodb:password');
-var database = nconf.get('mongodb:database') || 'graccs';
+var database = nconf.get('mongodb:database') || 'graccs_good';
 
 if (user && password) {
 	mongoURI += user + ':' + password + '@';
@@ -55,7 +55,7 @@ keystone.init({
 	// Database and User Auth Options
 	'auth': true,
 	'session': true,
-	'mongo': process.env.MONGO_URI || mongoURI,
+	'mongo': mongoURI/*process.env.MONGO_URI || mongoURI*/,
 	'session store': 'mongo',
 	'user model': 'User',
 	'cookie secret': process.env.COOKIE_SECRET || uuid.v4(),
@@ -64,13 +64,20 @@ keystone.init({
 	'emails': 'templates/views/emails'
 });
 
+var dashes = '------------------------------------------------\n';
+console.log('\n Init OK');
+console.log(dashes);
+
 // Load your project's Models
 keystone.import('models');
+
+console.log('Import Models OK');
+console.log(dashes);
 
 // Setup common locals for your templates. The following are required for the
 // bundled templates and layouts. Any runtime locals (that should be set uniquely
 // for each request) should be added to ./routes/middleware.js
-var transportOpt = {
+/*var transportOpt = {
 	host: nconf.get('nodemailer:host'),
 	port: nconf.get('nodemailer:port'),
 	auth: {
@@ -82,15 +89,18 @@ var transportOpt = {
 
 // Nodemailer configuration
 keystone.set('admin email', nconf.get('admin:email'));
-keystone.set('smtp nodemailer', transportOpt);
+keystone.set('smtp nodemailer', transportOpt);*/
 keystone.set('recaptcha', nconf.get('recaptcha'));
 
+console.log('Recaptcha OK');
+console.log(dashes);
+
 // Load Google Maps configuration
-if (nconf.get('google-maps:googleAPIKey') && nconf.get('google-maps:googleServerAPIKey')) {
+/*if (nconf.get('google-maps:googleAPIKey') && nconf.get('google-maps:googleServerAPIKey')) {
 	keystone.set('google api key', nconf.get('google-maps:googleAPIKey'));
 	keystone.set('google server api key', nconf.get('google-maps:googleServerAPIKey'));
 	keystone.set('default region', nconf.get('google-maps:defaultRegion'));
-}
+}*/
 
 // Setup common locals for your templates. The following are required for the
 // bundled templates and layouts. Any runtime locals (that should be set uniquely
@@ -102,8 +112,13 @@ keystone.set('locals', {
 	editable: keystone.content.editable
 });
 
+console.log('Set Locals OK');
+console.log(dashes);
+
 // Load your project's Routes
 keystone.set('routes', require('./routes'));
+console.log('Routes OK');
+console.log(dashes);
 
 // Switch Keystone Email defaults to handlebars
 //keystone.Email.defaults.templateExt = 'hbs';
@@ -119,12 +134,18 @@ keystone.set('nav', {
 	'usuarios': ['users']
 });
 
-try{
+console.log('Nav OK');
+console.log(dashes);
+
+try {
 	// Start Keystone to connect to your database and initialise the web server
 	keystone.start();
-}catch (e){
 	
-	console.log('Error starting keystone',e);
+	console.log('Start OK');
+	console.log(dashes);
+}
+catch (e) {
+	console.log('Error starting keystone', e);
 }
 
 
