@@ -433,13 +433,13 @@
                     });
 
                     req.done(function (results) {
+                        console.log('National results');
                         console.log(results);
                         
                         var points = [];
                         
-                        if (results.data && results.data.length > 0) {
-                            points = build_points(results.data);
-                            drawGraph(points);
+                        if (results.data) {
+                            get_points(indicator, 'national', results.data.nationalArea);
                         }
                         else {
                             var req = $.ajax({
@@ -448,11 +448,11 @@
                             });
 
                             req.done(function (results) {
+                                console.log('Departmental results');
                                 console.log(results);
                                 
-                                if (results.data && results.data.length > 0) {
-                                    points = build_points(results.data);
-                                    drawGraph(points);
+                                if (results.data) {
+                                    get_points(indicator, 'department', results.data.departmentArea);
                                 } 
                                 else {
                                     var req = $.ajax({
@@ -461,12 +461,14 @@
                                     });
 
                                     req.done(function (results) {
+                                        console.log('Municipal results');
                                         console.log(results);
                                         
-                                        if (results.data && results.data.length > 0) {
-                                            points = build_points(results.data);
-                                            console.log(points);
-                                            drawGraph(points);
+                                        if (results.data) {
+                                            get_points(indicator, 'municipal', results.data.municipalArea);
+                                            
+                                            //points = build_points(results.data);
+                                            //drawGraph(points);
                                         }
                                         else {
                                             var req = $.ajax({
@@ -475,11 +477,11 @@
                                             });
 
                                             req.done(function (results) {
+                                                console.log('Community results');                                                
                                                 console.log(results);
                                                 
-                                                if (results.data && results.data.length > 0) {
-                                                    points = build_points(results.data);
-                                                    drawGraph(points);
+                                                if (results.data) {
+                                                    get_points(indicator, 'community', results.data.communityArea);
                                                 }
                                             });
 
@@ -519,28 +521,33 @@
                 return points;
             }
             
-            function get_data(indicator, type) {
-                if (indicator) {
+            function get_points(indicator, type, area) {
+				if (indicator && type && area) {
                     var req = $.ajax({
-                        url: '/get-indicator-initial-data',
-                        data: { indicator_id: indicator, type: type }
+                        url: '/get-points',
+                        data: { area_type: type, area_id: area, indicator_id: indicator }
                     });
 
                     req.done(function (results) {
-                        console.log('Getting initial data successfully: ', results.data);
+                        console.log('Getting points successfully: ', results);
                         
-                        if (results) return results.data;
-                        else return null;
+                        if (results && results.points) {
+                            var points = [];
+                            
+                            $.each(results.points, function (key,val)
+                            {   
+                                var point = { "year": val.startYear, "value": val.realValue, "value_2": val.targetValue }
+                                points.push(point);
+                            });
+                            
+                            drawGraph(points);
+                        }
                     });
 
                     req.fail(function (res) {
-                        console.log('Getting initial data has failed', res);
-                        return null;
+                        console.log('Getting points has failed', res);
                     });
 				}
-                else {
-                    return null;
-                }
             }
             
             function get_areas() {

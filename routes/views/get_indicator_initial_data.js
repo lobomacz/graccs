@@ -6,7 +6,55 @@ exports = module.exports = function (req, res) {
 	var indicator_id = req.params.indicator_id;
     var type = req.params.type;
     
-    var q = keystone.list('IndicatorValue').model.find()
+    var q;
+    
+	switch (type) {
+		case 'national':
+			q = keystone.list('IndicatorValue').model.findOne()
+                .where('indicator', indicator_id)
+                .where('areaType', type)
+                .sort('nationalArea');
+			break;
+		case 'regional':
+			q = keystone.list('IndicatorValue').model.findOne()
+                .where('indicator', indicator_id)
+                .where('areaType', type)
+                .sort('departmentArea');
+			break;
+		case 'municipal':
+			q = keystone.list('IndicatorValue').model.findOne()
+                .where('indicator', indicator_id)
+                .where('areaType', type)
+                .sort('municipalArea');
+			break;
+		case 'community':
+			q = keystone.list('IndicatorValue').model.findOne()
+                .where('indicator', indicator_id)
+                .where('areaType', type)
+                .sort('communityArea');
+			break;
+	}
+
+    if (q) {
+        q.exec(function (err, results) {
+            if (err) {
+                res.send({ status: 'ERROR', data: null });
+            }
+            else if (results) {
+                res.send({ status: 'OK', data: results });
+            }
+            else {
+                res.send({ status: 'OK', data: null });
+            }
+        });
+    }
+    else {
+        res.send({ status: 'OK', data: null });
+    }
+    
+    
+    
+ /*   var q = keystone.list('IndicatorValue').model.find()
             .where('indicator', indicator_id)
             .where('areaType', type);
             
@@ -24,5 +72,5 @@ exports = module.exports = function (req, res) {
         else {
             res.send({ status: 'OK', data: null });
         }
-    });
+    });*/
 };
