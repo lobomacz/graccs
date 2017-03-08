@@ -77,7 +77,7 @@ console.log(dashes);
 // Setup common locals for your templates. The following are required for the
 // bundled templates and layouts. Any runtime locals (that should be set uniquely
 // for each request) should be added to ./routes/middleware.js
-/*var transportOpt = {
+var transportOpt = {
 	host: nconf.get('nodemailer:host'),
 	port: nconf.get('nodemailer:port'),
 	auth: {
@@ -89,7 +89,7 @@ console.log(dashes);
 
 // Nodemailer configuration
 keystone.set('admin email', nconf.get('admin:email'));
-keystone.set('smtp nodemailer', transportOpt);*/
+keystone.set('smtp nodemailer', transportOpt);
 keystone.set('recaptcha', nconf.get('recaptcha'));
 
 console.log('Recaptcha OK');

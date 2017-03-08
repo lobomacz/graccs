@@ -28,31 +28,37 @@
 							{{/if}}
                         </div>
 					{{/if}}
-                    <form action="/send" method="post" class="contact-form">
-                        <div class="form-group col-lg-6">
-                            <label for="name">Nombre</label>
-                            <input name="name" id="name" type="text" class="form-control" required />
-                        </div>
-                        <div class="form-group col-lg-6">
-                            <label for="territory">Territorio</label>
-                            <input name="territory" id="territory" type="text" class="form-control" required />
-                        </div>
-						<div class="form-group col-lg-6">
-                            <label for="email">E-mail</label>
-                            <input name="email" id="email" type="email" class="form-control" required />
-                        </div>
-                        <div class="form-group col-lg-6">
-                            <label for="subject">Asunto</label>
-                            <input name="subject" id="subject" type="text" class="form-control" required />
-                        </div>
-                        <div class="form-group col-lg-12">
-                            <label class="block" for="message">Mensaje</label>
-							<textarea class="form-control" id="message" name="message" rows="4" required></textarea>
-                        </div>
-                        <div class="form-group col-lg-12">
-                            <button type="submit" class="btn btn-default pull-right">Enviar Comentario</button>
-                        </div>
-                    </form>
+					{{#if messageSubmitted}}
+                        <h4>Muchas gracias por estar en contacto.</h4>
+					{{else}}
+                        <form method="post" action="/contacto" class="contact-form">
+                            <div class="form-group col-lg-6 {{#if validationErrors.name}}has-error{{/if}}">
+                                <label for="name">Name</label>
+                                <input type="text" name="name" id="name" class="form-control" value="{{formData.name}}" required />
+                            </div>
+                            <div class="form-group col-lg-6 {{#if validationErrors.territory}}has-error{{/if}}">
+                                <label for="territory">Territorio</label>
+                                <input name="territory" id="territory" type="text" class="form-control" required />
+                            </div>
+                            <div class="form-group col-lg-6 {{#if validationErrors.email}}has-error{{/if}}">
+                                <label for="email">Email</label>
+                                <input type="email" name="email" id="email" class="form-control" value="{{formData.email}}" required />
+                            </div>
+
+                            <div class="form-group col-lg-6 {{#if validationErrors.subject}}has-error{{/if}}">
+                                <label for="subject">Asunto</label>
+                                <input type="text" name="subject" id="subject" class="form-control" value="{{formData.subject}}" required  />
+                            </div>
+                            <div class="form-group col-lg-12 {{#if validationErrors.message}}has-error{{/if}}">
+                                <label class="block" for="message">Mensaje</label>
+                        		<textarea name="message" placeholder="Contáctenos..." rows="4"
+                                          class="form-control">{{formData.message}}</textarea>
+                            </div>
+                            <div class="form-group col-lg-12">
+                                <button type="submit" class="btn btn-default pull-right">Enviar Comentario</button>
+                            </div>
+                        </form>
+					{{/if}}
                 </div>
 			</div>
             <div class="contact-right-wrapper">

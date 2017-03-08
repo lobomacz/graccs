@@ -1,10 +1,10 @@
 var keystone = require('keystone');
 var async = require('async');
-//var nodemailer = require('nodemailer');
+var nodemailer = require('nodemailer');
 var Message = keystone.list('ContactMessage');
 
 var notifyByEmail = function (mailOptions, callback) {
-	/*// Prepare nodemailer transport object
+	// Prepare nodemailer transport object
 	var transport = nodemailer.createTransport(keystone.get('smtp nodemailer'));
 	
 	//send the email
@@ -12,7 +12,7 @@ var notifyByEmail = function (mailOptions, callback) {
 		//close transport
 		transport.close();
 		callback(err, res);
-	});*/
+	});
 };
 
 
@@ -61,7 +61,7 @@ exports = module.exports = function (req, res) {
 
 		updater.process(req.body, {
 			flashErrors: true,
-			fields: 'name, email, type, subject, message',
+			fields: 'name, email, territory, subject, message',
 			errorMessage: 'Existe un error con la información de contacto enviada:'
 		}, 
 		function (err) {
