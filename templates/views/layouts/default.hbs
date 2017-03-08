@@ -367,7 +367,7 @@
                 $('#select2-areas-container').attr('title', '');
                 $('#select2-areas-container').html('');
                 
-                get_areas();
+                get_areas($types.val(), null);
 			});
             
             $areas.change(function(e) { 
@@ -432,7 +432,11 @@
                         var points = [];
                         
                         if (results.data) {
+                            $('#select2-areaTypes-container').attr('title', 'National');
+                            $('#select2-areaTypes-container').html('National');
+							
                             get_points(indicator, 'national', results.data.nationalArea);
+							get_areas('national', results.data.nationalArea);
                         }
                         else {
                             var req = $.ajax({
@@ -445,7 +449,11 @@
                                 console.log(results);
                                 
                                 if (results.data) {
+                                    $('#select2-areaTypes-container').attr('title', 'Department');
+                                    $('#select2-areaTypes-container').html('Department');
+									
                                     get_points(indicator, 'department', results.data.departmentArea);
+                                    get_areas('department', results.data.departmentArea);
                                 } 
                                 else {
                                     var req = $.ajax({
@@ -458,7 +466,12 @@
                                         console.log(results);
                                         
                                         if (results.data) {
+											$types.val('municipal');
+                                            $('#select2-areaTypes-container').attr('title', 'Municipal');
+                                            $('#select2-areaTypes-container').html('Municipal');
+											
                                             get_points(indicator, 'municipal', results.data.municipalArea);
+                                            get_areas('municipal', results.data.municipalArea);
                                         }
                                         else {
                                             var req = $.ajax({
@@ -471,7 +484,11 @@
                                                 console.log(results);
                                                 
                                                 if (results.data) {
+                                                    $('#select2-areaTypes-container').attr('title', 'Community');
+                                                    $('#select2-areaTypes-container').html('Community');
+													
                                                     get_points(indicator, 'community', results.data.communityArea);
+                                                    get_areas('community', results.data.communityArea);
                                                 }
                                             });
 
@@ -526,7 +543,7 @@
                             
                             $.each(results.points, function (key,val)
                             {   
-                                var point = { "year": val.startYear, "value": val.realValue, "value_2": val.targetValue }
+                                var point = { "year": val.startYear, "value": val.realValue, "value_2": val.targetValue };
                                 points.push(point);
                             });
                             
@@ -543,9 +560,7 @@
 				}
             }
             
-            function get_areas() {
-                var type = $types.val();
-                
+            function get_areas(type, selected_area) {
 				if (type) {
                     var req = $.ajax({
                         url: '/get-areas',
@@ -554,23 +569,36 @@
 
                     req.done(function (results) {
                         console.log('Getting areas successfully: ', results);
-
+						
                         var first_time = true;
                         
                         $.each(results, function (key,val)
                         {
-                            var option = '';
+							var option = '';
                             
-                            if (first_time) {
-                                option = '<option data-name="'+ val.name +'" value="'+ val._id +'" selected>'+ val.name +'</option>';
-                                $('#select2-areas-container').attr('title', val.name);
-                                $('#select2-areas-container').html(val.name);
-                    
-                                first_time = false;
-                            }
-                            else {
-                                option = '<option data-name="'+ val.name +'" value="'+ val._id +'">'+ val.name +'</option>';
-                            }
+							if (selected_area) {
+								if (val._id == selected_area) {
+                                    option = '<option data-name="'+ val.name +'" value="'+ val._id +'" selected>'+ val.name +'</option>';
+
+                                    $('#select2-areas-container').attr('title', val.name);
+                                    $('#select2-areas-container').html(val.name);
+								}
+								else {
+                                    option = '<option data-name="'+ val.name +'" value="'+ val._id +'">'+ val.name +'</option>';
+								}
+							}
+							else {
+                                if (first_time) {
+                                    option = '<option data-name="'+ val.name +'" value="'+ val._id +'" selected>'+ val.name +'</option>';
+                                    $('#select2-areas-container').attr('title', val.name);
+                                    $('#select2-areas-container').html(val.name);
+
+                                    first_time = false;
+                                }
+                                else {
+                                    option = '<option data-name="'+ val.name +'" value="'+ val._id +'">'+ val.name +'</option>';
+                                }
+							}
                             
 							$areas.append(option);
                         });
@@ -585,25 +613,6 @@
             function drawGraph(points) {
                 var chart;
                 var graph, graph_2;
-                
-                var chartData = [
-                    {
-                        "year": "2014",
-                        "value": 6000
-                    },
-                    {
-                        "year": "2015",
-                        "value": 12000
-                    },
-                    {
-                        "year": "2016",
-                        "value": 24000
-                    },
-                    {
-                        "year": "2017",
-                        "value": 48000
-                    }
-                ];
 
                 // SERIAL CHART
                 chart = new AmCharts.AmSerialChart();

@@ -15,7 +15,7 @@ exports = module.exports = function (req, res) {
                 .where('indicator', indicator_id)
                 .where('nationalArea', area_id);
 			break;
-		case 'regional':
+		case 'department':
 			q = keystone.list('IndicatorValue').model.find()
                 .where('indicator', indicator_id)
                 .where('departmentArea', area_id);

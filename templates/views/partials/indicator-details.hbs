@@ -68,7 +68,7 @@
 											<dd>
                                                 <select id="areaTypes" class="form-control select">
                                                     <option value="national">Nacional</option>
-                                                    <option value="regional">Regional</option>
+                                                    <option value="department">Regional</option>
                                                     <option value="municipal">Municipal</option>
                                                     <option value="community">Urbano-rural</option>
                                                 </select>
@@ -92,7 +92,9 @@
                                 </div>
 								
                                 <div class="indicator-wrap">
-                                    <span class="indicator-name" style="text-transform: uppercase;">{{indicator.title}}</span>
+                                    <span class="indicator-name" title="{{indicator.title}}" style="text-transform: uppercase;">
+										{{#substring 50 indicator.title}}{{/substring}}
+									</span>
                                     <div class="indicator-content">
                                         <span class="indicator-info">Retraso del Plan</span>
                                         <span class="indicator-value"></span>

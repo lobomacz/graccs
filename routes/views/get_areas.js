@@ -10,7 +10,7 @@ exports = module.exports = function (req, res) {
 		case 'national':
 			q = keystone.list('NationalArea').model.find().sort('name');
 			break;
-		case 'regional':
+		case 'department':
 			q = keystone.list('DepartmentalArea').model.find().sort('name');
 			break;
 		case 'municipal':
