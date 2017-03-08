@@ -20,7 +20,6 @@ var Indicator = new keystone.List('Indicator', {
 Indicator.add(
 	{
 		title: { label: 'Nombre', type: Types.Text, required: true },
-		htmlTitle: { label: 'Nombre con estilo', type: Types.Markdown, wysiwyg: true, required: true, default: '<p></p>', note: 'Debe coincidir con el nombre original' },
 		code: { label: 'Código', type: Types.Number, default: 1, min: 1, unique: true, required: true, initial: true },
 		sector: { label: 'Sector', type: Types.Relationship, ref: 'IndicatorSector', required: true, many: false, initial: true },
 		version: { label: 'Versión', type: Types.Number, default: 1.0, min: 1.0, required: true },
@@ -141,8 +140,31 @@ Indicator.add(
 	}
 );
 
+Indicator.schema.pre('remove', function(next) {
+	var q = keystone.list('IndicatorValue').model.remove().where('indicator', this._id);
+
+	q.exec(function (err, results) {
+		console.log('EXEC: ', err, results);
+		
+		if (!err) return next();
+		next (err);
+	});
+});
+
+Indicator.schema.pre('remove', function(next) {
+	var q = keystone.list('IndicatorComment').model.remove().where('indicator', this._id);
+
+	q.exec(function (err, results) {
+		console.log('EXEC: ', err, results);
+
+		if (!err) return next();
+		next (err);
+	});
+});
+
 /* Relationships */
 Indicator.relationship({ ref: 'IndicatorComment', path: 'indicator-comments', refPath: 'indicator'});
+Indicator.relationship({ ref: 'IndicatorValue', path: 'values', refPath: 'indicator'});
 
 //Create Full Text Search index
 Indicator.schema.index(

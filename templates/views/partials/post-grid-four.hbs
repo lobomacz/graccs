@@ -5,11 +5,7 @@
             <li class="grid-news-content grid-promoted">
                 <div class="set-top">
                     <a href="/noticia/{{slug}}" class="item-meta-title hidden-xs">
-						{{#if htmlTitle}}
-							{{{htmlTitle.html}}}
-						{{else}}
-							{{title}}
-						{{/if}}
+                        <h2 style="text-transform: uppercase;">{{title}}</h2>
                     </a>
                     <h2 class="item-meta-title visible-xs" style="text-transform: uppercase;">
                         <a href="/noticia/{{slug}}">{{title}}</a>
@@ -36,11 +32,7 @@
             <li class="grid-news-content grid-promoted">
                 <div class="set-top">
                     <a href="/noticia/{{slug}}" class="item-meta-title hidden-xs" title="{{title}}">
-						{{#if htmlTitle}}
-							{{{htmlTitle.html}}}
-						{{else}}
-							{{title}}
-						{{/if}}
+                        <h2 style="text-transform: uppercase;">{{title}}</h2>
                     </a>
                     <h2 class="item-meta-title visible-xs" style="text-transform: uppercase;">
                         <a href="/noticia/{{slug}}" title="{{title}}">{{title}}</a>

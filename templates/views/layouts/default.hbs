@@ -217,13 +217,6 @@
                 var $set_top = $('.grid-content .set-top');
                 var $set_bottom = $('.grid-content .set-bottom');
 
-                $set_top.find('h2')
-                        //.addClass('dotted-wrap')
-                        .css('text-transform', 'uppercase');
-                $set_bottom.find('h2')
-                        .addClass('dotted-wrap')
-                        .css('text-transform', 'uppercase');
-
                 $set_top.find('p').addClass('item-meta-desc hidden-xxs');
                 $set_bottom.find('p').addClass('item-meta-desc hidden-xxs');
 
@@ -466,9 +459,6 @@
                                         
                                         if (results.data) {
                                             get_points(indicator, 'municipal', results.data.municipalArea);
-                                            
-                                            //points = build_points(results.data);
-                                            //drawGraph(points);
                                         }
                                         else {
                                             var req = $.ajax({
@@ -539,6 +529,9 @@
                                 var point = { "year": val.startYear, "value": val.realValue, "value_2": val.targetValue }
                                 points.push(point);
                             });
+                            
+                            $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_2).toPrecision(2));
+                            console.log(points.length);
                             
                             drawGraph(points);
                         }
@@ -642,6 +635,7 @@
                 graph.lineColor = "#FFA92E";
                 graph.negativeLineColor = "#637bb6"; // this line makes the graph to change color when it drops below 0
                 graph.bullet = "round";
+                graph.title = "Valor real";
                 graph.bulletSize = 8;
                 graph.bulletBorderColor = "#FFFFFF";
                 graph.bulletBorderAlpha = 1;
@@ -657,6 +651,7 @@
                 graph_2.lineColor = "#162A59";
                 graph_2.negativeLineColor = "#637bb6"; // this line makes the graph to change color when it drops below 0
                 graph_2.bullet = "round";
+                graph_2.title = "Valor planificado";
                 graph_2.bulletSize = 8;
                 graph_2.bulletBorderColor = "#FFFFFF";
                 graph_2.bulletBorderAlpha = 1;
@@ -676,6 +671,12 @@
                 // SCROLLBAR
                 /*  var chartScrollbar = new AmCharts.ChartScrollbar();
                     chart.addChartScrollbar(chartScrollbar);*/
+                    
+                // LEGEND
+               var legend = new AmCharts.AmLegend();
+               legend.marginLeft = 110;
+               legend.useGraphSettings = true;
+               chart.addLegend(legend);
 
                 chart.creditsPosition = "bottom-right";
 

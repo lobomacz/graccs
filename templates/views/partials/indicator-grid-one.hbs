@@ -8,14 +8,10 @@
         <li class="grid-content grid-promoted" data-color-target=".grid-orange">
             <div class="set-top">
                 <h2 class="item-meta-title visible-xxs" style="text-transform: uppercase;">
-                    <a href="/indicador/{{slug}}">{{htmlTitle}}</a>
+                    <a href="/indicador/{{slug}}">{{title}}</a>
                 </h2>
                 <a href="/indicador/{{slug}}" class="item-meta-title hidden-xxs" style="text-transform: uppercase;">
-					{{#if htmlTitle}}
-						{{{htmlTitle.html}}}
-					{{else}}
-						{{title}}
-					{{/if}}
+					<h2>{{title}}</h2>
                 </a>
             </div>
             <div class="set-bottom">

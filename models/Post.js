@@ -18,7 +18,6 @@ var Post = new keystone.List('Post', {
 
 Post.add({
 		title: { label: 'Título', type: Types.Text, required: true },
-		htmlTitle: { label: 'Título con estilo', type: Types.Markdown, wysiwyg: true, note: 'Debe coincidir con el título original' },
 		state: { 
 			label: 'Estado de publicación',
 			type: Types.Select,
@@ -74,6 +73,17 @@ Post.relationship({ ref: 'PostComment', path: 'post-comments', refPath: 'post' }
 
 Post.schema.virtual('content.full').get(function () {
 	return this.content.extended || this.content.brief;
+});
+
+Post.schema.pre('remove', function(next) {
+	var q = keystone.list('PostComment').model.remove().where('post', this._id);
+
+	q.exec(function (err, results) {
+		console.log('EXEC: ', err, results);
+
+		if (!err) return next();
+		next (err);
+	});
 });
 
 //Create Full Text Search index

@@ -15,7 +15,7 @@ var IndicatorValue = new keystone.List('IndicatorValue', {
 });
 
 IndicatorValue.add({
-	indicator: { label: 'Indicador', type: Types.Relationship, ref: 'Indicator', required: true, many: false, initial: true },
+	indicator: { label: 'Indicador', type: Types.Relationship, ref: 'Indicator', required: true, many: false, initial: true, index: true },
 	startYear: { label: 'Fecha de comienzo', type: Types.Number, default: 2000, min: 1900, required: true, initial: true },
 	realValue: { label: 'Valor ejecutado', type: Types.Number, default: 0, min: 0, required: true, initial: true },
 	useDenominator: { label: 'Usar denominador', type: Types.Boolean, watch: true, value: checkIndicatorDenominator, hidden: true },
