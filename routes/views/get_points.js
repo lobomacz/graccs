@@ -12,22 +12,26 @@ exports = module.exports = function (req, res) {
 		case 'national':
 			q = keystone.list('IndicatorValue').model.find()
                 .where('indicator', indicator_id)
-                .where('nationalArea', area_id);
+                .where('nationalArea', area_id)
+				.sort('monthlyFrequency quarterlyFrequency biannualFrequency startYear');
 			break;
 		case 'department':
 			q = keystone.list('IndicatorValue').model.find()
                 .where('indicator', indicator_id)
-                .where('departmentArea', area_id);
+                .where('departmentArea', area_id)
+				.sort('monthlyFrequency quarterlyFrequency biannualFrequency startYear');
 			break;
 		case 'municipal':
 			q = keystone.list('IndicatorValue').model.find()
                 .where('indicator', indicator_id)
-                .where('municipalArea', area_id);
+                .where('municipalArea', area_id)
+				.sort('monthlyFrequency quarterlyFrequency biannualFrequency startYear');
 			break;
 		case 'community':
 			q = keystone.list('IndicatorValue').model.find()
                 .where('indicator', indicator_id)
-                .where('communityArea', area_id);
+                .where('communityArea', area_id)
+				.sort('monthlyFrequency quarterlyFrequency biannualFrequency startYear');
 			break;
 	}
 

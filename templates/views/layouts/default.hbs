@@ -213,7 +213,7 @@
 
 	{{#if isIndicatorsSection}}
         <script type="text/javascript">
-            $('document').ready(function() {
+            $('document').ready(function() {				
                 var $set_top = $('.grid-content .set-top');
                 var $set_bottom = $('.grid-content .set-bottom');
 
@@ -221,6 +221,624 @@
                 $set_bottom.find('p').addClass('item-meta-desc hidden-xxs');
 
                 $('.grid-content .item-meta-info').find('span:first-child').css('text-transform', 'uppercase');
+            });
+        </script>
+	{{/if}}
+	
+	{{#if isIndicatorDetailsSection}}
+        <script type="text/javascript">
+            $(function () {
+                var $types = $('#areaTypes');
+                var $areas = $('#areas');
+                var indicator_id = "{{indicator.id}}";
+                var realValueLabel = "{{indicator.realValue}}";
+                var useDenominator = {{indicator.useDenominator}};
+				var targetValueLabel = useDenominator ? "{{indicator.targetValue}}" : "";
+				var comparativeValue = {{indicator.comparativeValue}};
+                var metricType = "{{indicator.metrics.type}}";
+				console.log('indicator_id: ', indicator_id, 'realValueLabel: ', realValueLabel, 
+						'useDenominator: ', useDenominator, 'targetValueLabel: ', targetValueLabel,
+						'comparativeValue: ', comparativeValue, 'metricType: ', metricType);
+
+                $('#vote-positive-button').click(function(e) {
+                    e.preventDefault();
+
+                    var $item = $(this);
+                    var id = $item.data('comment-id');
+
+                    if (id) {
+                        var req = $.ajax({
+                            method: 'POST',
+                            url: '/post-comment/' + id + '/vote',
+                            data: {vote: 1}
+                        });
+
+                        req.done(function (res) {
+                            var value = parseInt($item.find('span:first-child').text()) + 1;
+                            $item.find('span:first-child').text(value);
+                            $item.unbind('click');
+                            console.log('Comment vote updated successfully', res);
+                        });
+
+                        req.fail(function (res) {
+                            console.log('Updating comment vote has failed', res);
+                        });
+                    }
+                });
+
+                $('#vote-negative-button').click(function(e) {
+                    e.preventDefault();
+
+                    var $item = $(this);
+                    var id = $item.data('comment-id');
+
+                    if (id) {
+                        var req = $.ajax({
+                            method: 'POST',
+                            url: '/post-comment/' + id + '/vote',
+                            data: {vote: -1}
+                        });
+
+                        req.done(function (res) {
+                            var value = parseInt($item.find('span').text()) + 1;
+                            $item.find('span').text(value);
+                            $item.unbind('click');
+                            console.log('Comment vote updated successfully', res);
+                        });
+
+                        req.fail(function (res) {
+                            console.log('Updating comment vote has failed', res);
+                        });
+                    }
+                });
+
+                $('#vote-indicator-positive-button').click(function(e) {
+                    e.preventDefault();
+
+                    var $item = $(this);
+                    var id = $item.data('comment-id');
+
+                    if (id) {
+                        var req = $.ajax({
+                            method: 'POST',
+                            url: '/indicator-comment/' + id,
+                            data: { vote: 1 }
+                        });
+
+                        req.done(function (res) {
+                            var value = parseInt($item.find('span:first-child').text()) + 1;
+                            $item.find('span:first-child').text(value);
+                            $item.unbind('click');
+                            console.log('Comment vote updated successfully', res);
+                        });
+
+                        req.fail(function (res) {
+                            console.log('Updating comment vote has failed', res);
+                        });
+                    }
+                });
+
+                $('#vote-indicator-negative-button').click(function(e) {
+                    e.preventDefault();
+
+                    var $item = $(this);
+                    var id = $item.data('comment-id');
+
+                    if (id) {
+                        var req = $.ajax({
+                            method: 'POST',
+                            url: '/indicator-comment/' + id,
+                            data: { vote: -1 }
+                        });
+
+                        req.done(function (res) {
+                            var value = parseInt($item.find('span').text()) + 1;
+                            $item.find('span').text(value);
+                            $item.unbind('click');
+                            console.log('Comment vote updated successfully', res);
+                        });
+
+                        req.fail(function (res) {
+                            console.log('Updating comment vote has failed', res);
+                        });
+                    }
+                });
+
+                $types.select2({
+                    theme: "bootstrap",
+                    placeholder: "-- Seleccionar --",
+                    allowClear: true
+                });
+
+                $areas.select2({
+                    theme: "bootstrap",
+                    placeholder: "-- Seleccionar --",
+                    allowClear: false
+                });
+
+                $types.change(function(e) {
+                    $areas.empty();
+                    $('#select2-areas-container').attr('title', '');
+                    $('#select2-areas-container').html('');
+
+                    get_areas($types.val(), null);
+                });
+
+                $areas.change(function(e) {
+                    var area = $areas.val();
+
+                    if (area) {
+                        var name = $areas.data('name');
+
+                        $('#select2-areas-container').attr('title', name);
+                        $('#select2-areas-container').html(name);
+                    }
+                });
+
+                $('#bGraph').click(function(e) {
+                    $('#chartdiv').empty();
+
+                    var type = $types.val();
+                    var area = $areas.val();
+
+                    if (type) {
+                        var req = $.ajax({
+                            url: '/get-points',
+                            data: { area_type: type, area_id: area, indicator_id: indicator_id }
+                        });
+
+                        req.done(function (results) {
+                            console.log('Getting points successfully: ', results);
+
+                            if (results && results.points) {
+                                var points = [];
+
+                                $.each(results.points, function (key,val)
+                                {
+                                    var point = { "year": val.startYear, "value": val.realValue, "value_2": val.targetValue }
+                                    points.push(point);
+                                });
+
+                                drawGraph(points);
+                            }
+                        });
+
+                        req.fail(function (res) {
+                            console.log('Getting points has failed', res);
+                        });
+                    }
+                });
+
+                function get_indicator_initial_data() {
+                    if (indicator_id) {
+                        var req = $.ajax({
+                            url: '/get-indicator-initial-data',
+                            data: { indicator_id: indicator_id, type: 'national' }
+                        });
+
+                        req.done(function (results) {
+                            console.log('National results');
+                            console.log(results);
+
+                            var points = [];
+
+                            if (results.data) {
+                                $('#select2-areaTypes-container').attr('title', 'National');
+                                $('#select2-areaTypes-container').html('National');
+
+                                get_points(indicator_id, 'national', results.data.nationalArea);
+                                get_areas('national', results.data.nationalArea);
+                            }
+                            else {
+                                var req = $.ajax({
+                                    url: '/get-indicator-initial-data',
+                                    data: { indicator_id: indicator_id, type: 'department' }
+                                });
+
+                                req.done(function (results) {
+                                    console.log('Departmental results');
+                                    console.log(results);
+
+                                    if (results.data) {
+                                        $('#select2-areaTypes-container').attr('title', 'Department');
+                                        $('#select2-areaTypes-container').html('Department');
+
+                                        get_points(indicator_id, 'department', results.data.departmentArea);
+                                        get_areas('department', results.data.departmentArea);
+                                    }
+                                    else {
+                                        var req = $.ajax({
+                                            url: '/get-indicator-initial-data',
+                                            data: { indicator_id: indicator_id, type: 'municipal' }
+                                        });
+
+                                        req.done(function (results) {
+                                            console.log('Municipal results');
+                                            console.log(results);
+
+                                            if (results.data) {
+                                                $types.val('municipal');
+                                                $('#select2-areaTypes-container').attr('title', 'Municipal');
+                                                $('#select2-areaTypes-container').html('Municipal');
+
+                                                get_points(indicator_id, 'municipal', results.data.municipalArea);
+                                                get_areas('municipal', results.data.municipalArea);
+                                            }
+                                            else {
+                                                var req = $.ajax({
+                                                    url: '/get-indicator-initial-data',
+                                                    data: { indicator_id: indicator_id, type: 'community' }
+                                                });
+
+                                                req.done(function (results) {
+                                                    console.log('Community results');
+                                                    console.log(results);
+
+                                                    if (results.data) {
+                                                        $('#select2-areaTypes-container').attr('title', 'Community');
+                                                        $('#select2-areaTypes-container').html('Community');
+
+                                                        get_points(indicator_id, 'community', results.data.communityArea);
+                                                        get_areas('community', results.data.communityArea);
+                                                    }
+                                                });
+
+                                                req.fail(function (res) {
+                                                    console.log('Getting initial data has failed', res);
+                                                });
+                                            }
+                                        });
+
+                                        req.fail(function (res) {
+                                            console.log('Getting initial data has failed', res);
+                                        });
+                                    }
+                                });
+
+                                req.fail(function (res) {
+                                    console.log('Getting initial data has failed', res);
+                                });
+                            }
+                        });
+
+                        req.fail(function (res) {
+                            console.log('Getting initial data has failed', res);
+                        });
+                    }
+                }
+
+                function get_points(indicator, type, area) {
+                    if (indicator && type && area) {
+                        var req = $.ajax({
+                            url: '/get-points',
+                            data: { area_type: type, area_id: area, indicator_id: indicator }
+                        });
+
+                        req.done(function (results) {
+                            console.log('Getting points successfully: ', results);
+
+                            if (results && results.points) {
+                                var points = [];
+
+                                $.each(results.points, function (key,val)
+                                {
+                                    var point = null;
+									var year = '';
+									
+									if (val.isMonthlyFrequency) {
+										var month = '';
+										
+										switch (parseInt(val.monthlyFrequency)) {
+											case 1:
+												month = 'Enero';
+												break;
+                                            case 2:
+                                                month = 'Febrero';
+                                                break;
+                                            case 3:
+                                                month = 'Marzo';
+                                                break;
+                                            case 4:
+                                                month = 'Abril';
+                                                break;
+                                            case 5:
+                                                month = 'Mayo';
+                                                break;
+                                            case 6:
+                                                month = 'Junio';
+                                                break;
+                                            case 7:
+                                                month = 'Julio';
+                                                break;
+                                            case 8:
+                                                month = 'Agosto';
+                                                break;
+                                            case 9:
+                                                month = 'Septiembre';
+                                                break;
+                                            case 10:
+                                                month = 'Octubre';
+                                                break;
+                                            case 11:
+                                                month = 'Noviembre';
+                                                break;
+                                            case 12:
+                                                month = 'Diciembre';
+                                                break;											
+										}
+										
+										year = month + ' ' + val.startYear;
+									}
+									else if (val.isQuarterlyFrequency) {
+                                        var quarter = '';
+										
+										switch (parseInt(val.quarterlyFrequency)) {												
+											case 1:
+												quarter = 'I Trimestre';
+												break;
+											case 2:
+                                                quarter = 'II Trimestre';
+												break;
+											case 3:
+                                                quarter = 'III Trimestre';
+												break;
+											case 4:
+                                                quarter = 'IV Trimestre';
+												break;
+										}
+										
+                                        year = quarter + ' ' + val.startYear;
+									}
+									else if (val.isBiannualFrequency) {
+										var biannual = '';
+
+                                        switch (parseInt(val.biannualFrequency)) {
+                                            case 1:
+                                                biannual = 'I Semestre';
+                                                break;
+                                            case 2:
+                                                biannual = 'II Semestre';
+                                                break;
+                                        }
+										
+                                        year = biannual + ' ' + val.startYear;
+									}
+									else {
+										year = val.startYear;
+									}
+									
+									if (useDenominator) {
+                                        point = { "year": year, "value": val.realValue, "value_2": val.targetValue };
+									}
+									else if (comparativeValue > 0) {
+                                        point = { "year": year, "value": val.realValue, "value_2": comparativeValue };
+									}
+									else {
+                                        point = { "year": year, "value": val.realValue };
+									}
+									
+                                    points.push(point);
+                                });
+
+                                if (useDenominator) {
+                                    $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(2));
+                                    drawGraph(points);
+                                }
+								else if(comparativeValue > 0) {
+                                    $('.indicator-value').html(comparativeValue - Number(points[points.length - 1].value).toPrecision(2));
+                                    drawGraph(points);
+								}
+                                else {
+                                    $('.indicator-value').html(points[points.length - 1].value);
+									drawGraphOneLine(points);
+								}
+                            }
+                        });
+
+                        req.fail(function (res) {
+                            console.log('Getting points has failed', res);
+                        });
+                    }
+                }
+
+                function get_areas(type, selected_area) {
+                    if (type) {
+                        var req = $.ajax({
+                            url: '/get-areas',
+                            data: { area_type: type }
+                        });
+
+                        req.done(function (results) {
+                            console.log('Getting areas successfully: ', results);
+
+                            var first_time = true;
+
+                            $.each(results, function (key,val)
+                            {
+                                var option = '';
+
+                                if (selected_area) {
+                                    if (val._id == selected_area) {
+                                        option = '<option data-name="'+ val.name +'" value="'+ val._id +'" selected>'+ val.name +'</option>';
+
+                                        $('#select2-areas-container').attr('title', val.name);
+                                        $('#select2-areas-container').html(val.name);
+                                    }
+                                    else {
+                                        option = '<option data-name="'+ val.name +'" value="'+ val._id +'">'+ val.name +'</option>';
+                                    }
+                                }
+                                else {
+                                    if (first_time) {
+                                        option = '<option data-name="'+ val.name +'" value="'+ val._id +'" selected>'+ val.name +'</option>';
+                                        $('#select2-areas-container').attr('title', val.name);
+                                        $('#select2-areas-container').html(val.name);
+
+                                        first_time = false;
+                                    }
+                                    else {
+                                        option = '<option data-name="'+ val.name +'" value="'+ val._id +'">'+ val.name +'</option>';
+                                    }
+                                }
+
+                                $areas.append(option);
+                            });
+                        });
+
+                        req.fail(function (res) {
+                            console.log('Getting areas has failed', res);
+                        });
+                    }
+                }
+
+                function drawGraphOneLine(points) {
+                    var chart;
+                    var graph;
+
+                    // SERIAL CHART
+                    chart = new AmCharts.AmSerialChart();
+
+                    chart.dataProvider = points;
+                    chart.marginLeft = 10;
+                    chart.categoryField = "year";
+
+                    // AXES
+                    // category
+                    var categoryAxis = chart.categoryAxis;
+                    categoryAxis.dashLength = 3;
+                    categoryAxis.minorGridEnabled = true;
+                    categoryAxis.minorGridAlpha = 0.1;
+
+                    // value
+                    var valueAxis = new AmCharts.ValueAxis();
+                    valueAxis.axisAlpha = 0;
+                    valueAxis.inside = true;
+                    valueAxis.dashLength = 3;
+                    chart.addValueAxis(valueAxis);
+
+                    // GRAPH
+                    graph = new AmCharts.AmGraph();
+                    graph.type = "smoothedLine"; // this line makes the graph smoothed line.
+                    graph.lineColor = "#FFA92E";
+                    graph.negativeLineColor = "#637bb6"; // this line makes the graph to change color when it drops below 0
+                    graph.bullet = "round";
+                    graph.title = realValueLabel ? realValueLabel : "Valor real";
+                    graph.bulletSize = 8;
+                    graph.bulletBorderColor = "#FFFFFF";
+                    graph.bulletBorderAlpha = 1;
+                    graph.bulletBorderThickness = 2;
+                    graph.lineThickness = 2;
+                    graph.valueField = "value";
+                    /* graph.balloonText = "[[category]]<br><b><span style='font-size:14px;'>[[value]]</span></b>";*/
+                    chart.addGraph(graph);
+
+                    // CURSOR
+                    /*  var chartCursor = new AmCharts.ChartCursor();
+                        chartCursor.cursorAlpha = 0;
+                        chartCursor.cursorPosition = "mouse";
+                        chartCursor.categoryBalloonDateFormat = "YYYY";
+                        chart.addChartCursor(chartCursor);*/
+
+                    // SCROLLBAR
+                    /*  var chartScrollbar = new AmCharts.ChartScrollbar();
+                        chart.addChartScrollbar(chartScrollbar);*/
+
+                    // LEGEND
+                    var legend = new AmCharts.AmLegend();
+                    legend.marginLeft = 110;
+                    legend.useGraphSettings = true;
+                    chart.addLegend(legend);
+
+                    chart.creditsPosition = "bottom-right";
+
+                    // WRITE
+                    chart.write("chartdiv");
+                }
+				
+                function drawGraph(points) {
+                    var chart;
+                    var graph, graph_2;
+
+                    // SERIAL CHART
+                    chart = new AmCharts.AmSerialChart();
+
+                    chart.dataProvider = points;
+                    chart.marginLeft = 10;
+                    chart.categoryField = "year";
+                    chart.dataDateFormat = "YYYY";
+
+                    // AXES
+                    // category
+                    var categoryAxis = chart.categoryAxis;
+                    categoryAxis.parseDates = true; // as our data is date-based, we set parseDates to true
+                    categoryAxis.minPeriod = "YYYY"; // our data is yearly, so we set minPeriod to YYYY
+                    categoryAxis.dashLength = 3;
+                    categoryAxis.minorGridEnabled = true;
+                    categoryAxis.minorGridAlpha = 0.1;
+
+                    // value
+                    var valueAxis = new AmCharts.ValueAxis();
+                    valueAxis.axisAlpha = 0;
+                    valueAxis.inside = true;
+                    valueAxis.dashLength = 3;
+                    chart.addValueAxis(valueAxis);
+
+                    // GRAPH
+                    graph = new AmCharts.AmGraph();
+                    graph.type = "smoothedLine"; // this line makes the graph smoothed line.
+                    graph.lineColor = "#FFA92E";
+                    graph.negativeLineColor = "#637bb6"; // this line makes the graph to change color when it drops below 0
+                    graph.bullet = "round";
+                    graph.title = realValueLabel ? realValueLabel : "Valor real";
+                    graph.bulletSize = 8;
+                    graph.bulletBorderColor = "#FFFFFF";
+                    graph.bulletBorderAlpha = 1;
+                    graph.bulletBorderThickness = 2;
+                    graph.lineThickness = 2;
+                    graph.valueField = "value";
+                    /* graph.balloonText = "[[category]]<br><b><span style='font-size:14px;'>[[value]]</span></b>";*/
+                    chart.addGraph(graph);
+
+                    // GRAPH
+                    graph_2 = new AmCharts.AmGraph();
+                    graph_2.type = "smoothedLine"; // this line makes the graph smoothed line.
+                    graph_2.lineColor = "#162A59";
+                    graph_2.negativeLineColor = "#637bb6"; // this line makes the graph to change color when it drops below 0
+                    graph_2.bullet = "round";
+                    graph_2.title = targetValueLabel ? targetValueLabel : "Valor planificado";
+                    graph_2.bulletSize = 8;
+                    graph_2.bulletBorderColor = "#FFFFFF";
+                    graph_2.bulletBorderAlpha = 1;
+                    graph_2.bulletBorderThickness = 2;
+                    graph_2.lineThickness = 2;
+                    graph_2.valueField = "value_2";
+                    /* graph.balloonText = "[[category]]<br><b><span style='font-size:14px;'>[[value]]</span></b>";*/
+                    chart.addGraph(graph_2);
+
+                    // CURSOR
+                    /*  var chartCursor = new AmCharts.ChartCursor();
+                        chartCursor.cursorAlpha = 0;
+                        chartCursor.cursorPosition = "mouse";
+                        chartCursor.categoryBalloonDateFormat = "YYYY";
+                        chart.addChartCursor(chartCursor);*/
+
+                    // SCROLLBAR
+                    /*  var chartScrollbar = new AmCharts.ChartScrollbar();
+                        chart.addChartScrollbar(chartScrollbar);*/
+
+                    // LEGEND
+                    var legend = new AmCharts.AmLegend();
+                    legend.marginLeft = 110;
+                    legend.useGraphSettings = true;
+                    chart.addLegend(legend);
+
+                    chart.creditsPosition = "bottom-right";
+
+                    // WRITE
+                    chart.write("chartdiv");
+                }
+
+                get_indicator_initial_data();
             });
         </script>
 	{{/if}}
@@ -239,463 +857,5 @@
             });
 		</script>
 	{{/if}}
-
-    <!--javascript-->
-    <script type="text/javascript">
-        $(function () {
-			var $types = $('#areaTypes');
-            var $areas = $('#areas');
-			
-            $('#vote-positive-button').click(function(e) {
-				e.preventDefault();
-
-                var $item = $(this);
-                var id = $item.data('comment-id');
-
-                if (id) {
-                    var req = $.ajax({
-                        method: 'POST',
-                        url: '/post-comment/' + id + '/vote',
-                        data: {vote: 1}
-                    });
-
-                    req.done(function (res) {
-                        var value = parseInt($item.find('span:first-child').text()) + 1;
-                        $item.find('span:first-child').text(value);
-                        $item.unbind('click');
-                        console.log('Comment vote updated successfully', res);
-                    });
-
-                    req.fail(function (res) {
-                        console.log('Updating comment vote has failed', res);
-                    });
-                }
-			});
-
-            $('#vote-negative-button').click(function(e) {
-				e.preventDefault();
-				
-                var $item = $(this);
-                var id = $item.data('comment-id');
-
-                if (id) {
-                    var req = $.ajax({
-                        method: 'POST',
-                        url: '/post-comment/' + id + '/vote',
-                        data: {vote: -1}
-                    });
-
-                    req.done(function (res) {
-                        var value = parseInt($item.find('span').text()) + 1;
-                        $item.find('span').text(value);
-                        $item.unbind('click');
-                        console.log('Comment vote updated successfully', res);
-                    });
-
-                    req.fail(function (res) {
-                        console.log('Updating comment vote has failed', res);
-                    });
-                }
-			});
-
-            $('#vote-indicator-positive-button').click(function(e) {
-                e.preventDefault();
-
-                var $item = $(this);
-                var id = $item.data('comment-id');
-
-                if (id) {
-                    var req = $.ajax({
-                        method: 'POST',
-                        url: '/indicator-comment/' + id,
-                        data: { vote: 1 }
-                    });
-
-                    req.done(function (res) {
-                        var value = parseInt($item.find('span:first-child').text()) + 1;
-                        $item.find('span:first-child').text(value);
-                        $item.unbind('click');
-                        console.log('Comment vote updated successfully', res);
-                    });
-
-                    req.fail(function (res) {
-                        console.log('Updating comment vote has failed', res);
-                    });
-                }
-            });
-
-            $('#vote-indicator-negative-button').click(function(e) {
-                e.preventDefault();
-
-                var $item = $(this);
-                var id = $item.data('comment-id');
-
-                if (id) {
-                    var req = $.ajax({
-                        method: 'POST',
-                        url: '/indicator-comment/' + id,
-                        data: { vote: -1 }
-                    });
-
-                    req.done(function (res) {
-                        var value = parseInt($item.find('span').text()) + 1;
-                        $item.find('span').text(value);
-                        $item.unbind('click');
-                        console.log('Comment vote updated successfully', res);
-                    });
-
-                    req.fail(function (res) {
-                        console.log('Updating comment vote has failed', res);
-                    });
-                }
-            });
-			
-			$types.select2({
-                theme: "bootstrap",
-                placeholder: "-- Seleccionar --",
-                allowClear: true
-			});
-
-            $areas.select2({
-                theme: "bootstrap",
-                placeholder: "-- Seleccionar --",
-                allowClear: false
-            });
-			
-			$types.change(function(e) { 
-                $areas.empty();
-                $('#select2-areas-container').attr('title', '');
-                $('#select2-areas-container').html('');
-                
-                get_areas($types.val(), null);
-			});
-            
-            $areas.change(function(e) { 
-                var area = $areas.val();
-                
-                if (area) {
-                    var name = $areas.data('name');
-                    
-                    $('#select2-areas-container').attr('title', name);
-                    $('#select2-areas-container').html(name);
-                }
-			});
-                        
-            $('#bGraph').click(function(e) {
-                $('#chartdiv').empty();
-                
-                var type = $types.val();
-                var area = $areas.val();
-                var indicator = $('#current_indicator_id').text();
-                
-				if (type) {
-                    var req = $.ajax({
-                        url: '/get-points',
-                        data: { area_type: type, area_id: area, indicator_id: indicator }
-                    });
-
-                    req.done(function (results) {
-                        console.log('Getting points successfully: ', results);
-                        
-                        if (results && results.points) {
-                            var points = [];
-                            
-                            $.each(results.points, function (key,val)
-                            {   
-                                var point = { "year": val.startYear, "value": val.realValue, "value_2": val.targetValue }
-                                points.push(point);
-                            });
-                            
-                            drawGraph(points);
-                        }
-                    });
-
-                    req.fail(function (res) {
-                        console.log('Getting points has failed', res);
-                    });
-				}
-            });
-            
-            function get_indicator_initial_data() {
-                var indicator = $('#current_indicator_id').text();
-                
-                if (indicator) {
-                    var req = $.ajax({
-                        url: '/get-indicator-initial-data',
-                        data: { indicator_id: indicator, type: 'national' }
-                    });
-
-                    req.done(function (results) {
-                        console.log('National results');
-                        console.log(results);
-                        
-                        var points = [];
-                        
-                        if (results.data) {
-                            $('#select2-areaTypes-container').attr('title', 'National');
-                            $('#select2-areaTypes-container').html('National');
-							
-                            get_points(indicator, 'national', results.data.nationalArea);
-							get_areas('national', results.data.nationalArea);
-                        }
-                        else {
-                            var req = $.ajax({
-                                url: '/get-indicator-initial-data',
-                                data: { indicator_id: indicator, type: 'department' }
-                            });
-
-                            req.done(function (results) {
-                                console.log('Departmental results');
-                                console.log(results);
-                                
-                                if (results.data) {
-                                    $('#select2-areaTypes-container').attr('title', 'Department');
-                                    $('#select2-areaTypes-container').html('Department');
-									
-                                    get_points(indicator, 'department', results.data.departmentArea);
-                                    get_areas('department', results.data.departmentArea);
-                                } 
-                                else {
-                                    var req = $.ajax({
-                                        url: '/get-indicator-initial-data',
-                                        data: { indicator_id: indicator, type: 'municipal' }
-                                    });
-
-                                    req.done(function (results) {
-                                        console.log('Municipal results');
-                                        console.log(results);
-                                        
-                                        if (results.data) {
-											$types.val('municipal');
-                                            $('#select2-areaTypes-container').attr('title', 'Municipal');
-                                            $('#select2-areaTypes-container').html('Municipal');
-											
-                                            get_points(indicator, 'municipal', results.data.municipalArea);
-                                            get_areas('municipal', results.data.municipalArea);
-                                        }
-                                        else {
-                                            var req = $.ajax({
-                                                url: '/get-indicator-initial-data',
-                                                data: { indicator_id: indicator, type: 'community' }
-                                            });
-
-                                            req.done(function (results) {
-                                                console.log('Community results');                                                
-                                                console.log(results);
-                                                
-                                                if (results.data) {
-                                                    $('#select2-areaTypes-container').attr('title', 'Community');
-                                                    $('#select2-areaTypes-container').html('Community');
-													
-                                                    get_points(indicator, 'community', results.data.communityArea);
-                                                    get_areas('community', results.data.communityArea);
-                                                }
-                                            });
-
-                                            req.fail(function (res) {
-                                                console.log('Getting initial data has failed', res);
-                                            });
-                                        }
-                                    });
-
-                                    req.fail(function (res) {
-                                        console.log('Getting initial data has failed', res);
-                                    });                                                                  
-                                }
-                            });
-
-                            req.fail(function (res) {
-                                console.log('Getting initial data has failed', res);
-                            });
-                        }
-                    });
-
-                    req.fail(function (res) {
-                        console.log('Getting initial data has failed', res);
-                    });
-				}
-            }
-            
-            function build_points(data) {
-                var points = [];
-                            
-                $.each(data, function (key,val)
-                {   
-                    var point = { "year": val.startYear, "value": val.realValue, "value_2": val.targetValue }
-                    points.push(point);
-                });
-                
-                return points;
-            }
-            
-            function get_points(indicator, type, area) {
-				if (indicator && type && area) {
-                    var req = $.ajax({
-                        url: '/get-points',
-                        data: { area_type: type, area_id: area, indicator_id: indicator }
-                    });
-
-                    req.done(function (results) {
-                        console.log('Getting points successfully: ', results);
-                        
-                        if (results && results.points) {
-                            var points = [];
-                            
-                            $.each(results.points, function (key,val)
-                            {   
-                                var point = { "year": val.startYear, "value": val.realValue, "value_2": val.targetValue };
-                                points.push(point);
-                            });
-                            
-                            $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_2).toPrecision(2));
-                            console.log(points.length);
-                            
-                            drawGraph(points);
-                        }
-                    });
-
-                    req.fail(function (res) {
-                        console.log('Getting points has failed', res);
-                    });
-				}
-            }
-            
-            function get_areas(type, selected_area) {
-				if (type) {
-                    var req = $.ajax({
-                        url: '/get-areas',
-                        data: { area_type: type }
-                    });
-
-                    req.done(function (results) {
-                        console.log('Getting areas successfully: ', results);
-						
-                        var first_time = true;
-                        
-                        $.each(results, function (key,val)
-                        {
-							var option = '';
-                            
-							if (selected_area) {
-								if (val._id == selected_area) {
-                                    option = '<option data-name="'+ val.name +'" value="'+ val._id +'" selected>'+ val.name +'</option>';
-
-                                    $('#select2-areas-container').attr('title', val.name);
-                                    $('#select2-areas-container').html(val.name);
-								}
-								else {
-                                    option = '<option data-name="'+ val.name +'" value="'+ val._id +'">'+ val.name +'</option>';
-								}
-							}
-							else {
-                                if (first_time) {
-                                    option = '<option data-name="'+ val.name +'" value="'+ val._id +'" selected>'+ val.name +'</option>';
-                                    $('#select2-areas-container').attr('title', val.name);
-                                    $('#select2-areas-container').html(val.name);
-
-                                    first_time = false;
-                                }
-                                else {
-                                    option = '<option data-name="'+ val.name +'" value="'+ val._id +'">'+ val.name +'</option>';
-                                }
-							}
-                            
-							$areas.append(option);
-                        });
-                    });
-
-                    req.fail(function (res) {
-                        console.log('Getting areas has failed', res);
-                    });
-				}
-            }
-            
-            function drawGraph(points) {
-                var chart;
-                var graph, graph_2;
-
-                // SERIAL CHART
-                chart = new AmCharts.AmSerialChart();
-
-                chart.dataProvider = points;
-                chart.marginLeft = 10;
-                chart.categoryField = "year";
-                chart.dataDateFormat = "YYYY";
-
-                // AXES
-                // category
-                var categoryAxis = chart.categoryAxis;
-                categoryAxis.parseDates = true; // as our data is date-based, we set parseDates to true
-                categoryAxis.minPeriod = "YYYY"; // our data is yearly, so we set minPeriod to YYYY
-                categoryAxis.dashLength = 3;
-                categoryAxis.minorGridEnabled = true;
-                categoryAxis.minorGridAlpha = 0.1;
-
-                // value
-                var valueAxis = new AmCharts.ValueAxis();
-                valueAxis.axisAlpha = 0;
-                valueAxis.inside = true;
-                valueAxis.dashLength = 3;
-                chart.addValueAxis(valueAxis);
-
-                // GRAPH
-                graph = new AmCharts.AmGraph();
-                graph.type = "smoothedLine"; // this line makes the graph smoothed line.
-                graph.lineColor = "#FFA92E";
-                graph.negativeLineColor = "#637bb6"; // this line makes the graph to change color when it drops below 0
-                graph.bullet = "round";
-                graph.title = "Valor real";
-                graph.bulletSize = 8;
-                graph.bulletBorderColor = "#FFFFFF";
-                graph.bulletBorderAlpha = 1;
-                graph.bulletBorderThickness = 2;
-                graph.lineThickness = 2;
-                graph.valueField = "value";
-                /* graph.balloonText = "[[category]]<br><b><span style='font-size:14px;'>[[value]]</span></b>";*/
-                chart.addGraph(graph);
-                
-                // GRAPH
-                graph_2 = new AmCharts.AmGraph();
-                graph_2.type = "smoothedLine"; // this line makes the graph smoothed line.
-                graph_2.lineColor = "#162A59";
-                graph_2.negativeLineColor = "#637bb6"; // this line makes the graph to change color when it drops below 0
-                graph_2.bullet = "round";
-                graph_2.title = "Valor planificado";
-                graph_2.bulletSize = 8;
-                graph_2.bulletBorderColor = "#FFFFFF";
-                graph_2.bulletBorderAlpha = 1;
-                graph_2.bulletBorderThickness = 2;
-                graph_2.lineThickness = 2;
-                graph_2.valueField = "value_2";
-                /* graph.balloonText = "[[category]]<br><b><span style='font-size:14px;'>[[value]]</span></b>";*/
-                chart.addGraph(graph_2);
-
-                // CURSOR
-                /*  var chartCursor = new AmCharts.ChartCursor();
-                    chartCursor.cursorAlpha = 0;
-                    chartCursor.cursorPosition = "mouse";
-                    chartCursor.categoryBalloonDateFormat = "YYYY";
-                    chart.addChartCursor(chartCursor);*/
-
-                // SCROLLBAR
-                /*  var chartScrollbar = new AmCharts.ChartScrollbar();
-                    chart.addChartScrollbar(chartScrollbar);*/
-                    
-                // LEGEND
-               var legend = new AmCharts.AmLegend();
-               legend.marginLeft = 110;
-               legend.useGraphSettings = true;
-               chart.addLegend(legend);
-
-                chart.creditsPosition = "bottom-right";
-
-                // WRITE
-                chart.write("chartdiv");
-            }   
-            
-            get_indicator_initial_data();
-        });
-    </script>
-    <!--javascript-->
 </body>
 </html>

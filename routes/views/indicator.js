@@ -13,6 +13,7 @@ exports = module.exports = function (req, res) {
 	// item in the header navigation.
 	locals.section = 'Indicadores';
 	locals.isIndicatorsSection = true;
+	locals.isIndicatorDetailsSection = true;
 	locals.hassidebar = true;
 	locals.filters = {
 		name: req.params.name
