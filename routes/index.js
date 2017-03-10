@@ -58,6 +58,10 @@ exports = module.exports = function (app) {
 	app.get('/get-points', routes.views.get_points);
 	app.get('/get-indicator-initial-data', routes.views.get_indicator_initial_data);
 	
+	// Generate documents
+	app.get('/generate-docx', routes.views.generate_docx);
+	app.get('/generate-docx-content', routes.views.generate_docx_content);
+	
 	// Contact
 	app.all('/contacto', routes.views.contact);
 

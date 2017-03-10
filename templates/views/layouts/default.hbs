@@ -230,12 +230,15 @@
             $(function () {
                 var $types = $('#areaTypes');
                 var $areas = $('#areas');
+                var close = '<span class="select2-selection__clear">×</span>';
+
                 var indicator_id = "{{indicator.id}}";
                 var realValueLabel = "{{indicator.realValue}}";
                 var useDenominator = {{indicator.useDenominator}};
 				var targetValueLabel = useDenominator ? "{{indicator.targetValue}}" : "";
 				var comparativeValue = {{indicator.comparativeValue}};
                 var metricType = "{{indicator.metrics.type}}";
+				
 				console.log('indicator_id: ', indicator_id, 'realValueLabel: ', realValueLabel, 
 						'useDenominator: ', useDenominator, 'targetValueLabel: ', targetValueLabel,
 						'comparativeValue: ', comparativeValue, 'metricType: ', metricType);
@@ -353,7 +356,7 @@
                 $areas.select2({
                     theme: "bootstrap",
                     placeholder: "-- Seleccionar --",
-                    allowClear: false
+                    allowClear: true
                 });
 
                 $types.change(function(e) {
@@ -408,6 +411,21 @@
                         });
                     }
                 });
+				
+				$('#bCreateDocx').click(function(e) {
+                    var req = $.ajax({
+                        url: '/generate-docx',
+                        data: { area_type: 'national' }
+                    });
+
+                    req.done(function (results) {
+                        console.log('Create docx successfully: ', results);
+                    });
+
+                    req.fail(function (res) {
+                        console.log('Create docx has failed', res);
+                    });
+				});
 
                 function get_indicator_initial_data() {
                     if (indicator_id) {
@@ -423,8 +441,8 @@
                             var points = [];
 
                             if (results.data) {
-                                $('#select2-areaTypes-container').attr('title', 'National');
-                                $('#select2-areaTypes-container').html('National');
+                                $('#select2-areaTypes-container').attr('title', 'Nacional');
+                                $('#select2-areaTypes-container').html('Nacional');
 
                                 get_points(indicator_id, 'national', results.data.nationalArea);
                                 get_areas('national', results.data.nationalArea);
@@ -440,8 +458,8 @@
                                     console.log(results);
 
                                     if (results.data) {
-                                        $('#select2-areaTypes-container').attr('title', 'Department');
-                                        $('#select2-areaTypes-container').html('Department');
+                                        $('#select2-areaTypes-container').attr('title', 'Regional');
+                                        $('#select2-areaTypes-container').html('Regional');
 
                                         get_points(indicator_id, 'department', results.data.departmentArea);
                                         get_areas('department', results.data.departmentArea);
@@ -475,8 +493,8 @@
                                                     console.log(results);
 
                                                     if (results.data) {
-                                                        $('#select2-areaTypes-container').attr('title', 'Community');
-                                                        $('#select2-areaTypes-container').html('Community');
+                                                        $('#select2-areaTypes-container').attr('title', 'Urbano-rural');
+                                                        $('#select2-areaTypes-container').html('Urbano-rural');
 
                                                         get_points(indicator_id, 'community', results.data.communityArea);
                                                         get_areas('community', results.data.communityArea);
