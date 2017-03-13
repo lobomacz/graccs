@@ -230,18 +230,21 @@
             $(function () {
                 var $types = $('#areaTypes');
                 var $areas = $('#areas');
-                var close = '<span class="select2-selection__clear">×</span>';
+				var $departments = $('#departments');
+                var $municipalities = $('#municipalities');
+                var $communities = $('#communities');
 
-                var indicator_id = "{{indicator.id}}";
+                var area = $('#area_id').text().trim();
+                var areaParent = $('#area_parent_id').text().trim();
+
+                var indicator_id = "{{indicator._id}}";
                 var realValueLabel = "{{indicator.realValue}}";
                 var useDenominator = {{indicator.useDenominator}};
 				var targetValueLabel = useDenominator ? "{{indicator.targetValue}}" : "";
-				var comparativeValue = {{indicator.comparativeValue}};
+				var comparativeValue = 0;
                 var metricType = "{{indicator.metrics.type}}";
-				
-				console.log('indicator_id: ', indicator_id, 'realValueLabel: ', realValueLabel, 
-						'useDenominator: ', useDenominator, 'targetValueLabel: ', targetValueLabel,
-						'comparativeValue: ', comparativeValue, 'metricType: ', metricType);
+				var areaType = {{indicator.areaNumber}};
+                var areaTypeName = areaType === 3 ? 'community' : (areaType === 2 ? 'municipal' : (areaType === 1 ? 'department' : ''));
 
                 $('#vote-positive-button').click(function(e) {
                     e.preventDefault();
@@ -346,6 +349,615 @@
                         });
                     }
                 });
+				
+				$('.form-control.select').select2({
+                    theme: "bootstrap",
+                    placeholder: "-- Seleccionar --",
+                    allowClear: true
+                });
+
+                $departments.change(function(e) {
+                    var department = $departments.val();
+
+                    if (department) {
+                        select_department($departments.data('name'));
+						
+						if (areaType >= 2) {
+                            $municipalities.empty();
+                            select_municipality('');
+                            get_municipalities(department);
+
+							if (areaType >= 3) {
+                                $communities.empty();
+                                select_community('');
+							}
+						}
+                    }
+					else {
+                        $municipalities.empty();
+                        select_municipality('');
+
+                        $communities.empty();
+                        select_community('');
+                    }
+                });
+				
+				$municipalities.change(function(e) {
+                    var municipality = $municipalities.val();
+
+                    if (municipality) {
+                        select_municipality($municipalities.data('name'));
+
+						if (areaType >= 3) {
+                            $communities.empty();
+							select_community('');
+                            get_communities(municipality);	
+						}
+                    }
+					else {
+                        $communities.empty();
+                        select_community('');
+                    }
+				});
+
+                $communities.change(function(e) {
+                    var community = $communities.val();
+
+                    if (community) {
+						select_community($communities.data('name'));
+                    }
+                });
+				
+				$('#bBuildGraph').click(function(e) {
+                    $('#chartdiv').empty();
+
+                    var department = $departments.val();
+                    var municipality = $municipalities.val();
+					var community = $communities.val();
+					
+					switch (areaType) {
+						case 1:
+							if (department)
+								get_points(indicator_id, 'department', department);
+							break;
+						case 2:
+							if (municipality)
+                            	get_points(indicator_id, 'municipality', municipality);
+                            break;
+						case 3:
+							if (community)
+								get_points(indicator_id, 'community', community);
+                            break;
+					}
+				});
+
+                function get_initial_data() {
+                    if (indicator_id && areaTypeName != '' && area != '') {
+						select_areas_value(area, areaParent);
+						
+                        var req = $.ajax({
+                            url: '/get-initial-data',
+                            data: { indicator: indicator_id, type: areaTypeName, area: area }
+                        });
+
+                        req.done(function (results) {
+                            console.log('Getting initial data success', results);
+
+                            if (results && results.points) {
+								build_points(results.points);
+                            }
+                        });
+
+                        req.fail(function (res) {
+                            console.log('Getting initial data has failed', res);
+                        });
+					}
+				}
+
+                function get_municipalities(parent, municipality) {
+                    if (parent) {
+                        var req = $.ajax({
+                            url: '/get-municipalities',
+                            data: { parent: parent }
+                        });
+
+                        req.done(function (results) {
+                            console.log('Getting municipalities successfully: ', results);
+
+                            if (results && results.data) {
+                                var first_time = true;
+                                $municipalities.empty();
+
+                                $.each(results.data, function (key,val)
+                                {
+                                    var option = '';
+
+                                    if (municipality) {
+                                        if (val._id == municipality) {
+                                            option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'" selected>'+ val.name +'</option>';
+
+                                            $('#select2-municipalities-container').attr('title', val.name);
+                                            $('#select2-municipalities-container').html(val.name);
+                                        }
+                                        else {
+                                            option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'">'+ val.name +'</option>';
+                                        }
+                                    }
+                                    else {
+                                        if (first_time) {
+                                            first_time = false;
+                                            option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'" selected>'+ val.name +'</option>';
+
+                                            $('#select2-municipalities-container').attr('title', val.name);
+                                            $('#select2-municipalities-container').html(val.name);
+                                        }
+                                        else {
+                                            option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'">'+ val.name +'</option>';
+                                        }
+                                    }
+
+                                    $municipalities.append(option);
+                                });
+                            }
+                        });
+
+                        req.fail(function (res) {
+                            console.log('Getting municipalities has failed', res);
+                        });
+                    }
+                }
+
+                function get_municipality(municipality) {
+                    if (municipality) {
+                        var req = $.ajax({
+                            url: '/get-municipality',
+                            data: { id: municipality }
+                        });
+
+                        req.done(function (results) {
+                            console.log('Getting municipality successfully: ', results);
+
+                            if (results && results.related_municipal_areas) {
+                                var first_time = true;
+                                $municipalities.empty();
+
+                                $.each(results.related_municipal_areas, function (key,val)
+                                {
+                                    var option = '';
+
+                                    if (municipality) {
+                                        if (val._id == municipality) {
+                                            option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'" selected>'+ val.name +'</option>';
+
+                                            $('#select2-municipalities-container').attr('title', val.name);
+                                            $('#select2-municipalities-container').html(val.name);
+                                        }
+                                        else {
+                                            option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'">'+ val.name +'</option>';
+                                        }
+                                    }
+                                    else {
+                                        if (first_time) {
+                                            first_time = false;
+                                            option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'" selected>'+ val.name +'</option>';
+
+                                            $('#select2-municipalities-container').attr('title', val.name);
+                                            $('#select2-municipalities-container').html(val.name);
+                                        }
+                                        else {
+                                            option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'">'+ val.name +'</option>';
+                                        }
+                                    }
+
+                                    $municipalities.append(option);
+                                });
+
+                                if (results.municipal_area) {
+                                    var department = $('#' + results.municipal_area.parent).html().trim();
+                                    select_department(department);
+                                    $('#' + results.municipal_area.parent).attr('selected', 'selected');
+                                }
+                            }
+                        });
+
+                        req.fail(function (res) {
+                            console.log('Getting municipalities has failed', res);
+                        });
+                    }
+                }
+
+                function get_communities(parent, community) {
+					if (parent) {
+                        var req = $.ajax({
+                            url: '/get-communities',
+                            data: { parent: parent }
+                        });
+
+                        req.done(function (results) {
+                            console.log('Getting communities successfully: ', results);
+
+                            if (results && results.data) {
+                                var first_time = true;
+                                $communities.empty();
+
+                                $.each(results.data, function (key,val)
+                                {
+                                    var option = '';
+
+                                    if (community) {
+                                        if (val._id == community) {
+                                            option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'" selected>'+ val.name +'</option>';
+											select_community(val.name);
+                                        }
+                                        else {
+                                            option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'">'+ val.name +'</option>';
+                                        }
+                                    }
+                                    else {
+                                        if (first_time) {
+                                            first_time = false;
+                                            option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'" selected>'+ val.name +'</option>';
+                                            select_community(val.name);
+										}
+                                        else {
+                                            option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'">'+ val.name +'</option>';
+                                        }
+                                    }
+
+                                    $communities.append(option);
+                                });
+                            }
+                        });
+
+                        req.fail(function (res) {
+                            console.log('Getting communities has failed', res);
+                        });	
+					}
+				}
+				
+				function select_department(name) {
+                    $('#select2-departments-container').attr('title', name);
+                    $('#select2-departments-container').html(name);
+				}
+				
+				function select_municipality(name) {
+                    $('#select2-municipalities-container').attr('title', name);
+                    $('#select2-municipalities-container').html(name);
+				}
+				
+				function select_community(name) {
+                    $('#select2-communities-container').attr('title', name);
+                    $('#select2-communities-container').html(name);
+				}
+				
+				function select_areas_value(area_id, parent_id) {
+					if (areaType === 1) {
+                        var department = $('#' + area_id).html().trim();
+						select_department(department);
+                        $('#' + area_id).attr('selected', 'selected');
+                    }
+					else if (areaType === 2) {
+						get_municipalities(parent_id, area_id);
+
+                        var department = $('#' + parent_id).html().trim();
+						if (department) {
+							select_department(department);
+                            $('#' + parent_id).attr('selected', 'selected');
+						}
+                    }
+					else  if (areaType === 3) {
+                        get_communities(parent_id, area_id);
+						get_municipality(parent_id);
+                    }
+				}
+
+                function get_points(indicator, type, area) {
+                    if (indicator && type && area) {
+                        var req = $.ajax({
+                            url: '/get-points',
+                            data: { area_type: type, area_id: area, indicator_id: indicator }
+                        });
+
+                        req.done(function (results) {
+                            console.log('Getting points successfully: ', results);
+
+                            if (results && results.points) {
+                                build_points(results.points);
+                            }
+                        });
+
+                        req.fail(function (res) {
+                            console.log('Getting points has failed', res);
+                        });
+                    }
+                }
+
+                function build_points(data_points) {
+                    if (data_points && data_points.length > 0) {
+                        var points = [];
+						
+						for (var i = 0; i < data_points.length; i++) {
+                            var point = null;
+                            var year = '';
+
+                            if (data_points[i].isMonthlyFrequency) {
+                                var month = '';
+
+                                switch (parseInt(data_points[i].monthlyFrequency)) {
+                                    case 1:
+                                        month = 'Enero';
+                                        break;
+                                    case 2:
+                                        month = 'Febrero';
+                                        break;
+                                    case 3:
+                                        month = 'Marzo';
+                                        break;
+                                    case 4:
+                                        month = 'Abril';
+                                        break;
+                                    case 5:
+                                        month = 'Mayo';
+                                        break;
+                                    case 6:
+                                        month = 'Junio';
+                                        break;
+                                    case 7:
+                                        month = 'Julio';
+                                        break;
+                                    case 8:
+                                        month = 'Agosto';
+                                        break;
+                                    case 9:
+                                        month = 'Septiembre';
+                                        break;
+                                    case 10:
+                                        month = 'Octubre';
+                                        break;
+                                    case 11:
+                                        month = 'Noviembre';
+                                        break;
+                                    case 12:
+                                        month = 'Diciembre';
+                                        break;
+                                }
+
+                                year = month + ' ' + data_points[i].startYear;
+                            }
+                            else if (data_points[i].isQuarterlyFrequency) {
+                                var quarter = '';
+
+                                switch (parseInt(data_points[i].quarterlyFrequency)) {
+                                    case 1:
+                                        quarter = 'I Trimestre';
+                                        break;
+                                    case 2:
+                                        quarter = 'II Trimestre';
+                                        break;
+                                    case 3:
+                                        quarter = 'III Trimestre';
+                                        break;
+                                    case 4:
+                                        quarter = 'IV Trimestre';
+                                        break;
+                                }
+
+                                year = quarter + ' ' + data_points[i].startYear;
+                            }
+                            else if (data_points[i].isBiannualFrequency) {
+                                var biannual = '';
+
+                                switch (parseInt(data_points[i].biannualFrequency)) {
+                                    case 1:
+                                        biannual = 'I Semestre';
+                                        break;
+                                    case 2:
+                                        biannual = 'II Semestre';
+                                        break;
+                                }
+
+                                year = biannual + ' ' + data_points[i].startYear;
+                            }
+                            else {
+                                year = data_points[i].startYear;
+                            }
+
+                            if (useDenominator) {
+                                point = { "year": year, "value": data_points[i].realValue, "value_2": data_points[i].targetValue, 
+									"value_3": data_points[i].comparativeValue ? data_points[i].comparativeValue : 0 };
+                            }
+                            else {
+                                point = { "year": year, "value": data_points[i].realValue, 
+									"value_3": data_points[i].comparativeValue ? data_points[i].comparativeValue : 0 };
+                            }
+
+                            points.push(point);
+						}
+
+                        if (useDenominator) {
+                            $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(2));
+                            drawGraph(points);
+                        }
+                        else if(comparativeValue > 0) {
+                            $('.indicator-value').html(comparativeValue - Number(points[points.length - 1].value).toPrecision(2));
+                            drawGraph(points);
+                        }
+                        else {
+                            $('.indicator-value').html(points[points.length - 1].value);
+                            drawGraphOneLine(points);
+                        }
+                    }
+                }
+				
+                function drawGraphOneLine(points) {
+                    var chart;
+                    var graph, graph_3;
+
+                    // SERIAL CHART
+                    chart = new AmCharts.AmSerialChart();
+
+                    chart.dataProvider = points;
+                    chart.marginLeft = 10;
+                    chart.categoryField = "year";
+
+                    // AXES
+                    // category
+                    var categoryAxis = chart.categoryAxis;
+                    categoryAxis.dashLength = 3;
+                    categoryAxis.minorGridEnabled = true;
+                    categoryAxis.minorGridAlpha = 0.1;
+
+                    // value
+                    var valueAxis = new AmCharts.ValueAxis();
+                    valueAxis.axisAlpha = 0;
+                    valueAxis.inside = true;
+                    valueAxis.dashLength = 3;
+                    chart.addValueAxis(valueAxis);
+
+                    // GRAPH
+                    graph = new AmCharts.AmGraph();
+                    graph.type = "smoothedLine"; // this line makes the graph smoothed line.
+                    graph.lineColor = "#FFA92E";
+                    graph.negativeLineColor = "#637bb6"; // this line makes the graph to change color when it drops below 0
+                    graph.bullet = "round";
+                    graph.title = realValueLabel ? realValueLabel : "Valor real";
+                    graph.bulletSize = 8;
+                    graph.bulletBorderColor = "#FFFFFF";
+                    graph.bulletBorderAlpha = 1;
+                    graph.bulletBorderThickness = 2;
+                    graph.lineThickness = 2;
+                    graph.valueField = "value";
+                    graph.balloonText = "<span style='font-size:13px;'>[[title]] en [[category]]:<b>[[value]]</b> [[additional]]</span>";
+                    chart.addGraph(graph);
+
+                    graph_3 = new AmCharts.AmGraph();
+                    graph_3.type = "smoothedLine"; // this line makes the graph smoothed line.
+                    graph_3.title = "Valor comparativo";
+                    graph_3.lineColor = "#76AF25";
+                    graph_3.negativeLineColor = "#678B0D"; // this line makes the graph to change color when it drops below 0
+                    graph_3.bullet = "round";
+                    graph_3.bulletSize = 8;
+                    graph_3.bulletBorderColor = "#FFFFFF";
+                    graph_3.bulletBorderAlpha = 1;
+                    graph_3.bulletBorderThickness = 2;
+                    graph_3.lineThickness = 2;
+                    graph_3.valueField = "value_3";
+                    graph_3.balloonText = "<span style='font-size:13px;'>[[title]] en [[category]]:<b>[[value]]</b> [[additional]]</span>";
+                    chart.addGraph(graph_3);
+					
+                    // CURSOR
+                    /*  var chartCursor = new AmCharts.ChartCursor();
+                        chartCursor.cursorAlpha = 0;
+                        chartCursor.cursorPosition = "mouse";
+                        chartCursor.categoryBalloonDateFormat = "YYYY";
+                        chart.addChartCursor(chartCursor);*/
+
+                    // SCROLLBAR
+                    /*  var chartScrollbar = new AmCharts.ChartScrollbar();
+                        chart.addChartScrollbar(chartScrollbar);*/
+
+                    // LEGEND
+                    var legend = new AmCharts.AmLegend();
+                    legend.marginLeft = 110;
+                    legend.useGraphSettings = true;
+                    chart.addLegend(legend);
+
+                    chart.creditsPosition = "bottom-right";
+
+                    // WRITE
+                    chart.write("chartdiv");
+                }
+
+                function drawGraph(points) {
+                    var chart;
+                    var graph, graph_2, graph_3;
+
+                    // SERIAL CHART
+                    chart = new AmCharts.AmSerialChart();
+
+                    chart.dataProvider = points;
+                    chart.marginLeft = 10;
+                    chart.categoryField = "year";
+                    chart.startDuration = 1;
+
+                    // AXES
+                    // category
+                    var categoryAxis = chart.categoryAxis;
+                    categoryAxis.gridPosition = "start";
+
+                    // value
+                    var valueAxis = new AmCharts.ValueAxis();
+                    valueAxis.axisAlpha = 0;
+                    chart.addValueAxis(valueAxis);
+
+                    // GRAPH
+                    graph = new AmCharts.AmGraph();
+                    graph.type = "column"; // this line makes the graph smoothed line.
+                    graph.title = realValueLabel ? realValueLabel : "Valor real";
+                    graph.valueField = "value";
+                    graph.lineColor = "#FFA92E";
+                    graph.lineAlpha = 1;
+                    graph.fillAlphas = 1;
+                    graph.dashLengthField = "dashLengthColumn";
+                    graph.alphaField = "alpha";
+                    graph.balloonText = "<span style='font-size:13px;'>[[title]] en [[category]]:<b>[[value]]</b> [[additional]]</span>";
+                    chart.addGraph(graph);
+
+                    // GRAPH
+                    graph_2 = new AmCharts.AmGraph();
+                    graph_2.type = "column"; // this line makes the graph smoothed line.
+                    graph_2.title = targetValueLabel ? targetValueLabel : "Valor planificado";
+                    graph_2.valueField = "value_2";
+                    graph_2.lineColor = "#162A59";
+                    graph_2.lineAlpha = 1;
+                    graph_2.fillAlphas = 1;
+                    graph_2.dashLengthField = "dashLengthColumn";
+                    graph_2.alphaField = "alpha";
+                    graph_2.balloonText = "<span style='font-size:13px;'>[[title]] en [[category]]:<b>[[value]]</b> [[additional]]</span>";
+                    chart.addGraph(graph_2);
+
+                    graph_3 = new AmCharts.AmGraph();
+                    graph_3.type = "smoothedLine"; // this line makes the graph smoothed line.
+                    graph_3.title = "Valor comparativo";
+                    graph_3.lineColor = "#76AF25";
+                    graph_3.negativeLineColor = "#678B0D"; // this line makes the graph to change color when it drops below 0
+                    graph_3.bullet = "round";
+                    graph_3.bulletSize = 8;
+                    graph_3.bulletBorderColor = "#FFFFFF";
+                    graph_3.bulletBorderAlpha = 1;
+                    graph_3.bulletBorderThickness = 2;
+                    graph_3.lineThickness = 2;
+                    graph_3.valueField = "value_3";
+                    graph_3.balloonText = "<span style='font-size:13px;'>[[title]] en [[category]]:<b>[[value]]</b> [[additional]]</span>";
+                    chart.addGraph(graph_3);
+
+                    // CURSOR
+                    /*  var chartCursor = new AmCharts.ChartCursor();
+                        chartCursor.cursorAlpha = 0;
+                        chartCursor.cursorPosition = "mouse";
+                        chartCursor.categoryBalloonDateFormat = "YYYY";
+                        chart.addChartCursor(chartCursor);*/
+
+                    // SCROLLBAR
+                    /*  var chartScrollbar = new AmCharts.ChartScrollbar();
+                        chart.addChartScrollbar(chartScrollbar);*/
+
+                    // LEGEND
+                    var legend = new AmCharts.AmLegend();
+                    legend.marginLeft = 110;
+                    legend.useGraphSettings = true;
+                    chart.addLegend(legend);
+
+                    chart.creditsPosition = "bottom-right";
+
+                    // WRITE
+                    chart.write("chartdiv");
+                }
+
+
+
+
+
 
                 $types.select2({
                     theme: "bootstrap",
@@ -525,139 +1137,6 @@
                     }
                 }
 
-                function get_points(indicator, type, area) {
-                    if (indicator && type && area) {
-                        var req = $.ajax({
-                            url: '/get-points',
-                            data: { area_type: type, area_id: area, indicator_id: indicator }
-                        });
-
-                        req.done(function (results) {
-                            console.log('Getting points successfully: ', results);
-
-                            if (results && results.points) {
-                                var points = [];
-
-                                $.each(results.points, function (key,val)
-                                {
-                                    var point = null;
-									var year = '';
-									
-									if (val.isMonthlyFrequency) {
-										var month = '';
-										
-										switch (parseInt(val.monthlyFrequency)) {
-											case 1:
-												month = 'Enero';
-												break;
-                                            case 2:
-                                                month = 'Febrero';
-                                                break;
-                                            case 3:
-                                                month = 'Marzo';
-                                                break;
-                                            case 4:
-                                                month = 'Abril';
-                                                break;
-                                            case 5:
-                                                month = 'Mayo';
-                                                break;
-                                            case 6:
-                                                month = 'Junio';
-                                                break;
-                                            case 7:
-                                                month = 'Julio';
-                                                break;
-                                            case 8:
-                                                month = 'Agosto';
-                                                break;
-                                            case 9:
-                                                month = 'Septiembre';
-                                                break;
-                                            case 10:
-                                                month = 'Octubre';
-                                                break;
-                                            case 11:
-                                                month = 'Noviembre';
-                                                break;
-                                            case 12:
-                                                month = 'Diciembre';
-                                                break;											
-										}
-										
-										year = month + ' ' + val.startYear;
-									}
-									else if (val.isQuarterlyFrequency) {
-                                        var quarter = '';
-										
-										switch (parseInt(val.quarterlyFrequency)) {												
-											case 1:
-												quarter = 'I Trimestre';
-												break;
-											case 2:
-                                                quarter = 'II Trimestre';
-												break;
-											case 3:
-                                                quarter = 'III Trimestre';
-												break;
-											case 4:
-                                                quarter = 'IV Trimestre';
-												break;
-										}
-										
-                                        year = quarter + ' ' + val.startYear;
-									}
-									else if (val.isBiannualFrequency) {
-										var biannual = '';
-
-                                        switch (parseInt(val.biannualFrequency)) {
-                                            case 1:
-                                                biannual = 'I Semestre';
-                                                break;
-                                            case 2:
-                                                biannual = 'II Semestre';
-                                                break;
-                                        }
-										
-                                        year = biannual + ' ' + val.startYear;
-									}
-									else {
-										year = val.startYear;
-									}
-									
-									if (useDenominator) {
-                                        point = { "year": year, "value": val.realValue, "value_2": val.targetValue };
-									}
-									else if (comparativeValue > 0) {
-                                        point = { "year": year, "value": val.realValue, "value_2": comparativeValue };
-									}
-									else {
-                                        point = { "year": year, "value": val.realValue };
-									}
-									
-                                    points.push(point);
-                                });
-
-                                if (useDenominator) {
-                                    $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(2));
-                                    drawGraph(points);
-                                }
-								else if(comparativeValue > 0) {
-                                    $('.indicator-value').html(comparativeValue - Number(points[points.length - 1].value).toPrecision(2));
-                                    drawGraph(points);
-								}
-                                else {
-                                    $('.indicator-value').html(points[points.length - 1].value);
-									drawGraphOneLine(points);
-								}
-                            }
-                        });
-
-                        req.fail(function (res) {
-                            console.log('Getting points has failed', res);
-                        });
-                    }
-                }
 
                 function get_areas(type, selected_area) {
                     if (type) {
@@ -709,154 +1188,9 @@
                     }
                 }
 
-                function drawGraphOneLine(points) {
-                    var chart;
-                    var graph;
+                
 
-                    // SERIAL CHART
-                    chart = new AmCharts.AmSerialChart();
-
-                    chart.dataProvider = points;
-                    chart.marginLeft = 10;
-                    chart.categoryField = "year";
-
-                    // AXES
-                    // category
-                    var categoryAxis = chart.categoryAxis;
-                    categoryAxis.dashLength = 3;
-                    categoryAxis.minorGridEnabled = true;
-                    categoryAxis.minorGridAlpha = 0.1;
-
-                    // value
-                    var valueAxis = new AmCharts.ValueAxis();
-                    valueAxis.axisAlpha = 0;
-                    valueAxis.inside = true;
-                    valueAxis.dashLength = 3;
-                    chart.addValueAxis(valueAxis);
-
-                    // GRAPH
-                    graph = new AmCharts.AmGraph();
-                    graph.type = "smoothedLine"; // this line makes the graph smoothed line.
-                    graph.lineColor = "#FFA92E";
-                    graph.negativeLineColor = "#637bb6"; // this line makes the graph to change color when it drops below 0
-                    graph.bullet = "round";
-                    graph.title = realValueLabel ? realValueLabel : "Valor real";
-                    graph.bulletSize = 8;
-                    graph.bulletBorderColor = "#FFFFFF";
-                    graph.bulletBorderAlpha = 1;
-                    graph.bulletBorderThickness = 2;
-                    graph.lineThickness = 2;
-                    graph.valueField = "value";
-                    /* graph.balloonText = "[[category]]<br><b><span style='font-size:14px;'>[[value]]</span></b>";*/
-                    chart.addGraph(graph);
-
-                    // CURSOR
-                    /*  var chartCursor = new AmCharts.ChartCursor();
-                        chartCursor.cursorAlpha = 0;
-                        chartCursor.cursorPosition = "mouse";
-                        chartCursor.categoryBalloonDateFormat = "YYYY";
-                        chart.addChartCursor(chartCursor);*/
-
-                    // SCROLLBAR
-                    /*  var chartScrollbar = new AmCharts.ChartScrollbar();
-                        chart.addChartScrollbar(chartScrollbar);*/
-
-                    // LEGEND
-                    var legend = new AmCharts.AmLegend();
-                    legend.marginLeft = 110;
-                    legend.useGraphSettings = true;
-                    chart.addLegend(legend);
-
-                    chart.creditsPosition = "bottom-right";
-
-                    // WRITE
-                    chart.write("chartdiv");
-                }
-				
-                function drawGraph(points) {
-                    var chart;
-                    var graph, graph_2;
-
-                    // SERIAL CHART
-                    chart = new AmCharts.AmSerialChart();
-
-                    chart.dataProvider = points;
-                    chart.marginLeft = 10;
-                    chart.categoryField = "year";
-                    chart.dataDateFormat = "YYYY";
-
-                    // AXES
-                    // category
-                    var categoryAxis = chart.categoryAxis;
-                    categoryAxis.parseDates = true; // as our data is date-based, we set parseDates to true
-                    categoryAxis.minPeriod = "YYYY"; // our data is yearly, so we set minPeriod to YYYY
-                    categoryAxis.dashLength = 3;
-                    categoryAxis.minorGridEnabled = true;
-                    categoryAxis.minorGridAlpha = 0.1;
-
-                    // value
-                    var valueAxis = new AmCharts.ValueAxis();
-                    valueAxis.axisAlpha = 0;
-                    valueAxis.inside = true;
-                    valueAxis.dashLength = 3;
-                    chart.addValueAxis(valueAxis);
-
-                    // GRAPH
-                    graph = new AmCharts.AmGraph();
-                    graph.type = "smoothedLine"; // this line makes the graph smoothed line.
-                    graph.lineColor = "#FFA92E";
-                    graph.negativeLineColor = "#637bb6"; // this line makes the graph to change color when it drops below 0
-                    graph.bullet = "round";
-                    graph.title = realValueLabel ? realValueLabel : "Valor real";
-                    graph.bulletSize = 8;
-                    graph.bulletBorderColor = "#FFFFFF";
-                    graph.bulletBorderAlpha = 1;
-                    graph.bulletBorderThickness = 2;
-                    graph.lineThickness = 2;
-                    graph.valueField = "value";
-                    /* graph.balloonText = "[[category]]<br><b><span style='font-size:14px;'>[[value]]</span></b>";*/
-                    chart.addGraph(graph);
-
-                    // GRAPH
-                    graph_2 = new AmCharts.AmGraph();
-                    graph_2.type = "smoothedLine"; // this line makes the graph smoothed line.
-                    graph_2.lineColor = "#162A59";
-                    graph_2.negativeLineColor = "#637bb6"; // this line makes the graph to change color when it drops below 0
-                    graph_2.bullet = "round";
-                    graph_2.title = targetValueLabel ? targetValueLabel : "Valor planificado";
-                    graph_2.bulletSize = 8;
-                    graph_2.bulletBorderColor = "#FFFFFF";
-                    graph_2.bulletBorderAlpha = 1;
-                    graph_2.bulletBorderThickness = 2;
-                    graph_2.lineThickness = 2;
-                    graph_2.valueField = "value_2";
-                    /* graph.balloonText = "[[category]]<br><b><span style='font-size:14px;'>[[value]]</span></b>";*/
-                    chart.addGraph(graph_2);
-
-                    // CURSOR
-                    /*  var chartCursor = new AmCharts.ChartCursor();
-                        chartCursor.cursorAlpha = 0;
-                        chartCursor.cursorPosition = "mouse";
-                        chartCursor.categoryBalloonDateFormat = "YYYY";
-                        chart.addChartCursor(chartCursor);*/
-
-                    // SCROLLBAR
-                    /*  var chartScrollbar = new AmCharts.ChartScrollbar();
-                        chart.addChartScrollbar(chartScrollbar);*/
-
-                    // LEGEND
-                    var legend = new AmCharts.AmLegend();
-                    legend.marginLeft = 110;
-                    legend.useGraphSettings = true;
-                    chart.addLegend(legend);
-
-                    chart.creditsPosition = "bottom-right";
-
-                    // WRITE
-                    chart.write("chartdiv");
-                }
-
-                get_indicator_initial_data();
+                get_initial_data();
             });
         </script>
 	{{/if}}

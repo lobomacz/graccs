@@ -21,7 +21,7 @@ exports = module.exports = function (req, res) {
                 .where('departmentArea', area_id)
 				.sort('monthlyFrequency quarterlyFrequency biannualFrequency startYear');
 			break;
-		case 'municipal':
+		case 'municipality':
 			q = keystone.list('IndicatorValue').model.find()
                 .where('indicator', indicator_id)
                 .where('municipalArea', area_id)
@@ -38,20 +38,14 @@ exports = module.exports = function (req, res) {
     if (q) {
         q.exec(function (err, results) {
             if (err || !results) {
-                res.send(null);
-            }
+				res.send({ status: 'ERROR: ' + err, points: null });
+			}
             else {
-                var points = _.map(results, function (item) {
-                    return _.pick(item.toJSON(), '_id', 'startYear', 'realValue', 'targetValue',
-					'isMonthlyFrequency', 'monthlyFrequency', 'isQuarterlyFrequency', 'quarterlyFrequency',
-					'isBiannualFrequency', 'biannualFrequency');
-                });
-
-                res.send({ area_type: area_type, area_id: area_id, indicator_id: indicator_id, points: points });
-            }
+				res.send({ status: 'OK', points: results });
+			}
         });
     }
     else {
-        res.send(null);
-    }
+		res.send({ status: 'ERROR', points: null });
+	}
 };

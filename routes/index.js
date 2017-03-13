@@ -56,6 +56,10 @@ exports = module.exports = function (app) {
 	// Ajax calls
 	app.get('/get-areas', routes.views.get_areas);
 	app.get('/get-points', routes.views.get_points);
+	app.get('/get-municipalities', routes.views.get_municipalities);
+	app.get('/get-municipality', routes.views.get_municipality);
+	app.get('/get-communities', routes.views.get_communities);
+	app.get('/get-initial-data', routes.views.get_initial_data);
 	app.get('/get-indicator-initial-data', routes.views.get_indicator_initial_data);
 	
 	// Generate documents

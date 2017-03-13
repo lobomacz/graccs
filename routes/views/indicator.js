@@ -53,6 +53,15 @@ exports = module.exports = function (req, res) {
 					locals.indSector = results;
 					callback(err);
 				});
+			},
+			function (callback) {
+				// Get departmental areas
+				var q = keystone.list('DepartmentalArea').model.find().sort('name');
+
+				q.exec(function (err, results) {
+					locals.deparmentalAreas = results;
+					callback(err);
+				});
 			}],
 			function (err) {
 				next(err);
@@ -72,60 +81,86 @@ exports = module.exports = function (req, res) {
 			if (!err && indicator) {
 				locals.indicator = indicator;
 				
-				var q = keystone.list('IndicatorComment').model.find()
-					.where('indicator', indicator._id)
-					.sort('createdAt');
+				if (indicator.minAreaToApply === 'community') locals.indicator.areaNumber = 3;
+				else if (indicator.minAreaToApply === 'municipal') locals.indicator.areaNumber = 2;
+				else locals.indicator.areaNumber = 1;
 
-				q.exec(function (err, comments) {
-					if (!err && comments) {
-						locals.indicator.comments = comments;
-						locals.indicator.commentsCount = comments.length;
+				async.parallel([
+					function (callback) {
+						var q_comment = keystone.list('IndicatorComment').model.find()
+							.where('indicator', indicator._id)
+							.sort('createdAt');
 
+						q_comment.exec(function (err, comments) {
+							if (!err && comments) {
+								locals.indicator.comments = comments;
+								locals.indicator.commentsCount = comments.length;
+
+								callback(err);
+							}
+							else {
+								callback(err);
+							}
+						});
+					},
+					function (callback) {
+						var q_value;
+
+						switch (indicator.minAreaToApply) {
+							case 'department':
+								q_value = keystone.list('IndicatorValue').model.findOne()
+									.where('indicator', indicator._id)
+									.where('isDepartmentArea', true)
+									.sort('departmentArea')
+									.populate('departmentArea');
+								break;
+							case 'municipal':
+								q_value = keystone.list('IndicatorValue').model.findOne()
+									.where('indicator', indicator._id)
+									.where('isMunicipalArea', true)
+									.sort('municipalArea')
+									.populate('municipalArea');
+								break;
+							case 'community':
+								q_value = keystone.list('IndicatorValue').model.findOne()
+									.where('indicator', indicator._id)
+									.where('isCommunityArea', true)
+									.sort('communityArea')
+									.populate('communityArea');
+								break;
+						}
+
+						q_value.exec(function (err, value) {
+							if (!err && value) {
+								locals.indicator.point = value;
+
+								switch (indicator.minAreaToApply) {
+									case 'department':
+										break;
+									case 'municipal':
+										
+										break;
+									case 'community':
+										
+										break;
+								}
+								
+								callback(err);
+							}
+							else {
+								callback(err);
+							}
+						});
+					}],
+					function (err) {
 						next(err);
 					}
-					else {
-						next(err);
-					}
-				});
+				);
 			}
 			else {
 				next(err);
 			}
 		});
-		
-		if (locals.indicator) {
-			locals.indicator.inside = true;
-			
-			var q_national = keystone.list('IndicatorValue').model.find()
-					.where('indicator', indicator._id)
-					.where('areaType', 'national')
-					.sort('createdAt');
-					
-			q_national.exec(function (err, values) {
-				if (!err && values) {
-					locals.indicator.national_values = values;
-					next(err);
-				}
-				else {
-					next(err);
-				}
-			});
-			
-			var q_municipal = keystone.list('IndicatorValue').model.find()
-					.where('indicator', indicator._id)
-					.where('areaType', 'municipal')
-					.sort('createdAt');
-					
-			q_municipal.exec(function (err, values) {
-				if (!err && values) {
-					locals.indicator.municipal_values = values;
-					next(err);
-				}
-				else {
-					next(err);
-				}
-			});
-		}
 	});
 	
 	// Indicator comment

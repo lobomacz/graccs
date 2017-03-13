@@ -20,9 +20,10 @@ IndicatorValue.add({
 	realValue: { label: 'Valor ejecutado', type: Types.Number, default: 0, min: 0, required: true, initial: true },
 	useDenominator: { label: 'Usar denominador', type: Types.Boolean, watch: true, value: checkIndicatorDenominator, hidden: true },
 	targetValue: { label: 'Valor planificado', type: Types.Number, default: 0, min: 0, dependsOn: { useDenominator: true } },
-	isMonthlyFrequency: { label: 'Frecuencia', type: Types.Boolean, watch: true, value: checkMonthlyFrequency, hidden: true },
+	comparativeValue: { label: 'Valor para comparar', type: Types.Number, min: 0 },
+	isMonthlyFrequency: { label: 'Es una frecuencia mensual', type: Types.Boolean, watch: true, value: checkMonthlyFrequency, hidden: true },
 	monthlyFrequency: {
-		label: 'Frecuencia',
+		label: 'Frecuencia mensual',
 		required: true,
 		type: Types.Select,
 		options: [
@@ -42,9 +43,9 @@ IndicatorValue.add({
 		default: '1',
 		dependsOn: { isMonthlyFrequency: true }
 	},
-	isQuarterlyFrequency: { label: 'Frecuencia', type: Types.Boolean, watch: true, value: checkQuarterlyFrequency, hidden: true },
+	isQuarterlyFrequency: { label: 'Es una frecuencia trimestral', type: Types.Boolean, watch: true, value: checkQuarterlyFrequency, hidden: true },
 	quarterlyFrequency: {
-		label: 'Frecuencia',
+		label: 'Frecuencia trimestral',
 		required: true,
 		type: Types.Select,
 		options: [
@@ -56,9 +57,9 @@ IndicatorValue.add({
 		default: '1',
 		dependsOn: { isQuarterlyFrequency: true }
 	},
-	isBiannualFrequency: { label: 'Frecuencia', type: Types.Boolean, watch: true, value: checkBiannualFrequency, hidden: true },
+	isBiannualFrequency: { label: 'Es una frecuencia semestral', type: Types.Boolean, watch: true, value: checkBiannualFrequency, hidden: true },
 	biannualFrequency: {
-		label: 'Frecuencia',
+		label: 'Frecuencia semestral',
 		required: true,
 		type: Types.Select,
 		options: [
@@ -68,22 +69,13 @@ IndicatorValue.add({
 		default: '1',
 		dependsOn: { isBiannualFrequency: true }
 	},
-	areaType: {
-		label: 'Tipo de Desagregación',
-		type: Types.Select,
-		options: [
-			{ value: 'national', label: 'Desagregación Nacional' },
-			{ value: 'department', label: 'Desagregación Departamental (regional)' },
-			{ value: 'municipal', label: 'Desagregación Municipal' },
-			{ value: 'community', label: 'Desagregación Urbano-Rural (comunidad)' }
-		],
-		default: 'national',
-		required: true
-	},
-	nationalArea: { label: 'Desagregación Nacional', type: Types.Relationship, ref: 'NationalArea', many: false, dependsOn: { areaType: 'national' } },
-	departmentArea: { label: 'Desagregación Departamental (regional)', type: Types.Relationship, ref: 'DepartmentalArea', many: false, dependsOn: { areaType: 'department' } },
-	municipalArea: { label: 'Desagregación Municipal', type: Types.Relationship, ref: 'MunicipalArea', many: false, dependsOn: { areaType: 'municipal' } },
-	communityArea: { label: 'Desagregación Urbano-Rural (comunidad)', type: Types.Relationship, ref: 'CommunityArea', many: false, dependsOn: { areaType: 'community' } },
+	/*nationalArea: { label: 'Desagregación Nacional', type: Types.Relationship, ref: 'NationalArea', many: false, dependsOn: { areaType: 'national' } },*/
+	isDepartmentArea: { label: 'Es una desagregación departamental', type: Types.Boolean, watch: true, value: checkDepartmentArea, hidden: true },
+	departmentArea: { label: 'Desagregación Departamental (regional)', type: Types.Relationship, ref: 'DepartmentalArea', many: false, dependsOn: { isDepartmentArea: true } },
+	isMunicipalArea: { label: 'Es una desagregación municipal', type: Types.Boolean, watch: true, value: checkMunicipalArea, hidden: true },
+	municipalArea: { label: 'Desagregación Municipal', type: Types.Relationship, ref: 'MunicipalArea', many: false, dependsOn: { isMunicipalArea: true } },
+	isCommunityArea: { label: 'Es una desagregación urbano-rural', type: Types.Boolean, watch: true, value: checkCommunityArea, hidden: true },
+	communityArea: { label: 'Desagregación Urbano-Rural (comunidad)', type: Types.Relationship, ref: 'CommunityArea', many: false, dependsOn: { isCommunityArea: true } },
 	relatedFiles: {
 		label: 'Evidencias',
 		type: Types.LocalFiles,
@@ -144,6 +136,45 @@ function checkBiannualFrequency(callback) {
 
 		console.log(ind);
 		callback(null, ind.frequency === 'biannual');
+	});
+}
+
+function checkDepartmentArea(callback) {
+	var q = keystone.list('Indicator').model.findById(this.indicator);
+
+	q.exec(function (err, ind) {
+		if (err || !ind) {
+			return callback(err);
+		}
+
+		console.log(ind);
+		callback(null, ind.minAreaToApply === 'department');
+	});
+}
+
+function checkMunicipalArea(callback) {
+	var q = keystone.list('Indicator').model.findById(this.indicator);
+
+	q.exec(function (err, ind) {
+		if (err || !ind) {
+			return callback(err);
+		}
+
+		console.log(ind);
+		callback(null, ind.minAreaToApply === 'municipal');
+	});
+}
+
+function checkCommunityArea(callback) {
+	var q = keystone.list('Indicator').model.findById(this.indicator);
+
+	q.exec(function (err, ind) {
+		if (err || !ind) {
+			return callback(err);
+		}
+
+		console.log(ind);
+		callback(null, ind.minAreaToApply === 'community');
 	});
 }
 

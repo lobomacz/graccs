@@ -4,7 +4,32 @@
             <div class="row">
                 <div class="col-xs-6 push-5-t">
                     <span>{{date Date.now format='DD MMM YYYY'}}</span>
-                    <label id="current_indicator_id" hidden>{{indicator.id}}</label>
+                    <label id="area_id" hidden>
+						{{#if indicator.point}}
+							{{#if indicator.point.isDepartmentArea}}
+								{{indicator.point.departmentArea._id}}
+							{{/if}}
+							{{#if indicator.point.isMunicipalArea}}
+								{{indicator.point.municipalArea._id}}
+							{{/if}}
+							{{#if indicator.point.isCommunityArea}}
+								{{indicator.point.communityArea._id}}
+							{{/if}}
+						{{/if}}
+					</label>
+                    <label id="area_parent_id" hidden>
+						{{#if indicator.point}}
+							{{#if indicator.point.isDepartmentArea}}
+								{{indicator.point.departmentArea.parent}}
+							{{/if}}
+							{{#if indicator.point.isMunicipalArea}}
+								{{indicator.point.municipalArea.parent}}
+							{{/if}}
+							{{#if indicator.point.isCommunityArea}}
+								{{indicator.point.communityArea.parent}}
+							{{/if}}
+						{{/if}}
+                    </label>
 				</div>
                 <div class="col-xs-5 text-right">
                     <form role="search" method="get" class="search-form" action="/buscar">
@@ -59,38 +84,59 @@
                     <div class="article-content bg-gray">
                         <div class="row">
                             <div class="col-lg-12">
-                                <div class="row push-20-b">
-                                    <div class="col-lg-4">
-										<dl>
-											<dt>
-												<label for="areaTypes">Tipo de Desagregación</label>
-											</dt>
-											<dd>
-                                                <select id="areaTypes" class="form-control select">
-                                                    <option value="national">Nacional</option>
-                                                    <option value="department">Regional</option>
-                                                    <option value="municipal">Municipal</option>
-                                                    <option value="community">Urbano-rural</option>
-                                                </select>
-											</dd>
-										</dl>
-                                    </div>
-                                    <div class="col-lg-4">
-										<dl>
-											<dt>
-                                                <label for="areas">Desagregación</label>
-											</dt>
-											<dd>
-                                                <select id="areas" class="form-control select"></select>
-											</dd>
-										</dl>
-                                    </div>
-                                    <div class="col-lg-4">
-                                        <button id="bGraph" class="btn btn-default" style="margin-top: 24px;">Graficar</button>
-                                        <button id="bCreateDocx" class="btn btn-default" style="margin-top: 24px;">Crear docx</button>
-										<a href="/generate-docx-content">Ver...</a>
+								<div class="row push-20-b">
+									<div class="col-lg-3">
+										{{#compare indicator.areaNumber 1 operator=">="}}
+                                            <dl>
+                                                <dt>
+                                                    <label for="departments">Región:</label>
+                                                </dt>
+                                                <dd>
+                                                    <select id="departments" class="form-control select">
+														<option></option>
+														{{#if deparmentalAreas}}
+															{{#each deparmentalAreas}}
+																<option id="{{_id}}" value="{{_id}}">{{name}}</option>
+															{{/each}}
+														{{/if}}
+													</select>
+                                                </dd>
+                                            </dl>
+										{{/compare}}
 									</div>
-                                </div>
+                                    <div class="col-lg-3">
+										{{#compare indicator.areaNumber 2 operator=">="}}
+                                            <dl>
+                                                <dt>
+                                                    <label for="municipalities">Municipio:</label>
+                                                </dt>
+                                                <dd>
+                                                    <select id="municipalities" class="form-control select"></select>
+                                                </dd>
+                                            </dl>
+										{{/compare}}
+                                    </div>
+                                    <div class="col-lg-3">
+										{{#compare indicator.areaNumber 3 operator="==="}}
+                                            <dl>
+                                                <dt>
+                                                    <label for="communities">Localidad:</label>
+                                                </dt>
+                                                <dd>
+                                                    <select id="communities" class="form-control select"></select>
+                                                </dd>
+                                            </dl>
+										{{/compare}}
+                                    </div>
+                                    <div class="col-lg-3">
+										<dl>
+											<dt></dt>
+											<dd>
+                                                <button id="bBuildGraph" class="btn btn-default" style="margin-top: 24px;">Graficar</button>
+											</dd>
+										</dl>
+                                    </div>
+								</div>
 								
                                 <div class="indicator-wrap">
                                     <span class="indicator-name" title="{{indicator.title}}" style="text-transform: uppercase;">

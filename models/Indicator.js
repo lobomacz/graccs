@@ -73,24 +73,31 @@ Indicator.add(
 			label: 'Etiqueta a mostrar para el valor ejecutado', type: Types.Text, trim: true, required: true, default: 'Valor ejecutado',
 			note: 'Depende del indicador: valor ejecutado, valor alcanzado, ...'
 		},
-		useDenominator: { label: 'Fórmula con denominador', type: Types.Boolean, default: false },
+		useDenominator: { label: 'Tiene valor planificado', type: Types.Boolean, default: false },
 		targetValue: {
 			label: 'Etiqueta a mostrar para el valor planificado', type: Types.Text, trim: true, default: 'Valor planificado',
 			dependsOn: { useDenominator: true }, note: 'Depende del indicador: valor planificado, valor deseado, ...'
 		},
-		usePercent: { label: 'Fórmula con porciento', type: Types.Boolean, default: false },
-		percentValue: {
-			label: 'Valor por el que se multiplica', type: Types.Number, default: 100, min: 0, required: true,
-			dependsOn: { usePercent: true }, note: 'Para el caso del porciento poner 100, para la natalidad o mortalidad infantil 1000, ...'
-		},
-		comparativeValue: { label: 'Valor para comparar', type: Types.Number, default: 0, min: 0, required: true },
-		frequency: { value: 'Frecuencia de captura', type: Types.Select, required: true,
-					 options: [{ value: 'monthly', label: 'Mensual' },
+		frequency: { label: 'Frecuencia de captura', type: Types.Select, required: true,
+					 options: [
+						 { value: 'monthly', label: 'Mensual' },
 						 { value: 'quarterly', label: 'Trimestral' },
 						 { value: 'biannual', label: 'Semestral' },
 						 { value: 'annual', label: 'Anual' },
 						 { value: 'fifthly', label: 'Quinquenal' },
-						 { value: 'decade', label: 'Década' }], default: 'monthly' }
+						 { value: 'decade', label: 'Década' }], 
+					 default: 'monthly' },
+		minAreaToApply: { label: 'Desagregación mínima a aplicar', type: Types.Select, required: true,
+						  options: [
+							  { value: 'department', label: 'Departamental (regional)' },
+							  { value: 'municipal', label: 'Municipal' },
+							  { value: 'community', label: 'Urbano-Rural (comunidad)' }], 
+						  default: 'community' },
+		formula: { label: 'Tipo de fórmula acumulativa', type: Types.Select, required: true,
+			options: [
+				{ value: 'sum', label: 'Sumatoria' },
+				{ value: 'avg', label: 'Promedio' }],
+			default: 'sum' }
 	},
 	'Métrica', {
 		metrics: {
@@ -144,8 +151,6 @@ Indicator.schema.pre('remove', function(next) {
 	var q = keystone.list('IndicatorValue').model.remove().where('indicator', this._id);
 
 	q.exec(function (err, results) {
-		console.log('EXEC: ', err, results);
-		
 		if (!err) return next();
 		next (err);
 	});
@@ -155,8 +160,6 @@ Indicator.schema.pre('remove', function(next) {
 	var q = keystone.list('IndicatorComment').model.remove().where('indicator', this._id);
 
 	q.exec(function (err, results) {
-		console.log('EXEC: ', err, results);
-
 		if (!err) return next();
 		next (err);
 	});
