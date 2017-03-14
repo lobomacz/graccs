@@ -236,14 +236,15 @@
                 var areaParent = $('#area_parent_id').text().trim();
 
                 var indicator_id = "{{indicator._id}}";
+				var formula = "{{indicator.formula}}";
                 var realValueLabel = "{{indicator.realValue}}";
                 var useDenominator = {{indicator.useDenominator}};
 				var targetValueLabel = useDenominator ? "{{indicator.targetValue}}" : "";
-				var comparativeValue = 0;
-                var metricType = "{{indicator.metrics.type}}";
 				var areaType = {{indicator.areaNumber}};
                 var areaTypeName = areaType === 3 ? 'community' : (areaType === 2 ? 'municipal' : (areaType === 1 ? 'department' : ''));
 
+				console.log("Formula: ", formula);
+				
                 $('#vote-positive-button').click(function(e) {
                     e.preventDefault();
 
@@ -442,7 +443,7 @@
                             break;
 					}
 				});
-
+				
                 function get_initial_data() {
                     if (indicator_id && areaTypeName != '' && area != '') {
 						select_areas_value(area, areaParent);
@@ -710,11 +711,14 @@
 
                         req.done(function (results) {
                             if (results && results.points_array) {
-								var years = [];
-								var realValues = [];
-								var targetValues = [];
-								var comparativeValues = [];
-								var points = [];
+                                var years = [];
+                                var realValues = [];
+                                var realValuesCount = [];
+                                var targetValues = [];
+                                var targetValuesCount = [];
+                                var comparativeValues = [];
+                                var comparativeValuesCount = [];
+                                var points = [];
 								
 								$.each(results.points_array, function(key, points) {
 									$.each(points, function(key_1, point) {
@@ -802,45 +806,55 @@
                                             year = point.startYear;
                                         }
 
-										if (years.indexOf(year) === -1) years.push(year);
+                                        if (years.indexOf(year) === -1) years.push(year);
 
                                         if (!realValues[year]) {
                                             realValues[year] = point.realValue;
+                                            realValuesCount[year] = 1;
                                         }
                                         else {
                                             realValues[year] += point.realValue;
+                                            realValuesCount[year]++;
                                         }
 
                                         if (!targetValues[year]) {
                                             targetValues[year] = point.targetValue;
+                                            targetValuesCount[year] = 1;
                                         }
                                         else {
                                             targetValues[year] += point.targetValue;
+                                            targetValuesCount[year]++;
                                         }
 
                                         if (!comparativeValues[year]) {
                                             comparativeValues[year] = point.comparativeValue;
+                                            comparativeValuesCount[year] = 1;
                                         }
                                         else {
                                             comparativeValues[year] += point.comparativeValue;
+                                            comparativeValuesCount[year]++;
                                         }
 									});
                                 });
 								
 								$.each(years, function(key, year) {
 									var point;
+
+                                    var real_value = formula === 'sum' ? realValues[year] : (realValuesCount[year] != 0 ? realValues[year] / realValuesCount[year] : 0);
+                                    var comparative_value = formula === 'sum' ? comparativeValues[year] : (comparativeValuesCount[year] != 0 ? comparativeValues[year] / comparativeValuesCount[year] : 0);
 									
                                     if (useDenominator) {
-                                        point = { "year": year, "value": realValues[year], "value_2": targetValues[year], "value_3": comparativeValues[year], 
-											"percent": targetValues[year] !== 0 ? "<br />Representa: " + Number((realValues[year] / targetValues[year]) * 100).toPrecision(4) + "%" : "" };
+                                        var target_value = formula === 'sum' ? targetValues[year] : (targetValuesCount[year] != 0 ? targetValues[year] / targetValuesCount[year] : 0);
+
+                                        point = { "year": year, "value": real_value, "value_2": target_value, "value_3": comparative_value,
+                                            "percent": targetValues[year] !== 0 ? "<br />Representa: " + Number((realValues[year] / targetValues[year]) * 100).toPrecision(4) + "%" : "" };
                                     }
                                     else {
-                                        point = { "year": year, "value": realValues[year], "value_3": comparativeValues[year],
+                                        point = { "year": year, "value": real_value, "value_3": comparative_value,
                                             "percent": comparativeValues[year] !== 0 ? "<br />Representa: " + Number((realValues[year] / targetValues[year]) * 100).toPrecision(4) + "%" : ""};
                                     }
 
                                     points.push(point);
-									console.log('point: ', point);
 								});
 
                                 if (useDenominator) {
@@ -871,8 +885,11 @@
                             if (results && results.points_array) {
                                 var years = [];
                                 var realValues = [];
+								var realValuesCount = [];
                                 var targetValues = [];
+                                var targetValuesCount = [];
                                 var comparativeValues = [];
+                                var comparativeValuesCount = [];
                                 var points = [];
 
                                 $.each(results.points_array, function(key, points) {
@@ -965,41 +982,50 @@
 
                                         if (!realValues[year]) {
                                             realValues[year] = point.realValue;
+											realValuesCount[year] = 1;
                                         }
                                         else {
                                             realValues[year] += point.realValue;
+                                            realValuesCount[year]++;
                                         }
 
                                         if (!targetValues[year]) {
                                             targetValues[year] = point.targetValue;
+                                            targetValuesCount[year] = 1;
                                         }
                                         else {
                                             targetValues[year] += point.targetValue;
+                                            targetValuesCount[year]++;
                                         }
 
                                         if (!comparativeValues[year]) {
                                             comparativeValues[year] = point.comparativeValue;
+                                            comparativeValuesCount[year] = 1;
                                         }
                                         else {
                                             comparativeValues[year] += point.comparativeValue;
+                                            comparativeValuesCount[year]++;
                                         }
                                     });
                                 });
 
                                 $.each(years, function(key, year) {
                                     var point;
+									var real_value = formula === 'sum' ? realValues[year] : (realValuesCount[year] != 0 ? realValues[year] / realValuesCount[year] : 0);
+                                    var comparative_value = formula === 'sum' ? comparativeValues[year] : (comparativeValuesCount[year] != 0 ? comparativeValues[year] / comparativeValuesCount[year] : 0);
+                                    
+									if (useDenominator) {
+                                        var target_value = formula === 'sum' ? targetValues[year] : (targetValuesCount[year] != 0 ? targetValues[year] / targetValuesCount[year] : 0);
 
-                                    if (useDenominator) {
-                                        point = { "year": year, "value": realValues[year], "value_2": targetValues[year], "value_3": comparativeValues[year],
+                                        point = { "year": year, "value": real_value, "value_2": target_value, "value_3": comparative_value,
                                             "percent": targetValues[year] !== 0 ? "<br />Representa: " + Number((realValues[year] / targetValues[year]) * 100).toPrecision(4) + "%" : "" };
                                     }
                                     else {
-                                        point = { "year": year, "value": realValues[year], "value_3": comparativeValues[year],
+                                        point = { "year": year, "value": real_value, "value_3": comparative_value,
                                             "percent": comparativeValues[year] !== 0 ? "<br />Representa: " + Number((realValues[year] / targetValues[year]) * 100).toPrecision(4) + "%" : ""};
                                     }
 
                                     points.push(point);
-                                    console.log('point: ', point);
                                 });
 
                                 if (useDenominator) {
@@ -1032,8 +1058,11 @@
                             if (results && results.points_array) {
                                 var years = [];
                                 var realValues = [];
+                                var realValuesCount = [];
                                 var targetValues = [];
+                                var targetValuesCount = [];
                                 var comparativeValues = [];
+                                var comparativeValuesCount = [];
                                 var points = [];
 
                                 $.each(results.points_array, function(key, points) {
@@ -1126,41 +1155,50 @@
 
                                         if (!realValues[year]) {
                                             realValues[year] = point.realValue;
+                                            realValuesCount[year] = 1;
                                         }
                                         else {
                                             realValues[year] += point.realValue;
+                                            realValuesCount[year]++;
                                         }
 
                                         if (!targetValues[year]) {
                                             targetValues[year] = point.targetValue;
+                                            targetValuesCount[year] = 1;
                                         }
                                         else {
                                             targetValues[year] += point.targetValue;
+                                            targetValuesCount[year]++;
                                         }
 
                                         if (!comparativeValues[year]) {
                                             comparativeValues[year] = point.comparativeValue;
+                                            comparativeValuesCount[year] = 1;
                                         }
                                         else {
                                             comparativeValues[year] += point.comparativeValue;
+                                            comparativeValuesCount[year]++;
                                         }
                                     });
                                 });
 
                                 $.each(years, function(key, year) {
                                     var point;
+                                    var real_value = formula === 'sum' ? realValues[year] : (realValuesCount[year] != 0 ? realValues[year] / realValuesCount[year] : 0);
+                                    var comparative_value = formula === 'sum' ? comparativeValues[year] : (comparativeValuesCount[year] != 0 ? comparativeValues[year] / comparativeValuesCount[year] : 0);
 
                                     if (useDenominator) {
-                                        point = { "year": year, "value": realValues[year], "value_2": targetValues[year], "value_3": comparativeValues[year],
+                                        var target_value = formula === 'sum' ? targetValues[year] : (targetValuesCount[year] != 0 ? targetValues[year] / targetValuesCount[year] : 0);
+
+                                        point = { "year": year, "value": real_value, "value_2": target_value, "value_3": comparative_value,
                                             "percent": targetValues[year] !== 0 ? "<br />Representa: " + Number((realValues[year] / targetValues[year]) * 100).toPrecision(4) + "%" : "" };
                                     }
                                     else {
-                                        point = { "year": year, "value": realValues[year], "value_3": comparativeValues[year],
+                                        point = { "year": year, "value": real_value, "value_3": comparative_value,
                                             "percent": comparativeValues[year] !== 0 ? "<br />Representa: " + Number((realValues[year] / targetValues[year]) * 100).toPrecision(4) + "%" : ""};
                                     }
 
                                     points.push(point);
-                                    console.log('point: ', point);
                                 });
 
                                 if (useDenominator) {
@@ -1375,6 +1413,7 @@
 
                     // WRITE
                     chart.write("chartdiv");
+                    $('.amChartsLegend.amcharts-legend-div').css('margin-top', '18px');
                 }
 
                 function drawGraph(points) {
@@ -1461,6 +1500,7 @@
 
                     // WRITE
                     chart.write("chartdiv");
+					$('.amChartsLegend.amcharts-legend-div').css('margin-top', '18px');
                 }
 				
                 get_initial_data();

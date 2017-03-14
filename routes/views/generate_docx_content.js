@@ -2,6 +2,7 @@
 // without using real files on the server side.
 
 var officegen = require('officegen');
+var _ = require('underscore');
 
 var fs = require('fs');
 var http = require("http");

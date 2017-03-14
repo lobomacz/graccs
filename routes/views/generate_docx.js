@@ -1,50 +1,103 @@
-var keystone = require('keystone');
-var async = require('async');
-var _ = require('underscore');
+// Simple server that displaying form to ask the user name and then generate PowerPoint stream with the user's name 
+// without using real files on the server side.
+
 var officegen = require('officegen');
+var keystone = require('keystone');
+var _ = require('underscore');
+
 var fs = require('fs');
-var path = require('path');
+var http = require("http");
+var querystring = require('querystring');
+
+function postRequest ( request, response, callback ) {
+	var queryData = "";
+	if ( typeof callback !== 'function' ) return null;
+
+	if ( request.method == 'GET' ) {
+		request.on ( 'data', function ( data ) {
+			queryData += data;
+			if ( queryData.length > 100 ) {
+				queryData = "";
+				response.writeHead ( 413, {'Content-Type': 'text/plain'}).end ();
+				request.connection.destroy ();
+			}
+		});
+
+		request.on ( 'end', function () {
+			response.post = querystring.parse( queryData );
+			callback();
+		});
+
+	} else {
+		response.writeHead ( 405, { 'Content-Type': 'text/plain' });
+		response.end ();
+	}
+}
 
 exports = module.exports = function (req, res) {
 	req.params = _.extend(req.params || {}, req.query || {}, req.body || {});
-	
-	//var area_type = req.params.area_type;
-	//var area_id = req.params.area_id;
-	//var indicator_id = req.params.indicator_id;
-	
-	var docx = officegen({
-		type: 'docx',
-		orientation: 'portrait',
-		compress: false
-	});
+	var indicator_id = req.params.id;
 
-// Remove this comment in case of debugging Officegen:
-	officegen.setVerboseMode(true);
+	var q = keystone.list('Indicator').model.findOne().where('_id', indicator_id);
 
-	var pObj = docx.createP();
+	q.exec(function (err, indicator) {
+		if (!err && indicator) {
+			var title = indicator.title;
+			var slug = indicator.slug;
+			var code = "'" + indicator.code + "'";
+			var version = "'" + indicator.version + "'";
 
-	pObj.addText ('Simple');
-	pObj.addText (' with color', { color: '000088' });
-	pObj.addText (' and back color.', { color: '00ffff', back: '000088' });
+			postRequest (req, res, function() {
+				res.writeHead ( 200, {
+					"Content-Type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+					'Content-disposition': 'attachment; filename='+ slug +'.docx'
+				});
 
-	var pObj = docx.createP();
+				var docx = officegen ( {
+					type: 'docx',
+					orientation: 'portrait'
+				} );
 
-	pObj.addText('Since ');
-	pObj.addText('officegen 0.2.12', { back: '00ffff', shdType: 'pct12', shdColor: 'ff0000' }); // Use pattern in the background.
-	pObj.addText(' you can do ');
-	pObj.addText('more cool ', { highlight: true }); // Highlight!
-	pObj.addText('stuff!', { highlight: 'darkGreen' }); // Different highlight color.
-	
-	var out = fs.createWriteStream('public/tmp/out.docx');
+				docx.on('finalize', function(written) {
+					console.log('Finish to create the surprise PowerPoint stream and send it to .\nTotal bytes created: ' + written + '\n');
+				});
 
-	docx.generate(out, {
-		'finalize': function ( written ) {
-			console.log ( 'Finish to create a Word file.\nTotal bytes created: ' + written + '\n' );
-			res.send({status: 'OK', data: null});
-		},
-		'error': function ( err ) {
-			console.log(err);
-			res.send({status: 'ERROR', data: null});
+				docx.on('error', function(err) {
+					console.log(err);
+				});
+
+				var pObj = docx.createP();
+				
+				pObj.addText('Nombre del Indicador: ', { bold: true, underline: true });
+				pObj.addLineBreak ();
+				pObj.addText(title);
+
+				var pObj = docx.createP ();
+
+				pObj.addText('Código: ', { bold: true, underline: true });
+				pObj.addLineBreak ();
+				pObj.addText(code);
+
+				var pObj = docx.createP ();
+
+				pObj.addText('Versión: ', { bold: true, underline: true });
+				pObj.addLineBreak ();
+				pObj.addText(version);
+
+				var pObj = docx.createP ();
+
+				pObj.addText ('Even add ');
+				pObj.addText ('external link', { link: 'https://github.com' });
+				pObj.addText ('!');
+
+				docx.generate(res);
+			});
+		}
+		else {
+			res.send({ status: 'ERROR' });
 		}
 	});
 };
+
+	
+

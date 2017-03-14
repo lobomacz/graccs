@@ -43,6 +43,62 @@
     margin-top: 4px;
 }
 
+#download-wrapper {
+	float: right; 
+	margin-top: -35px;
+}
+
+#download-wrapper > ul > li {
+	margin-right: 10px;
+}
+
+#download-wrapper > ul > li:first-child {
+	padding-top: 10px;
+}
+
+#download-wrapper > ul > li:first-child > span {
+	color: #412272;
+	font-family: Lato, serif; 
+	font-size: 14px; 
+	text-transform: uppercase;
+}
+
+#download-pdf-button {
+	background: url('../img/pdf.png') no-repeat bottom;
+}
+
+#download-pdf-button:hover {
+	background: url('../img/pdf-hover.png') no-repeat bottom;
+}
+
+#download-pdf-button:focus {
+	background: url('../img/pdf-pressed.png') no-repeat bottom;
+}
+
+#download-word-button {
+	background: url('../img/word.png') no-repeat bottom;
+}
+
+#download-word-button:hover {
+	background: url('../img/word-hover.png') no-repeat bottom;
+}
+
+#download-word-button:focus {
+	background: url('../img/word-pressed.png') no-repeat bottom;
+}
+
+#download-excel-button {
+	background: url('../img/excel.png') no-repeat bottom;
+}
+
+#download-excel-button:hover {
+	background: url('../img/excel-hover.png') no-repeat bottom;
+}
+
+#download-excel-button:focus {
+	background: url('../img/excel-pressed.png') no-repeat bottom;
+}
+
 
 @media (max-width: 1200px) {
 
