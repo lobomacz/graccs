@@ -56,6 +56,9 @@ exports = module.exports = function (app) {
 	// Ajax calls
 	app.get('/get-areas', routes.views.get_areas);
 	app.get('/get-points', routes.views.get_points);
+	app.get('/get-points-by-department', routes.views.get_points_by_department);
+	app.get('/get-points-by-department-without-municipality', routes.views.get_points_by_department_without_municipality);
+	app.get('/get-points-by-municipality', routes.views.get_points_by_municipality);
 	app.get('/get-municipalities', routes.views.get_municipalities);
 	app.get('/get-municipality', routes.views.get_municipality);
 	app.get('/get-communities', routes.views.get_communities);

@@ -13,25 +13,29 @@ exports = module.exports = function (req, res) {
 			q = keystone.list('IndicatorValue').model.findOne()
                 .where('indicator', indicator_id)
                 .where('areaType', type)
-                .sort('nationalArea');
+                .sort('nationalArea')
+				.sort('createddAt');
 			break;
 		case 'department':
 			q = keystone.list('IndicatorValue').model.findOne()
                 .where('indicator', indicator_id)
                 .where('areaType', type)
-                .sort('departmentArea');
+                .sort('departmentArea')
+				.sort('createddAt');
 			break;
 		case 'municipal':
 			q = keystone.list('IndicatorValue').model.findOne()
                 .where('indicator', indicator_id)
                 .where('areaType', type)
-                .sort('municipalArea');
+                .sort('municipalArea')
+				.sort('createddAt');
 			break;
 		case 'community':
 			q = keystone.list('IndicatorValue').model.findOne()
                 .where('indicator', indicator_id)
                 .where('areaType', type)
-                .sort('communityArea');
+                .sort('communityArea')
+				.sort('createddAt');
 			break;
 	}
 

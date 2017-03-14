@@ -7,7 +7,7 @@ exports = module.exports = function (req, res) {
 
 	var q = keystone.list('MunicipalArea').model.find()
 		.where('parent', parent)
-		.sort('name');
+		.sort('position name');
 
 	q.exec(function (err, results) {
 		if (err) {

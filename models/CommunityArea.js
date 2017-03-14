@@ -17,12 +17,13 @@ var CommunityArea = new keystone.List('CommunityArea', {
 
 CommunityArea.add({
 	name: { label: 'Nombre', type: Types.Text, required: true, unique: true, initial: true },
+	position: { label: 'Posición para ordenar', type: Types.Number, default: 0, min: 0, required: true, initial: true },
 	parent: { label: 'Desagregación a la que pertenece', type: Types.Relationship, ref: 'MunicipalArea', many: false, initial: true }
 });
 
 /**
  * Registration
  */
-CommunityArea.defaultSort = 'name';
-CommunityArea.defaultColumns = 'parent, name';
+CommunityArea.defaultSort = 'position name';
+CommunityArea.defaultColumns = 'position, name, parent';
 CommunityArea.register();

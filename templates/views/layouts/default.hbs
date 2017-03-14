@@ -228,8 +228,6 @@
 	{{#if isIndicatorDetailsSection}}
         <script type="text/javascript">
             $(function () {
-                var $types = $('#areaTypes');
-                var $areas = $('#areas');
 				var $departments = $('#departments');
                 var $municipalities = $('#municipalities');
                 var $communities = $('#communities');
@@ -364,13 +362,14 @@
 						
 						if (areaType >= 2) {
                             $municipalities.empty();
+                            $municipalities.value = '';
                             select_municipality('');
+							
+							$communities.empty();
+							$communities.value = '';
+							select_community('');
+							
                             get_municipalities(department);
-
-							if (areaType >= 3) {
-                                $communities.empty();
-                                select_community('');
-							}
 						}
                     }
 					else {
@@ -421,12 +420,25 @@
 								get_points(indicator_id, 'department', department);
 							break;
 						case 2:
-							if (municipality)
-                            	get_points(indicator_id, 'municipality', municipality);
+							if (municipality) {
+								get_points(indicator_id, 'municipality', municipality);
+                            }
+							else if (department) {
+								get_points_by_department(indicator_id, department);	
+							}
                             break;
 						case 3:
-							if (community)
+							if (community) {
 								get_points(indicator_id, 'community', community);
+                            }
+							else {
+								if (municipality) {
+                                    get_points_by_municipality(indicator_id, municipality);
+                                }
+								else if (department) {
+									get_points_by_department_without_municipality(indicator_id, department);
+								}
+							}
                             break;
 					}
 				});
@@ -466,14 +478,15 @@
 
                             if (results && results.data) {
                                 var first_time = true;
+                                var selected_option = '';
                                 $municipalities.empty();
 
-                                $.each(results.data, function (key,val)
-                                {
+                                $.each(results.data, function (key,val) {
                                     var option = '';
 
                                     if (municipality) {
                                         if (val._id == municipality) {
+                                            selected_option = val._id;
                                             option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'" selected>'+ val.name +'</option>';
 
                                             $('#select2-municipalities-container').attr('title', val.name);
@@ -486,6 +499,7 @@
                                     else {
                                         if (first_time) {
                                             first_time = false;
+                                            selected_option = val._id;
                                             option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'" selected>'+ val.name +'</option>';
 
                                             $('#select2-municipalities-container').attr('title', val.name);
@@ -498,6 +512,11 @@
 
                                     $municipalities.append(option);
                                 });
+
+                                if (selected_option) {
+									$municipalities.value = selected_option;
+									get_communities(selected_option);
+                                }
                             }
                         });
 
@@ -519,16 +538,17 @@
 
                             if (results && results.related_municipal_areas) {
                                 var first_time = true;
+								var selected_option = '';
                                 $municipalities.empty();
 
-                                $.each(results.related_municipal_areas, function (key,val)
-                                {
+                                $.each(results.related_municipal_areas, function (key,val) {
                                     var option = '';
 
                                     if (municipality) {
                                         if (val._id == municipality) {
                                             option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'" selected>'+ val.name +'</option>';
-
+											selected_option = val._id;
+											
                                             $('#select2-municipalities-container').attr('title', val.name);
                                             $('#select2-municipalities-container').html(val.name);
                                         }
@@ -540,6 +560,7 @@
                                         if (first_time) {
                                             first_time = false;
                                             option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'" selected>'+ val.name +'</option>';
+                                            selected_option = val._id;
 
                                             $('#select2-municipalities-container').attr('title', val.name);
                                             $('#select2-municipalities-container').html(val.name);
@@ -551,6 +572,11 @@
 
                                     $municipalities.append(option);
                                 });
+								
+								if (selected_option) {
+                                	$municipalities.value = selected_option;
+									get_communities(selected_option);
+                            	}
 
                                 if (results.municipal_area) {
                                     var department = $('#' + results.municipal_area.parent).html().trim();
@@ -578,14 +604,15 @@
 
                             if (results && results.data) {
                                 var first_time = true;
+                                var selected_option = '';
                                 $communities.empty();
 
-                                $.each(results.data, function (key,val)
-                                {
+                                $.each(results.data, function (key,val) {
                                     var option = '';
 
                                     if (community) {
                                         if (val._id == community) {
+											selected_option = val._id;
                                             option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'" selected>'+ val.name +'</option>';
 											select_community(val.name);
                                         }
@@ -596,6 +623,7 @@
                                     else {
                                         if (first_time) {
                                             first_time = false;
+                                            selected_option = val._id;
                                             option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'" selected>'+ val.name +'</option>';
                                             select_community(val.name);
 										}
@@ -606,6 +634,8 @@
 
                                     $communities.append(option);
                                 });
+
+                                if (selected_option) $communities.value = selected_option;
                             }
                         });
 
@@ -616,6 +646,7 @@
 				}
 				
 				function select_department(name) {
+                    $('#select2-departments-container').attr('data-option-id', name);
                     $('#select2-departments-container').attr('title', name);
                     $('#select2-departments-container').html(name);
 				}
@@ -659,8 +690,6 @@
                         });
 
                         req.done(function (results) {
-                            console.log('Getting points successfully: ', results);
-
                             if (results && results.points) {
                                 build_points(results.points);
                             }
@@ -672,11 +701,490 @@
                     }
                 }
 
+                function get_points_by_municipality(indicator, municipality) {
+                    if (indicator && municipality) {
+                        var req = $.ajax({
+                            url: '/get-points-by-municipality',
+                            data: { indicator_id: indicator, municipality_id: municipality }
+                        });
+
+                        req.done(function (results) {
+                            if (results && results.points_array) {
+								var years = [];
+								var realValues = [];
+								var targetValues = [];
+								var comparativeValues = [];
+								var points = [];
+								
+								$.each(results.points_array, function(key, points) {
+									$.each(points, function(key_1, point) {
+                                        var year = '';
+
+                                        if (point.isMonthlyFrequency) {
+                                            var month = '';
+
+                                            switch (parseInt(point.monthlyFrequency)) {
+                                                case 1:
+                                                    month = 'Enero';
+                                                    break;
+                                                case 2:
+                                                    month = 'Febrero';
+                                                    break;
+                                                case 3:
+                                                    month = 'Marzo';
+                                                    break;
+                                                case 4:
+                                                    month = 'Abril';
+                                                    break;
+                                                case 5:
+                                                    month = 'Mayo';
+                                                    break;
+                                                case 6:
+                                                    month = 'Junio';
+                                                    break;
+                                                case 7:
+                                                    month = 'Julio';
+                                                    break;
+                                                case 8:
+                                                    month = 'Agosto';
+                                                    break;
+                                                case 9:
+                                                    month = 'Septiembre';
+                                                    break;
+                                                case 10:
+                                                    month = 'Octubre';
+                                                    break;
+                                                case 11:
+                                                    month = 'Noviembre';
+                                                    break;
+                                                case 12:
+                                                    month = 'Diciembre';
+                                                    break;
+                                            }
+
+                                            year = month + ' ' + point.startYear;
+                                        }
+                                        else if (point.isQuarterlyFrequency) {
+                                            var quarter = '';
+
+                                            switch (parseInt(point.quarterlyFrequency)) {
+                                                case 1:
+                                                    quarter = 'I Trimestre';
+                                                    break;
+                                                case 2:
+                                                    quarter = 'II Trimestre';
+                                                    break;
+                                                case 3:
+                                                    quarter = 'III Trimestre';
+                                                    break;
+                                                case 4:
+                                                    quarter = 'IV Trimestre';
+                                                    break;
+                                            }
+
+                                            year = quarter + ' ' + point.startYear;
+                                        }
+                                        else if (point.isBiannualFrequency) {
+                                            var biannual = '';
+
+                                            switch (parseInt(point.biannualFrequency)) {
+                                                case 1:
+                                                    biannual = 'I Semestre';
+                                                    break;
+                                                case 2:
+                                                    biannual = 'II Semestre';
+                                                    break;
+                                            }
+
+                                            year = biannual + ' ' + point.startYear;
+                                        }
+                                        else {
+                                            year = point.startYear;
+                                        }
+
+										if (years.indexOf(year) === -1) years.push(year);
+
+                                        if (!realValues[year]) {
+                                            realValues[year] = point.realValue;
+                                        }
+                                        else {
+                                            realValues[year] += point.realValue;
+                                        }
+
+                                        if (!targetValues[year]) {
+                                            targetValues[year] = point.targetValue;
+                                        }
+                                        else {
+                                            targetValues[year] += point.targetValue;
+                                        }
+
+                                        if (!comparativeValues[year]) {
+                                            comparativeValues[year] = point.comparativeValue;
+                                        }
+                                        else {
+                                            comparativeValues[year] += point.comparativeValue;
+                                        }
+									});
+                                });
+								
+								$.each(years, function(key, year) {
+									var point;
+									
+                                    if (useDenominator) {
+                                        point = { "year": year, "value": realValues[year], "value_2": targetValues[year], "value_3": comparativeValues[year], 
+											"percent": targetValues[year] !== 0 ? "<br />Representa: " + Number((realValues[year] / targetValues[year]) * 100).toPrecision(4) + "%" : "" };
+                                    }
+                                    else {
+                                        point = { "year": year, "value": realValues[year], "value_3": comparativeValues[year],
+                                            "percent": comparativeValues[year] !== 0 ? "<br />Representa: " + Number((realValues[year] / targetValues[year]) * 100).toPrecision(4) + "%" : ""};
+                                    }
+
+                                    points.push(point);
+									console.log('point: ', point);
+								});
+
+                                if (useDenominator) {
+                                    $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(2));
+                                    drawGraph(points);
+                                }
+                                else {
+                                    $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(2));
+                                    drawGraphOneLine(points);
+                                }
+                            }
+                        });
+
+                        req.fail(function (res) {
+                            console.log('Getting points by municipality has failed', res);
+                        });
+                    }
+                }
+				
+				function get_points_by_department(indicator, department) {
+                    if (indicator && department) {
+                        var req = $.ajax({
+                            url: '/get-points-by-department',
+                            data: { indicator_id: indicator, department_id: department }
+                        });
+
+                        req.done(function (results) {
+                            if (results && results.points_array) {
+                                var years = [];
+                                var realValues = [];
+                                var targetValues = [];
+                                var comparativeValues = [];
+                                var points = [];
+
+                                $.each(results.points_array, function(key, points) {
+                                    $.each(points, function(key_1, point) {
+                                        var year = '';
+
+                                        if (point.isMonthlyFrequency) {
+                                            var month = '';
+
+                                            switch (parseInt(point.monthlyFrequency)) {
+                                                case 1:
+                                                    month = 'Enero';
+                                                    break;
+                                                case 2:
+                                                    month = 'Febrero';
+                                                    break;
+                                                case 3:
+                                                    month = 'Marzo';
+                                                    break;
+                                                case 4:
+                                                    month = 'Abril';
+                                                    break;
+                                                case 5:
+                                                    month = 'Mayo';
+                                                    break;
+                                                case 6:
+                                                    month = 'Junio';
+                                                    break;
+                                                case 7:
+                                                    month = 'Julio';
+                                                    break;
+                                                case 8:
+                                                    month = 'Agosto';
+                                                    break;
+                                                case 9:
+                                                    month = 'Septiembre';
+                                                    break;
+                                                case 10:
+                                                    month = 'Octubre';
+                                                    break;
+                                                case 11:
+                                                    month = 'Noviembre';
+                                                    break;
+                                                case 12:
+                                                    month = 'Diciembre';
+                                                    break;
+                                            }
+
+                                            year = month + ' ' + point.startYear;
+                                        }
+                                        else if (point.isQuarterlyFrequency) {
+                                            var quarter = '';
+
+                                            switch (parseInt(point.quarterlyFrequency)) {
+                                                case 1:
+                                                    quarter = 'I Trimestre';
+                                                    break;
+                                                case 2:
+                                                    quarter = 'II Trimestre';
+                                                    break;
+                                                case 3:
+                                                    quarter = 'III Trimestre';
+                                                    break;
+                                                case 4:
+                                                    quarter = 'IV Trimestre';
+                                                    break;
+                                            }
+
+                                            year = quarter + ' ' + point.startYear;
+                                        }
+                                        else if (point.isBiannualFrequency) {
+                                            var biannual = '';
+
+                                            switch (parseInt(point.biannualFrequency)) {
+                                                case 1:
+                                                    biannual = 'I Semestre';
+                                                    break;
+                                                case 2:
+                                                    biannual = 'II Semestre';
+                                                    break;
+                                            }
+
+                                            year = biannual + ' ' + point.startYear;
+                                        }
+                                        else {
+                                            year = point.startYear;
+                                        }
+
+                                        if (years.indexOf(year) === -1) years.push(year);
+
+                                        if (!realValues[year]) {
+                                            realValues[year] = point.realValue;
+                                        }
+                                        else {
+                                            realValues[year] += point.realValue;
+                                        }
+
+                                        if (!targetValues[year]) {
+                                            targetValues[year] = point.targetValue;
+                                        }
+                                        else {
+                                            targetValues[year] += point.targetValue;
+                                        }
+
+                                        if (!comparativeValues[year]) {
+                                            comparativeValues[year] = point.comparativeValue;
+                                        }
+                                        else {
+                                            comparativeValues[year] += point.comparativeValue;
+                                        }
+                                    });
+                                });
+
+                                $.each(years, function(key, year) {
+                                    var point;
+
+                                    if (useDenominator) {
+                                        point = { "year": year, "value": realValues[year], "value_2": targetValues[year], "value_3": comparativeValues[year],
+                                            "percent": targetValues[year] !== 0 ? "<br />Representa: " + Number((realValues[year] / targetValues[year]) * 100).toPrecision(4) + "%" : "" };
+                                    }
+                                    else {
+                                        point = { "year": year, "value": realValues[year], "value_3": comparativeValues[year],
+                                            "percent": comparativeValues[year] !== 0 ? "<br />Representa: " + Number((realValues[year] / targetValues[year]) * 100).toPrecision(4) + "%" : ""};
+                                    }
+
+                                    points.push(point);
+                                    console.log('point: ', point);
+                                });
+
+                                if (useDenominator) {
+                                    $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(2));
+                                    drawGraph(points);
+                                }
+                                else {
+                                    $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(2));
+                                    drawGraphOneLine(points);
+                                }
+                            }
+                        });
+
+                        req.fail(function (res) {
+                            console.log('Getting points by department has failed', res);
+                        });
+                    }
+                }
+				
+				function get_points_by_department_without_municipality(indicator, department) {
+                    if (indicator && department) {
+                        var req = $.ajax({
+                            url: '/get-points-by-department-without-municipality',
+                            data: { indicator_id: indicator, department_id: department }
+                        });
+
+                        req.done(function (results) {
+                            console.log('Getting points by department successfully: ', results);
+
+                            if (results && results.points_array) {
+                                var years = [];
+                                var realValues = [];
+                                var targetValues = [];
+                                var comparativeValues = [];
+                                var points = [];
+
+                                $.each(results.points_array, function(key, points) {
+                                    $.each(points, function(key_1, point) {
+                                        var year = '';
+
+                                        if (point.isMonthlyFrequency) {
+                                            var month = '';
+
+                                            switch (parseInt(point.monthlyFrequency)) {
+                                                case 1:
+                                                    month = 'Enero';
+                                                    break;
+                                                case 2:
+                                                    month = 'Febrero';
+                                                    break;
+                                                case 3:
+                                                    month = 'Marzo';
+                                                    break;
+                                                case 4:
+                                                    month = 'Abril';
+                                                    break;
+                                                case 5:
+                                                    month = 'Mayo';
+                                                    break;
+                                                case 6:
+                                                    month = 'Junio';
+                                                    break;
+                                                case 7:
+                                                    month = 'Julio';
+                                                    break;
+                                                case 8:
+                                                    month = 'Agosto';
+                                                    break;
+                                                case 9:
+                                                    month = 'Septiembre';
+                                                    break;
+                                                case 10:
+                                                    month = 'Octubre';
+                                                    break;
+                                                case 11:
+                                                    month = 'Noviembre';
+                                                    break;
+                                                case 12:
+                                                    month = 'Diciembre';
+                                                    break;
+                                            }
+
+                                            year = month + ' ' + point.startYear;
+                                        }
+                                        else if (point.isQuarterlyFrequency) {
+                                            var quarter = '';
+
+                                            switch (parseInt(point.quarterlyFrequency)) {
+                                                case 1:
+                                                    quarter = 'I Trimestre';
+                                                    break;
+                                                case 2:
+                                                    quarter = 'II Trimestre';
+                                                    break;
+                                                case 3:
+                                                    quarter = 'III Trimestre';
+                                                    break;
+                                                case 4:
+                                                    quarter = 'IV Trimestre';
+                                                    break;
+                                            }
+
+                                            year = quarter + ' ' + point.startYear;
+                                        }
+                                        else if (point.isBiannualFrequency) {
+                                            var biannual = '';
+
+                                            switch (parseInt(point.biannualFrequency)) {
+                                                case 1:
+                                                    biannual = 'I Semestre';
+                                                    break;
+                                                case 2:
+                                                    biannual = 'II Semestre';
+                                                    break;
+                                            }
+
+                                            year = biannual + ' ' + point.startYear;
+                                        }
+                                        else {
+                                            year = point.startYear;
+                                        }
+
+                                        if (years.indexOf(year) === -1) years.push(year);
+
+                                        if (!realValues[year]) {
+                                            realValues[year] = point.realValue;
+                                        }
+                                        else {
+                                            realValues[year] += point.realValue;
+                                        }
+
+                                        if (!targetValues[year]) {
+                                            targetValues[year] = point.targetValue;
+                                        }
+                                        else {
+                                            targetValues[year] += point.targetValue;
+                                        }
+
+                                        if (!comparativeValues[year]) {
+                                            comparativeValues[year] = point.comparativeValue;
+                                        }
+                                        else {
+                                            comparativeValues[year] += point.comparativeValue;
+                                        }
+                                    });
+                                });
+
+                                $.each(years, function(key, year) {
+                                    var point;
+
+                                    if (useDenominator) {
+                                        point = { "year": year, "value": realValues[year], "value_2": targetValues[year], "value_3": comparativeValues[year],
+                                            "percent": targetValues[year] !== 0 ? "<br />Representa: " + Number((realValues[year] / targetValues[year]) * 100).toPrecision(4) + "%" : "" };
+                                    }
+                                    else {
+                                        point = { "year": year, "value": realValues[year], "value_3": comparativeValues[year],
+                                            "percent": comparativeValues[year] !== 0 ? "<br />Representa: " + Number((realValues[year] / targetValues[year]) * 100).toPrecision(4) + "%" : ""};
+                                    }
+
+                                    points.push(point);
+                                    console.log('point: ', point);
+                                });
+
+                                if (useDenominator) {
+                                    $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(2));
+                                    drawGraph(points);
+                                }
+                                else {
+                                    $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(2));
+                                    drawGraphOneLine(points);
+                                }
+                            }
+                        });
+
+                        req.fail(function (res) {
+                            console.log('Getting points by department has failed', res);
+                        });
+                    }
+                }
+
                 function build_points(data_points) {
                     if (data_points && data_points.length > 0) {
                         var points = [];
-						
-						for (var i = 0; i < data_points.length; i++) {
+
+                        for (var i = 0; i < data_points.length; i++) {
                             var point = null;
                             var year = '';
 
@@ -763,27 +1271,31 @@
                             }
 
                             if (useDenominator) {
-                                point = { "year": year, "value": data_points[i].realValue, "value_2": data_points[i].targetValue, 
-									"value_3": data_points[i].comparativeValue ? data_points[i].comparativeValue : 0 };
+                                point = {
+                                    "year": year,
+                                    "value": data_points[i].realValue,
+                                    "value_2": data_points[i].targetValue,
+                                    "value_3": data_points[i].comparativeValue ? data_points[i].comparativeValue : 0,
+                                    "percent": data_points[i].targetValue !== 0 ? "<br />Representa: " + Number((data_points[i].realValue / data_points[i].targetValue) * 100).toPrecision(4) + "%" : ""
+                                };
                             }
                             else {
-                                point = { "year": year, "value": data_points[i].realValue, 
-									"value_3": data_points[i].comparativeValue ? data_points[i].comparativeValue : 0 };
+                                point = {
+                                    "year": year, "value": data_points[i].realValue,
+                                    "value_3": data_points[i].comparativeValue ? data_points[i].comparativeValue : 0,
+                                    "percent": data_points[i].targetValue !== 0 ? "<br />Representa: " + Number((data_points[i].realValue / data_points[i].targetValue) * 100).toPrecision(4) + "%" : ""
+                                };
                             }
 
                             points.push(point);
-						}
+                        }
 
                         if (useDenominator) {
                             $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(2));
                             drawGraph(points);
                         }
-                        else if(comparativeValue > 0) {
-                            $('.indicator-value').html(comparativeValue - Number(points[points.length - 1].value).toPrecision(2));
-                            drawGraph(points);
-                        }
                         else {
-                            $('.indicator-value').html(points[points.length - 1].value);
+                            $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(2));
                             drawGraphOneLine(points);
                         }
                     }
@@ -816,18 +1328,15 @@
 
                     // GRAPH
                     graph = new AmCharts.AmGraph();
-                    graph.type = "smoothedLine"; // this line makes the graph smoothed line.
-                    graph.lineColor = "#FFA92E";
-                    graph.negativeLineColor = "#637bb6"; // this line makes the graph to change color when it drops below 0
-                    graph.bullet = "round";
+                    graph.type = "column"; // this line makes the graph smoothed line.
                     graph.title = realValueLabel ? realValueLabel : "Valor real";
-                    graph.bulletSize = 8;
-                    graph.bulletBorderColor = "#FFFFFF";
-                    graph.bulletBorderAlpha = 1;
-                    graph.bulletBorderThickness = 2;
-                    graph.lineThickness = 2;
                     graph.valueField = "value";
-                    graph.balloonText = "<span style='font-size:13px;'>[[title]] en [[category]]:<b>[[value]]</b> [[additional]]</span>";
+                    graph.lineColor = "#FFA92E";
+                    graph.lineAlpha = 1;
+                    graph.fillAlphas = 1;
+                    graph.dashLengthField = "dashLengthColumn";
+                    graph.alphaField = "alpha";
+                    graph.balloonText = "<span style='font-size:13px;'>[[title]] en [[category]]:<b>[[value]]</b> [[percent]]</span>";
                     chart.addGraph(graph);
 
                     graph_3 = new AmCharts.AmGraph();
@@ -900,7 +1409,7 @@
                     graph.fillAlphas = 1;
                     graph.dashLengthField = "dashLengthColumn";
                     graph.alphaField = "alpha";
-                    graph.balloonText = "<span style='font-size:13px;'>[[title]] en [[category]]:<b>[[value]]</b> [[additional]]</span>";
+                    graph.balloonText = "<span style='font-size:13px;'>[[title]] en [[category]]:<b>[[value]]</b> [[percent]]</span>";
                     chart.addGraph(graph);
 
                     // GRAPH
@@ -953,243 +1462,7 @@
                     // WRITE
                     chart.write("chartdiv");
                 }
-
-
-
-
-
-
-                $types.select2({
-                    theme: "bootstrap",
-                    placeholder: "-- Seleccionar --",
-                    allowClear: true
-                });
-
-                $areas.select2({
-                    theme: "bootstrap",
-                    placeholder: "-- Seleccionar --",
-                    allowClear: true
-                });
-
-                $types.change(function(e) {
-                    $areas.empty();
-                    $('#select2-areas-container').attr('title', '');
-                    $('#select2-areas-container').html('');
-
-                    get_areas($types.val(), null);
-                });
-
-                $areas.change(function(e) {
-                    var area = $areas.val();
-
-                    if (area) {
-                        var name = $areas.data('name');
-
-                        $('#select2-areas-container').attr('title', name);
-                        $('#select2-areas-container').html(name);
-                    }
-                });
-
-                $('#bGraph').click(function(e) {
-                    $('#chartdiv').empty();
-
-                    var type = $types.val();
-                    var area = $areas.val();
-
-                    if (type) {
-                        var req = $.ajax({
-                            url: '/get-points',
-                            data: { area_type: type, area_id: area, indicator_id: indicator_id }
-                        });
-
-                        req.done(function (results) {
-                            console.log('Getting points successfully: ', results);
-
-                            if (results && results.points) {
-                                var points = [];
-
-                                $.each(results.points, function (key,val)
-                                {
-                                    var point = { "year": val.startYear, "value": val.realValue, "value_2": val.targetValue }
-                                    points.push(point);
-                                });
-
-                                drawGraph(points);
-                            }
-                        });
-
-                        req.fail(function (res) {
-                            console.log('Getting points has failed', res);
-                        });
-                    }
-                });
 				
-				$('#bCreateDocx').click(function(e) {
-                    var req = $.ajax({
-                        url: '/generate-docx',
-                        data: { area_type: 'national' }
-                    });
-
-                    req.done(function (results) {
-                        console.log('Create docx successfully: ', results);
-                    });
-
-                    req.fail(function (res) {
-                        console.log('Create docx has failed', res);
-                    });
-				});
-
-                function get_indicator_initial_data() {
-                    if (indicator_id) {
-                        var req = $.ajax({
-                            url: '/get-indicator-initial-data',
-                            data: { indicator_id: indicator_id, type: 'national' }
-                        });
-
-                        req.done(function (results) {
-                            console.log('National results');
-                            console.log(results);
-
-                            var points = [];
-
-                            if (results.data) {
-                                $('#select2-areaTypes-container').attr('title', 'Nacional');
-                                $('#select2-areaTypes-container').html('Nacional');
-
-                                get_points(indicator_id, 'national', results.data.nationalArea);
-                                get_areas('national', results.data.nationalArea);
-                            }
-                            else {
-                                var req = $.ajax({
-                                    url: '/get-indicator-initial-data',
-                                    data: { indicator_id: indicator_id, type: 'department' }
-                                });
-
-                                req.done(function (results) {
-                                    console.log('Departmental results');
-                                    console.log(results);
-
-                                    if (results.data) {
-                                        $('#select2-areaTypes-container').attr('title', 'Regional');
-                                        $('#select2-areaTypes-container').html('Regional');
-
-                                        get_points(indicator_id, 'department', results.data.departmentArea);
-                                        get_areas('department', results.data.departmentArea);
-                                    }
-                                    else {
-                                        var req = $.ajax({
-                                            url: '/get-indicator-initial-data',
-                                            data: { indicator_id: indicator_id, type: 'municipal' }
-                                        });
-
-                                        req.done(function (results) {
-                                            console.log('Municipal results');
-                                            console.log(results);
-
-                                            if (results.data) {
-                                                $types.val('municipal');
-                                                $('#select2-areaTypes-container').attr('title', 'Municipal');
-                                                $('#select2-areaTypes-container').html('Municipal');
-
-                                                get_points(indicator_id, 'municipal', results.data.municipalArea);
-                                                get_areas('municipal', results.data.municipalArea);
-                                            }
-                                            else {
-                                                var req = $.ajax({
-                                                    url: '/get-indicator-initial-data',
-                                                    data: { indicator_id: indicator_id, type: 'community' }
-                                                });
-
-                                                req.done(function (results) {
-                                                    console.log('Community results');
-                                                    console.log(results);
-
-                                                    if (results.data) {
-                                                        $('#select2-areaTypes-container').attr('title', 'Urbano-rural');
-                                                        $('#select2-areaTypes-container').html('Urbano-rural');
-
-                                                        get_points(indicator_id, 'community', results.data.communityArea);
-                                                        get_areas('community', results.data.communityArea);
-                                                    }
-                                                });
-
-                                                req.fail(function (res) {
-                                                    console.log('Getting initial data has failed', res);
-                                                });
-                                            }
-                                        });
-
-                                        req.fail(function (res) {
-                                            console.log('Getting initial data has failed', res);
-                                        });
-                                    }
-                                });
-
-                                req.fail(function (res) {
-                                    console.log('Getting initial data has failed', res);
-                                });
-                            }
-                        });
-
-                        req.fail(function (res) {
-                            console.log('Getting initial data has failed', res);
-                        });
-                    }
-                }
-
-
-                function get_areas(type, selected_area) {
-                    if (type) {
-                        var req = $.ajax({
-                            url: '/get-areas',
-                            data: { area_type: type }
-                        });
-
-                        req.done(function (results) {
-                            console.log('Getting areas successfully: ', results);
-
-                            var first_time = true;
-
-                            $.each(results, function (key,val)
-                            {
-                                var option = '';
-
-                                if (selected_area) {
-                                    if (val._id == selected_area) {
-                                        option = '<option data-name="'+ val.name +'" value="'+ val._id +'" selected>'+ val.name +'</option>';
-
-                                        $('#select2-areas-container').attr('title', val.name);
-                                        $('#select2-areas-container').html(val.name);
-                                    }
-                                    else {
-                                        option = '<option data-name="'+ val.name +'" value="'+ val._id +'">'+ val.name +'</option>';
-                                    }
-                                }
-                                else {
-                                    if (first_time) {
-                                        option = '<option data-name="'+ val.name +'" value="'+ val._id +'" selected>'+ val.name +'</option>';
-                                        $('#select2-areas-container').attr('title', val.name);
-                                        $('#select2-areas-container').html(val.name);
-
-                                        first_time = false;
-                                    }
-                                    else {
-                                        option = '<option data-name="'+ val.name +'" value="'+ val._id +'">'+ val.name +'</option>';
-                                    }
-                                }
-
-                                $areas.append(option);
-                            });
-                        });
-
-                        req.fail(function (res) {
-                            console.log('Getting areas has failed', res);
-                        });
-                    }
-                }
-
-                
-
                 get_initial_data();
             });
         </script>

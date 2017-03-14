@@ -11,13 +11,13 @@ exports = module.exports = function (req, res) {
 			q = keystone.list('NationalArea').model.find().sort('name');
 			break;
 		case 'department':
-			q = keystone.list('DepartmentalArea').model.find().sort('name');
+			q = keystone.list('DepartmentalArea').model.find().sort('position name');
 			break;
 		case 'municipal':
-			q = keystone.list('MunicipalArea').model.find().sort('name');
+			q = keystone.list('MunicipalArea').model.find().sort('position name');
 			break;
 		case 'community':
-			q = keystone.list('CommunityArea').model.find().sort('name');
+			q = keystone.list('CommunityArea').model.find().sort('position name');
 			break;
 	}
 
@@ -28,7 +28,7 @@ exports = module.exports = function (req, res) {
             }
             else {
                 var areas = _.map(results, function (item) {
-                    return _.pick(item.toJSON(), '_id', 'name');
+                    return _.pick(item.toJSON(), '_id', 'name', 'position');
                 });
 
                 res.send(areas);

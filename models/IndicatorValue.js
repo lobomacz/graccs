@@ -20,7 +20,7 @@ IndicatorValue.add({
 	realValue: { label: 'Valor ejecutado', type: Types.Number, default: 0, min: 0, required: true, initial: true },
 	useDenominator: { label: 'Usar denominador', type: Types.Boolean, watch: true, value: checkIndicatorDenominator, hidden: true },
 	targetValue: { label: 'Valor planificado', type: Types.Number, default: 0, min: 0, dependsOn: { useDenominator: true } },
-	comparativeValue: { label: 'Valor para comparar', type: Types.Number, min: 0 },
+	comparativeValue: { label: 'Valor para comparar', type: Types.Number, default: 0, min: 0 },
 	isMonthlyFrequency: { label: 'Es una frecuencia mensual', type: Types.Boolean, watch: true, value: checkMonthlyFrequency, hidden: true },
 	monthlyFrequency: {
 		label: 'Frecuencia mensual',
