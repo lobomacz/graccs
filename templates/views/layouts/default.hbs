@@ -254,6 +254,7 @@
                 var authorizer = "{{indicator.authorizer}}";
                 var publisher = "{{indicator.publisher}}";
 				var global_points = [];
+				var years = [];
 
                 var formula = "{{indicator.formula}}";
                 var realValueLabel = "{{indicator.realValue}}";
@@ -869,6 +870,19 @@
                     allowClear: true
                 });
 
+                $('#graph_tab a:first').tab('show');
+
+                $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+                    var current_tab = e.target; // newly activated tab
+                    var last_tab = e.relatedTarget; // previous active tab
+
+                    $('.form-control.select').select2({
+                        theme: "bootstrap",
+                        placeholder: "-- Seleccionar --",
+                        allowClear: true
+                    });
+				});
+
                 $departments.change(function(e) {
                     var department = $departments.val();
 
@@ -945,7 +959,7 @@
                         req.done(function (results) {
                             console.log('Getting municipalities successfully: ', results);
 
-                            if (results && results.data) {
+                            if (results && results.data && results.data.length > 0) {
                                 var data = [];
 								
                                 $.each(results.data, function (key,val) {
@@ -986,7 +1000,7 @@
                         req.done(function (results) {
                             console.log('Getting municipality successfully: ', results);
 
-                            if (results && results.related_municipal_areas) {
+                            if (results && results.related_municipal_areas && results.related_municipal_areas.length > 0) {
                                 var data = [];
 
                                 $.each(results.related_municipal_areas, function (key,val) {
@@ -1023,7 +1037,7 @@
                         req.done(function (results) {
                             console.log('Getting communities successfully: ', results);
 
-                            if (results && results.data) {
+                            if (results && results.data && results.data.length > 0) {
                                 var data = [];
                                 var selected_option = '';
 
@@ -1092,7 +1106,7 @@
                         });
 
                         req.done(function (results) {
-                            if (results && results.points_array) {
+                            if (results && results.points_array && results.points_array.length > 0) {
                                 var years = [];
                                 var realValues = [];
                                 var realValuesCount = [];
@@ -1264,7 +1278,7 @@
                         });
 
                         req.done(function (results) {
-                            if (results && results.points_array) {
+                            if (results && results.points_array && results.points_array.length > 0) {
                                 var years = [];
                                 var realValues = [];
 								var realValuesCount = [];
@@ -1437,7 +1451,7 @@
                         req.done(function (results) {
                             console.log('Getting points by department successfully: ', results);
 
-                            if (results && results.points_array) {
+                            if (results && results.points_array && results.points_array.length > 0) {
                                 var years = [];
                                 var realValues = [];
                                 var realValuesCount = [];

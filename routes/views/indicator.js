@@ -111,40 +111,28 @@ exports = module.exports = function (req, res) {
 								q_value = keystone.list('IndicatorValue').model.findOne()
 									.where('indicator', indicator._id)
 									.where('isDepartmentArea', true)
-									.sort('departmentArea')
+									.sort('-startYear departmentArea')
 									.populate('departmentArea');
 								break;
 							case 'municipal':
 								q_value = keystone.list('IndicatorValue').model.findOne()
 									.where('indicator', indicator._id)
 									.where('isMunicipalArea', true)
-									.sort('municipalArea')
+									.sort('-startYear municipalArea')
 									.populate('municipalArea');
 								break;
 							case 'community':
 								q_value = keystone.list('IndicatorValue').model.findOne()
 									.where('indicator', indicator._id)
 									.where('isCommunityArea', true)
-									.sort('communityArea')
+									.sort('-startYear communityArea')
 									.populate('communityArea');
 								break;
 						}
 
 						q_value.exec(function (err, value) {
 							if (!err && value) {
-								locals.indicator.point = value;
-
-								switch (indicator.minAreaToApply) {
-									case 'department':
-										break;
-									case 'municipal':
-										
-										break;
-									case 'community':
-										
-										break;
-								}
-								
+								locals.indicator.point = value;								
 								callback(err);
 							}
 							else {

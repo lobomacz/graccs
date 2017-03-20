@@ -69,7 +69,7 @@ Indicator.add(
 		},
 		source: { label: 'Fuente de información', type: Types.Text, trim: true },
 		url: { label: 'Enlace de la fuente de información', type: Types.Url, note: 'http://' },
-		target: { label: 'Descripción', type: Types.Html, default: '<p></p>', wysiwyg: true, height: 150 },
+		target: { label: 'Descripción', type: Types.Html, default: '', wysiwyg: true, height: 150 },
 		realValue: {
 			label: 'Etiqueta a mostrar para el valor ejecutado', type: Types.Text, trim: true, required: true, default: 'Valor ejecutado',
 			note: 'Depende del indicador: valor ejecutado, valor alcanzado, ...'
