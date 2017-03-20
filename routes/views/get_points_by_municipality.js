@@ -7,7 +7,6 @@ exports = module.exports = function (req, res) {
 	var indicator_id = req.params.indicator_id;
 	var municipality_id = req.params.municipality_id;
 
-	var communities = [];
 	var points = [];
 	
 	var q = keystone.list('CommunityArea').model.find()
@@ -25,11 +24,9 @@ exports = module.exports = function (req, res) {
 					
 					q_community.exec(function(err, values) {
 						if (!err && values) {
-							community.points = values;
 							points.push(values);
 						}
 						else {
-							community.points = null;
 							points.push(null);
 						}
 						

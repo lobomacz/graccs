@@ -129,7 +129,7 @@ console.log(dashes);
 keystone.set('nav', {
 	'información general': ['GeneralInformation', 'external-links', 'contact-messages'],
 	'desagregaciones': ['national-areas', 'departmental-areas', 'municipal-areas', 'community-areas'],
-	'indicadores': ['indicators', 'indicator-values', 'indicator-sectors', 'indicator-comments'],
+	'indicadores': ['indicators', 'indicator-values', 'indicator-sectors', 'indicator-comments', 'legal-backups'],
 	'noticias': ['posts', 'post-categories', 'post-comments'],
 	'usuarios': ['users']
 });

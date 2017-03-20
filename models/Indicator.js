@@ -43,7 +43,7 @@ Indicator.add(
 			label: 'Clasificación', 
 			type: Types.Select,
 			options: [
-				{ value: 'children', label: 'Niños' },
+				{ value: 'children', label: 'Niñez' },
 				{ value: 'teenager', label: 'Adolescentes' },
 				{ value: 'youth', label: 'Jóvenes' },
 				{ value: 'adults', label: 'Adultos' }
@@ -68,7 +68,8 @@ Indicator.add(
 			}
 		},
 		source: { label: 'Fuente de información', type: Types.Text, trim: true },
-		target: { label: 'Objetivo', type: Types.Html, default: '<p></p>', wysiwyg: true, height: 150, collapse: true },
+		url: { label: 'Enlace de la fuente de información', type: Types.Url, note: 'http://' },
+		target: { label: 'Descripción', type: Types.Html, default: '<p></p>', wysiwyg: true, height: 150 },
 		realValue: {
 			label: 'Etiqueta a mostrar para el valor ejecutado', type: Types.Text, trim: true, required: true, default: 'Valor ejecutado',
 			note: 'Depende del indicador: valor ejecutado, valor alcanzado, ...'
@@ -124,7 +125,7 @@ Indicator.add(
 	},
 	'Apoyo legal', {
 		legalBackup: {
-			cdn: { label: 'Derecho CDN', type: Types.Text, default: '', trim: true },
+			instance: { label: 'Instancia', type: Types.Relationship, ref: 'LegalBackup', many: false },
 			institutionalMark: { label: 'Marco Institucional', type: Types.Text, default: '', trim: true },
 			relatedFile: {
 				label: 'Archivo relacionado al Marco Institucional',

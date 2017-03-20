@@ -226,6 +226,9 @@
 	{{/if}}
 	
 	{{#if isIndicatorDetailsSection}}
+        <script type="text/javascript" src="/assets/js/pdfmake.js"></script>
+        <script type="text/javascript" src="/assets/js/vfs_fonts.js"></script>
+		
         <script type="text/javascript">
             $(function () {
 				var $departments = $('#departments');
@@ -236,14 +239,98 @@
                 var areaParent = $('#area_parent_id').text().trim();
 
                 var indicator_id = "{{indicator._id}}";
-				var formula = "{{indicator.formula}}";
+				var title = "{{indicator.title}}";
+                var slug = "{{indicator.slug}}";
+                var code = "{{indicator.code}}";
+                var version = "{{indicator.version}}";
+                var date = "{{date indicator.startDate format='MMMM DD, YYYY'}}";
+                var sector = "{{indicator.sector.name}}";
+				var minAreaToApply = "{{indicator.minAreaToApply}}";
+				var frequency = "{{indicator.frequency}}";
+				var source = "{{indicator.source}}";
+                var target = $('#target').text();//$('#target').html().replace('&lt;p&gt;', '').replace('&lt;/p&gt;', '');
+                var collector = "{{indicator.collector}}";
+                var analizer = "{{indicator.analizer}}";
+                var authorizer = "{{indicator.authorizer}}";
+                var publisher = "{{indicator.publisher}}";
+				var global_points = [];
+
+                var formula = "{{indicator.formula}}";
                 var realValueLabel = "{{indicator.realValue}}";
                 var useDenominator = {{indicator.useDenominator}};
 				var targetValueLabel = useDenominator ? "{{indicator.targetValue}}" : "";
 				var areaType = {{indicator.areaNumber}};
                 var areaTypeName = areaType === 3 ? 'community' : (areaType === 2 ? 'municipal' : (areaType === 1 ? 'department' : ''));
 
-				console.log("Formula: ", formula);
+                var stockData = [
+                    {
+                        Symbol: "AAPL",
+                        Company: "Apple Inc.",
+                        Price: "132.54"
+                    },
+                    {
+                        Symbol: "INTC",
+                        Company: "Intel Corporation",
+                        Price: "33.45"
+                    },
+                    {
+                        Symbol: "GOOG",
+                        Company: "Google Inc",
+                        Price: "554.52"
+                    },
+                ];
+
+                function convertArrayOfObjectsToCSV(args) {
+                    var result, ctr, keys, columnDelimiter, lineDelimiter, data;
+
+                    data = args.data || null;
+                    if (data == null || !data.length) {
+                        return null;
+                    }
+
+                    columnDelimiter = args.columnDelimiter || ',';
+                    lineDelimiter = args.lineDelimiter || '\n';
+
+                    keys = Object.keys(data[0]);
+
+                    result = '';
+                    result += keys.join(columnDelimiter);
+                    result += lineDelimiter;
+
+                    data.forEach(function(item) {
+                        ctr = 0;
+                        keys.forEach(function(key) {
+                            if (ctr > 0) result += columnDelimiter;
+
+                            result += item[key];
+                            ctr++;
+                        });
+                        result += lineDelimiter;
+                    });
+
+                    return result;
+                }
+
+                window.downloadCSV = function(args) {
+                    var data, filename, link;
+
+                    var csv = convertArrayOfObjectsToCSV({
+                        data: stockData
+                    });
+                    if (csv == null) return;
+
+                    filename = args.filename || 'export.csv';
+
+                    if (!csv.match(/^data:text\/csv/i)) {
+                        csv = 'data:text/csv;charset=utf-8,' + csv;
+                    }
+                    data = encodeURI(csv);
+
+                    link = document.createElement('a');
+                    link.setAttribute('href', data);
+                    link.setAttribute('download', filename);
+                    link.click();
+                };
 				
                 $('#vote-positive-button').click(function(e) {
                     e.preventDefault();
@@ -348,6 +435,433 @@
                         });
                     }
                 });
+
+                $('#bBuildGraph').click(function(e) {
+                    $('#chartdiv').empty();
+
+                    var department = $departments.val();
+                    var municipality = $municipalities.val();
+                    var community = $communities.val();
+
+                    switch (areaType) {
+                        case 1:
+                            if (department)
+                                get_points(indicator_id, 'department', department);
+                            break;
+                        case 2:
+                            if (municipality) {
+                                get_points(indicator_id, 'municipal', municipality);
+                            }
+                            else if (department) {
+                                get_points_by_department(indicator_id, department);
+                            }
+                            break;
+                        case 3:
+                            if (community) {
+                                get_points(indicator_id, 'community', community);
+                            }
+                            else {
+                                if (municipality) {
+                                    get_points_by_municipality(indicator_id, municipality);
+                                }
+                                else if (department) {
+                                    get_points_by_department_without_municipality(indicator_id, department);
+                                }
+                            }
+                            break;
+                    }
+                });
+
+                $('#download-pdf-button').click(function(e) {
+                    //e.preventDefault();
+
+                    /*var areasToApply = '';
+                    var area_header = '';
+                    switch (minAreaToApply) {
+                        case 'department':
+                            areasToApply = "Regionales";
+                            area_header = 'Región';
+                            break;
+                        case 'municipal':
+                            areasToApply = "Regionales, Municipales";
+                            area_header = 'Municipio';
+                            break;
+                        case 'community':
+                            areasToApply = "Regionales, Municipales, Urbano-rurales";
+                            area_header = 'Localidad';
+                            break;
+                    }
+                    
+                    var frequencyEs = '';
+                    switch (frequency) {
+                        case 'monthly':
+                            frequencyEs = "Mensual";
+                            break;
+                        case 'quarterly':
+                            frequencyEs = "Trimestral";
+                            break;
+                        case 'biannual':
+                            frequencyEs = "Semestral";
+                            break;
+                        case 'annual':
+                            frequencyEs = "Anual";
+                            break;
+                        case 'fifthly':
+                            frequencyEs = "Cada cinco años";
+                            break;
+                        case 'decade':
+                            frequencyEs = "Cada diez años";
+                            break;
+                    }
+                    
+                    var values_table = {};
+                    if (global_points) {
+                        var header = [];
+                        var body = [];
+                        
+                        if (useDenominator) {
+                            
+                        }
+                        else {
+                            header = [{ rowSpan: 2, text: area_header, style: 'tableHeader'}, { colSpan: 3, style: 'tableHeader' } ];
+                        }
+                        
+                        for (var i = 0; i < global_points.length; i++) {
+                            
+                        }
+                    }
+
+                    var docDefinition = {
+                        compress: false,
+                        // a string or { width: number, height: number }
+                        pageSize: 'A4',
+                        // by default we use portrait, you can change it to landscape if you wish
+                        pageOrientation: 'portrait',
+                        // [left, top, right, bottom] or [horizontal, vertical] or just a number for equal margins
+                        pageMargins: [ 40, 60, 40, 60 ],
+                        info: {
+                            title: title,
+                            author: 'Casabe', 
+                            subject: 'GRACCS - Sistema de Información y Comunicación Regional',
+                            keywords: 'indicadores'
+                        },
+                        content: [
+                            { text: 'Información General', style: 'title' },
+                            {
+                                columns: [
+                                    {
+                                        style: 'label',
+                                        width: 'auto',
+                                        text: 'Nombre del Indicador: '
+                                    },
+                                    {
+                                        width: '*',
+                                        text: title
+                                    }
+                                ]
+                            },
+                            {
+                                columns: [
+                                    {
+                                        style: 'label',
+                                        width: 'auto',
+                                        text: 'Código: '
+                                    },
+                                    {
+                                        width: '*',
+                                        text: code
+                                    }
+                                ]
+                            },
+                            {
+                                columns: [
+                                    {
+                                        style: 'label',
+                                        width: 'auto',
+                                        text: 'Versión: '
+                                    },
+                                    {
+                                        width: '*',
+                                        text: version
+                                    }
+                                ]
+                            },
+                            {
+                                columns: [
+                                    {
+                                        style: 'label',
+                                        width: 'auto',
+                                        text: 'Fecha de creación: '
+                                    },
+                                    {
+                                        width: '*',
+                                        text: date
+                                    }
+                                ]
+                            },
+                            {
+                                columns: [
+                                    {
+                                        style: 'label',
+                                        width: 'auto',
+                                        text: 'Sector al que pertenece: '
+                                    },
+                                    {
+                                        width: '*',
+                                        text: sector
+                                    }
+                                ]
+                            },
+                            {
+                                columns: [
+                                    {
+                                        style: 'label',
+                                        width: 'auto',
+                                        text: 'Desagregaciones a las que se aplica: '
+                                    },
+                                    {
+                                        width: '*',
+                                        text: areasToApply
+                                    }
+                                ]
+                            },
+                            {
+                                columns: [
+                                    {
+                                        style: 'label',
+                                        width: 'auto',
+                                        text: 'Fuente: '
+                                    },
+                                    {
+                                        width: '*',
+                                        text: source && source != '' ? source : '-'
+                                    }
+                                ]
+                            },
+                            {
+                                columns: [
+                                    {
+                                        style: 'label',
+                                        width: 'auto',
+                                        text: 'Objetivo: '
+                                    },
+                                    {
+                                        width: '*',
+                                        text: target && target != "" ? target : '-'
+                                    }
+                                ]
+                            },
+                            { text: 'Responsables del proceso', style: 'title' },
+                            {
+                                columns: [
+                                    {
+                                        style: 'label',
+                                        width: 'auto',
+                                        text: 'Recolectar la información: '
+                                    },
+                                    {
+                                        width: '*',
+                                        text: collector && collector != "" ? collector : '-'
+                                    }
+                                ]
+                            },
+                            {
+                                columns: [
+                                    {
+                                        style: 'label',
+                                        width: 'auto',
+                                        text: 'Analizar la información: '
+                                    },
+                                    {
+                                        width: '*',
+                                        text: analizer && analizer != "" ? analizer : '-'
+                                    }
+                                ]
+                            },
+                            {
+                                columns: [
+                                    {
+                                        style: 'label',
+                                        width: 'auto',
+                                        text: 'Autorizar la información: '
+                                    },
+                                    {
+                                        width: '*',
+                                        text: authorizer && authorizer != "" ? authorizer : '-'
+                                    }
+                                ]
+                            },
+                            {
+                                columns: [
+                                    {
+                                        style: 'label',
+                                        width: 'auto',
+                                        text: 'Publicar la información: '
+                                    },
+                                    {
+                                        width: '*',
+                                        text: publisher && publisher != "" ? publisher : '-'
+                                    }
+                                ]
+                            },
+                            { text: 'Valores tabulares', style: 'title' },
+                            {
+                                style: 'tableExample',
+                                table: {
+                                    headerRows: 1,
+                                    // dontBreakRows: true,
+                                    // keepWithHeaderRows: 1,
+                                    body: [
+                                        [{text: 'Header 1', style: 'tableHeader'}, {text: 'Header 2', style: 'tableHeader'}, {text: 'Header 3', style: 'tableHeader'}],
+                                        [
+                                            'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+                                            'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+                                            'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+                                        ]
+                                    ]
+                                }
+                            },
+                            {
+                                style: 'tableExample',
+                                table: {
+                                    body: [
+                                        [
+                                            {
+                                                border: [false, true, false, false],
+                                                fillColor: '#eeeeee',
+                                                text: 'border:\n[false, true, false, false]'
+                                            },
+                                            {
+                                                border: [false, false, false, false],
+                                                fillColor: '#dddddd',
+                                                text: 'border:\n[false, false, false, false]'
+                                            },
+                                            {
+                                                border: [true, true, true, true],
+                                                fillColor: '#eeeeee',
+                                                text: 'border:\n[true, true, true, true]'
+                                            }
+                                        ],
+                                        [
+                                            {
+                                                rowSpan: 3,
+                                                border: [true, true, true, true],
+                                                fillColor: '#eeeeff',
+                                                text: 'rowSpan: 3\n\nborder:\n[true, true, true, true]'
+                                            },
+                                            {
+                                                border: undefined,
+                                                fillColor: '#eeeeee',
+                                                text: 'border:\nundefined'
+                                            },
+                                            {
+                                                border: [true, false, false, false],
+                                                fillColor: '#dddddd',
+                                                text: 'border:\n[true, false, false, false]'
+                                            }
+                                        ],
+                                        [
+                                            '',
+                                            {
+                                                colSpan: 2,
+                                                border: [true, true, true, true],
+                                                fillColor: '#eeffee',
+                                                text: 'colSpan: 2\n\nborder:\n[true, true, true, true]'
+                                            },
+                                            ''
+                                        ],
+                                        [
+                                            '',
+                                            {
+                                                border: undefined,
+                                                fillColor: '#eeeeee',
+                                                text: 'border:\nundefined'
+                                            },
+                                            {
+                                                border: [false, false, true, true],
+                                                fillColor: '#dddddd',
+                                                text: 'border:\n[false, false, true, true]'
+                                            }
+                                        ]
+                                    ]
+                                },
+                                layout: {
+                                    defaultBorder: false
+                                }
+                            },
+                            {
+                                style: 'tableExample',
+                                table: {
+                                    body: [
+                                        [
+                                            { rowSpan: 2, text: 'Municipio', style: 'tableHeader'}, 
+                                             { colSpan: 3, text: 'Enero 2016', style: 'tableHeader' }, '', '',
+                                            { colSpan: 3, text: 'Febrero 2016', style: 'tableHeader' }, '', '',
+                                            { colSpan: 3, text: 'Marzo 2016', style: 'tableHeader' }, '', '',
+                                            { colSpan: 3, text: 'Abril 2016', style: 'tableHeader' }, '', '',
+                                            { colSpan: 3, text: 'Mayo 2016', style: 'tableHeader' }, '', '',
+                                        ],
+                                        ['', 
+                                            { text: 'Realizado', style: 'tableHeader' }, { text: 'Planificado', style: 'tableHeader' }, { text: '%', style: 'tableHeader' },
+                                            { text: 'Realizado', style: 'tableHeader' }, { text: 'Planificado', style: 'tableHeader' }, { text: '%', style: 'tableHeader' },
+                                            { text: 'Realizado', style: 'tableHeader' }, { text: 'Planificado', style: 'tableHeader' }, { text: '%', style: 'tableHeader' },
+                                            { text: 'Realizado', style: 'tableHeader' }, { text: 'Planificado', style: 'tableHeader' }, { text: '%', style: 'tableHeader' },
+                                            { text: 'Realizado', style: 'tableHeader' }, { text: 'Planificado', style: 'tableHeader' }, { text: '%', style: 'tableHeader' },
+                                        ],
+                                        [ 	{ text: 'Bluefields', },
+                                            { text: 'Realizado', style: 'tableHeader' }, { text: 'Planificado', style: 'tableHeader' }, { text: '%', style: 'tableHeader' },
+                                            { text: 'Realizado', style: 'tableHeader' }, { text: 'Planificado', style: 'tableHeader' }, { text: '%', style: 'tableHeader' },
+                                            { text: 'Realizado', style: 'tableHeader' }, { text: 'Planificado', style: 'tableHeader' }, { text: '%', style: 'tableHeader' },
+                                            { text: 'Realizado', style: 'tableHeader' }, { text: 'Planificado', style: 'tableHeader' }, { text: '%', style: 'tableHeader' },
+                                            { text: 'Realizado', style: 'tableHeader' }, { text: 'Planificado', style: 'tableHeader' }, { text: '%', style: 'tableHeader' },
+                                        ]
+                                    ]
+                                }
+                            }
+                        ],
+                        styles: {
+                            title: {
+                                fontSize: 14,
+                                bold: true,
+                                color: '#678B0D',
+                                margin: [0, 10]
+                            },
+                            label: {
+                                fontSize: 12,
+                                bold: true,
+                                margin: [0, 0, 5, 10],
+                                alignment: 'left'
+                            },
+                            description: {
+                                fontSize: 12,
+                                margin: [0, 0, 0, 10],
+                                alignment: 'left'
+                            },
+                            header: {
+                                fontSize: 18,
+                                bold: true,
+                                margin: [0, 0, 0, 10]
+                            },
+                            subheader: {
+                                fontSize: 16,
+                                bold: true,
+                                margin: [0, 10, 0, 5]
+                            },
+                            tableExample: {
+                                margin: [0, 5, 0, 15]
+                            },
+                            tableHeader: {
+                                bold: true,
+                                fontSize: 13,
+                                color: 'black',
+                                alignment: 'center'
+                            }
+                        }
+                    };
+                    
+                    // open the PDF in a new window
+                    pdfMake.createPdf(docDefinition).download(slug + '.pdf');*/
+                });
 				
 				$('.form-control.select').select2({
                     theme: "bootstrap",
@@ -358,27 +872,23 @@
                 $departments.change(function(e) {
                     var department = $departments.val();
 
-                    if (department) {
-                        select_department($departments.data('name'));
-						
-						if (areaType >= 2) {
-                            $municipalities.empty();
-                            $municipalities.value = '';
-                            select_municipality('');
-							
-							$communities.empty();
-							$communities.value = '';
-							select_community('');
-							
-                            get_municipalities(department);
-						}
+                    if (department && areaType >= 2) {
+                        get_municipalities(department);
                     }
 					else {
-                        $municipalities.empty();
-                        select_municipality('');
+                        $municipalities.html('').select2({
+                            theme: "bootstrap",
+                            placeholder: "-- Seleccionar --",
+                            allowClear: true,
+                            data: []
+                        });
 
-                        $communities.empty();
-                        select_community('');
+                        $communities.html('').select2({
+                            theme: "bootstrap",
+                            placeholder: "-- Seleccionar --",
+                            allowClear: true,
+                            data: []
+                        });
                     }
                 });
 				
@@ -386,62 +896,16 @@
                     var municipality = $municipalities.val();
 
                     if (municipality) {
-                        select_municipality($municipalities.data('name'));
-
-						if (areaType >= 3) {
-                            $communities.empty();
-							select_community('');
-                            get_communities(municipality);	
-						}
+						if (areaType === 3) get_communities(municipality);
                     }
 					else {
-                        $communities.empty();
-                        select_community('');
+                        $communities.html('').select2({
+                            theme: "bootstrap",
+                            placeholder: "-- Seleccionar --",
+                            allowClear: true,
+                            data: []
+                        });
                     }
-				});
-
-                $communities.change(function(e) {
-                    var community = $communities.val();
-
-                    if (community) {
-						select_community($communities.data('name'));
-                    }
-                });
-				
-				$('#bBuildGraph').click(function(e) {
-                    $('#chartdiv').empty();
-
-                    var department = $departments.val();
-                    var municipality = $municipalities.val();
-					var community = $communities.val();
-					
-					switch (areaType) {
-						case 1:
-							if (department)
-								get_points(indicator_id, 'department', department);
-							break;
-						case 2:
-							if (municipality) {
-								get_points(indicator_id, 'municipality', municipality);
-                            }
-							else if (department) {
-								get_points_by_department(indicator_id, department);	
-							}
-                            break;
-						case 3:
-							if (community) {
-								get_points(indicator_id, 'community', community);
-                            }
-							else {
-								if (municipality) {
-                                    get_points_by_municipality(indicator_id, municipality);
-                                }
-								else if (department) {
-									get_points_by_department_without_municipality(indicator_id, department);
-								}
-							}
-                            break;
-					}
 				});
 				
                 function get_initial_data() {
@@ -456,8 +920,12 @@
                         req.done(function (results) {
                             console.log('Getting initial data success', results);
 
-                            if (results && results.points) {
-								build_points(results.points);
+                            if (results && results.points && results.points.length > 0) {
+                                $('#download-excel-button').attr('href', '/generate-csv?id='+ indicator_id +'&slug='+ slug +'&area_type='+ areaTypeName +'&area_id='+ area);
+                                build_points(results.points);
+                            }
+							else {
+                                $('#download-excel-button').attr('href', '/indicador/' + slug);
                             }
                         });
 
@@ -478,45 +946,26 @@
                             console.log('Getting municipalities successfully: ', results);
 
                             if (results && results.data) {
-                                var first_time = true;
-                                var selected_option = '';
-                                $municipalities.empty();
-
+                                var data = [];
+								
                                 $.each(results.data, function (key,val) {
-                                    var option = '';
-
-                                    if (municipality) {
-                                        if (val._id == municipality) {
-                                            selected_option = val._id;
-                                            option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'" selected>'+ val.name +'</option>';
-
-                                            $('#select2-municipalities-container').attr('title', val.name);
-                                            $('#select2-municipalities-container').html(val.name);
-                                        }
-                                        else {
-                                            option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'">'+ val.name +'</option>';
-                                        }
-                                    }
-                                    else {
-                                        if (first_time) {
-                                            first_time = false;
-                                            selected_option = val._id;
-                                            option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'" selected>'+ val.name +'</option>';
-
-                                            $('#select2-municipalities-container').attr('title', val.name);
-                                            $('#select2-municipalities-container').html(val.name);
-                                        }
-                                        else {
-                                            option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'">'+ val.name +'</option>';
-                                        }
-                                    }
-
-                                    $municipalities.append(option);
+									data.push({ id: val._id, text: val.name });
                                 });
 
-                                if (selected_option) {
-									$municipalities.value = selected_option;
-									get_communities(selected_option);
+                                $municipalities.html('').select2({
+                                    theme: "bootstrap",
+                                    placeholder: "-- Seleccionar --",
+                                    allowClear: true,
+                                    data: data
+                                });
+								
+								if (municipality) {
+									$municipalities.val(municipality).trigger("change");
+                                    get_communities(municipality);
+                                }
+								else {
+									municipality = $municipalities.val();
+                                    get_communities(municipality);
                                 }
                             }
                         });
@@ -538,52 +987,23 @@
                             console.log('Getting municipality successfully: ', results);
 
                             if (results && results.related_municipal_areas) {
-                                var first_time = true;
-								var selected_option = '';
-                                $municipalities.empty();
+                                var data = [];
 
                                 $.each(results.related_municipal_areas, function (key,val) {
-                                    var option = '';
+                                    data.push({ id: val._id, text: val.name });
+                                });
 
-                                    if (municipality) {
-                                        if (val._id == municipality) {
-                                            option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'" selected>'+ val.name +'</option>';
-											selected_option = val._id;
-											
-                                            $('#select2-municipalities-container').attr('title', val.name);
-                                            $('#select2-municipalities-container').html(val.name);
-                                        }
-                                        else {
-                                            option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'">'+ val.name +'</option>';
-                                        }
-                                    }
-                                    else {
-                                        if (first_time) {
-                                            first_time = false;
-                                            option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'" selected>'+ val.name +'</option>';
-                                            selected_option = val._id;
-
-                                            $('#select2-municipalities-container').attr('title', val.name);
-                                            $('#select2-municipalities-container').html(val.name);
-                                        }
-                                        else {
-                                            option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'">'+ val.name +'</option>';
-                                        }
-                                    }
-
-                                    $municipalities.append(option);
+                                $municipalities.html('').select2({
+                                    theme: "bootstrap",
+                                    placeholder: "-- Seleccionar --",
+                                    allowClear: true,
+                                    data: data
                                 });
 								
-								if (selected_option) {
-                                	$municipalities.value = selected_option;
-									get_communities(selected_option);
-                            	}
-
-                                if (results.municipal_area) {
-                                    var department = $('#' + results.municipal_area.parent).html().trim();
-                                    select_department(department);
-                                    $('#' + results.municipal_area.parent).attr('selected', 'selected');
-                                }
+								$municipalities.val(municipality).trigger("change");
+								get_communities(municipality);
+								
+                                if (results.municipal_area) $departments.val(results.municipal_area.parent).trigger("change");
                             }
                         });
 
@@ -604,36 +1024,19 @@
                             console.log('Getting communities successfully: ', results);
 
                             if (results && results.data) {
-                                var first_time = true;
+                                var data = [];
                                 var selected_option = '';
-                                $communities.empty();
 
                                 $.each(results.data, function (key,val) {
-                                    var option = '';
+                                    data.push({ id: val._id, text: val.name });
+                                    if (community) selected_option = val._id;
+                                });
 
-                                    if (community) {
-                                        if (val._id == community) {
-											selected_option = val._id;
-                                            option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'" selected>'+ val.name +'</option>';
-											select_community(val.name);
-                                        }
-                                        else {
-                                            option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'">'+ val.name +'</option>';
-                                        }
-                                    }
-                                    else {
-                                        if (first_time) {
-                                            first_time = false;
-                                            selected_option = val._id;
-                                            option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'" selected>'+ val.name +'</option>';
-                                            select_community(val.name);
-										}
-                                        else {
-                                            option = '<option id="'+ val._id +'" data-name="'+ val.name +'" value="'+ val._id +'">'+ val.name +'</option>';
-                                        }
-                                    }
-
-                                    $communities.append(option);
+                                $communities.html('').select2({
+                                    theme: "bootstrap",
+                                    placeholder: "-- Seleccionar --",
+                                    allowClear: true,
+                                    data: data
                                 });
 
                                 if (selected_option) $communities.value = selected_option;
@@ -646,39 +1049,14 @@
 					}
 				}
 				
-				function select_department(name) {
-                    $('#select2-departments-container').attr('data-option-id', name);
-                    $('#select2-departments-container').attr('title', name);
-                    $('#select2-departments-container').html(name);
-				}
-				
-				function select_municipality(name) {
-                    $('#select2-municipalities-container').attr('title', name);
-                    $('#select2-municipalities-container').html(name);
-				}
-				
-				function select_community(name) {
-                    $('#select2-communities-container').attr('title', name);
-                    $('#select2-communities-container').html(name);
-				}
-				
 				function select_areas_value(area_id, parent_id) {
 					if (areaType === 1) {
-                        var department = $('#' + area_id).html().trim();
-						select_department(department);
-                        $('#' + area_id).attr('selected', 'selected');
+						$departments.val(area_id).trigger("change");
                     }
 					else if (areaType === 2) {
 						get_municipalities(parent_id, area_id);
-
-                        var department = $('#' + parent_id).html().trim();
-						if (department) {
-							select_department(department);
-                            $('#' + parent_id).attr('selected', 'selected');
-						}
                     }
 					else  if (areaType === 3) {
-                        get_communities(parent_id, area_id);
 						get_municipality(parent_id);
                     }
 				}
@@ -691,8 +1069,12 @@
                         });
 
                         req.done(function (results) {
-                            if (results && results.points) {
+                            if (results && results.points && results.points.length > 0) {
+								$('#download-excel-button').attr('href', '/generate-csv?id='+ indicator_id +'&slug='+ slug +'&area_type='+ type +'&area_id='+ area);
                                 build_points(results.points);
+                            }
+							else {
+                                $('#download-excel-button').attr('href', '/indicador/' + slug);
                             }
                         });
 
@@ -1336,6 +1718,9 @@
                             $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(2));
                             drawGraphOneLine(points);
                         }
+						
+						global_points = points;
+						console.log('global_points: ', global_points);
                     }
                 }
 				

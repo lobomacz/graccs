@@ -116,7 +116,7 @@ exports = module.exports = function (req, res) {
 					var q = keystone.list('Indicator').model.find(query, score)
 						.where('state', 'published')
 						.sort({score: {$meta: 'textScore'}})
-						.populate('category')
+						.populate('category sector')
 						.skip(skipNumOfDocs)
 						.limit(perCollection);
 		

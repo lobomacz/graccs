@@ -75,7 +75,7 @@ exports = module.exports = function (req, res) {
 		var q = keystone.list('Indicator').model.findOne({
 			slug: locals.filters.name,
 			state: 'published'
-		}).populate('comments ');
+		}).populate('comments sector');
 
 		q.exec(function (err, indicator) {
 			if (!err && indicator) {

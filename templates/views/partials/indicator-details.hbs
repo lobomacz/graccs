@@ -30,10 +30,11 @@
 							{{/if}}
 						{{/if}}
                     </label>
+					<label id="target" hidden>{{indicator.target}}</label>
 				</div>
                 <div class="col-xs-5 text-right">
                     <form role="search" method="get" class="search-form" action="/buscar">
-                        <input class="search-field" placeholder="Buscar..." value="" name="query" type="search" required />
+                        <input class="search-field" placeholder="Buscar..." value="" name="q" type="search" required />
                     </form>
                 </div>
                 <div class="col-xs-1">
@@ -85,15 +86,14 @@
                         <div class="row">
                             <div class="col-lg-12">
 								<div class="row push-20-b">
-									<div class="col-lg-3">
-										{{#compare indicator.areaNumber 1 operator=">="}}
+									{{#compare indicator.areaNumber 1 operator=">="}}
+										<div class="col-lg-3">
                                             <dl>
                                                 <dt>
                                                     <label for="departments">Región:</label>
                                                 </dt>
                                                 <dd>
                                                     <select id="departments" class="form-control select">
-														<option></option>
 														{{#if deparmentalAreas}}
 															{{#each deparmentalAreas}}
 																<option id="{{_id}}" value="{{_id}}">{{name}}</option>
@@ -102,10 +102,10 @@
 													</select>
                                                 </dd>
                                             </dl>
-										{{/compare}}
-									</div>
-                                    <div class="col-lg-3">
-										{{#compare indicator.areaNumber 2 operator=">="}}
+										</div>
+									{{/compare}}
+									{{#compare indicator.areaNumber 2 operator=">="}}
+                                    	<div class="col-lg-3">
                                             <dl>
                                                 <dt>
                                                     <label for="municipalities">Municipio:</label>
@@ -114,10 +114,10 @@
                                                     <select id="municipalities" class="form-control select"></select>
                                                 </dd>
                                             </dl>
-										{{/compare}}
-                                    </div>
-                                    <div class="col-lg-3">
-										{{#compare indicator.areaNumber 3 operator="==="}}
+                                    	</div>
+									{{/compare}}
+									{{#compare indicator.areaNumber 3 operator="==="}}
+                                    	<div class="col-lg-3">
                                             <dl>
                                                 <dt>
                                                     <label for="communities">Localidad:</label>
@@ -126,8 +126,8 @@
                                                     <select id="communities" class="form-control select"></select>
                                                 </dd>
                                             </dl>
-										{{/compare}}
-                                    </div>
+                                    	</div>
+									{{/compare}}
                                     <div class="col-lg-3">
 										<dl>
 											<dt></dt>
@@ -153,14 +153,15 @@
 										<li>
 											<span>Descargar</span>
 										</li>
-                                        <li>
-                                            <a id="download-pdf-button" href="/" title="Descargar PDF"></a>
+                                        <!-- <li>
+                                            <a hid="download-pdf-button" href="/generate-csv" title="Descargar PDF"></a>
                                         </li>
                                         <li>
                                             <a id="download-word-button" href="/generate-docx?id={{indicator._id}}" title="Descargar Word"></a>
-                                        </li>
+                                        </li> -->
                                         <li>
-                                            <a id="download-excel-button" href="/contacto" title="Descargar Excel"></a>
+                                            <a id="download-excel-button" href="#" title="Descargar Excel"></a>
+                                            <a href='#' onclick='downloadCSV({ filename: "stock-data.csv" });'>Download CSV</a>
                                         </li>
 									</ul>
                                 </div>

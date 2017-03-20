@@ -67,8 +67,9 @@ exports = module.exports = function (app) {
 	
 	// Generate documents
 	app.get('/generate-docx', routes.views.generate_docx);
-	app.get('/generate-docx-content', routes.views.generate_docx_content);
-	
+	app.get('/generate-xlsx', routes.views.generate_xlsx);
+	app.get('/generate-csv', routes.views.generate_csv);
+
 	// Contact
 	app.all('/contacto', routes.views.contact);
 
