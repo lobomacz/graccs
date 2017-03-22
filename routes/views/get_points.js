@@ -3,10 +3,11 @@ var _ = require('underscore');
 
 exports = module.exports = function (req, res) {
 	req.params = _.extend(req.params || {}, req.query || {}, req.body || {});
-	
+
+	var indicator_id = req.params.indicator_id;
 	var area_type = req.params.area_type;
     var area_id = req.params.area_id;
-    var indicator_id = req.params.indicator_id;
+	var year = req.params.year;
 	var q;
     
 	switch (area_type) {
@@ -14,25 +15,29 @@ exports = module.exports = function (req, res) {
 			q = keystone.list('IndicatorValue').model.find()
                 .where('indicator', indicator_id)
                 .where('nationalArea', area_id)
-				.sort('monthlyFrequency quarterlyFrequency biannualFrequency startYear');
+				.where('startYear', year)
+				.sort('monthlyFrequency quarterlyFrequency biannualFrequency');
 			break;
 		case 'department':
 			q = keystone.list('IndicatorValue').model.find()
                 .where('indicator', indicator_id)
                 .where('departmentArea', area_id)
-				.sort('monthlyFrequency quarterlyFrequency biannualFrequency startYear');
+				.where('startYear', year)
+				.sort('monthlyFrequency quarterlyFrequency biannualFrequency');
 			break;
 		case 'municipal':
 			q = keystone.list('IndicatorValue').model.find()
                 .where('indicator', indicator_id)
                 .where('municipalArea', area_id)
-				.sort('monthlyFrequency quarterlyFrequency biannualFrequency startYear');
+				.where('startYear', year)
+				.sort('monthlyFrequency quarterlyFrequency biannualFrequency');
 			break;
 		case 'community':
 			q = keystone.list('IndicatorValue').model.find()
                 .where('indicator', indicator_id)
                 .where('communityArea', area_id)
-				.sort('monthlyFrequency quarterlyFrequency biannualFrequency startYear');
+				.where('startYear', year)
+				.sort('monthlyFrequency quarterlyFrequency biannualFrequency');
 			break;
 	}
 

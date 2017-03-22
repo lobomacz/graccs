@@ -108,21 +108,21 @@ exports = module.exports = function (req, res) {
 
 						switch (indicator.minAreaToApply) {
 							case 'department':
-								q_value = keystone.list('IndicatorValue').model.findOne()
+								q_value = keystone.list('IndicatorValue').model.find()
 									.where('indicator', indicator._id)
 									.where('isDepartmentArea', true)
 									.sort('-startYear departmentArea')
 									.populate('departmentArea');
 								break;
 							case 'municipal':
-								q_value = keystone.list('IndicatorValue').model.findOne()
+								q_value = keystone.list('IndicatorValue').model.find()
 									.where('indicator', indicator._id)
 									.where('isMunicipalArea', true)
 									.sort('-startYear municipalArea')
 									.populate('municipalArea');
 								break;
 							case 'community':
-								q_value = keystone.list('IndicatorValue').model.findOne()
+								q_value = keystone.list('IndicatorValue').model.find()
 									.where('indicator', indicator._id)
 									.where('isCommunityArea', true)
 									.sort('-startYear communityArea')
@@ -130,10 +130,32 @@ exports = module.exports = function (req, res) {
 								break;
 						}
 
-						q_value.exec(function (err, value) {
-							if (!err && value) {
-								locals.indicator.point = value;								
-								callback(err);
+						q_value.exec(function (err, values) {
+							if (!err && values) {
+								locals.indicator.point = values[0];
+								var years = [];
+
+								async.each(values,
+									function(indicator_value, callback) {
+										if(years.indexOf(indicator_value.startYear) === -1)  {
+											years.push(indicator_value.startYear);
+										}
+										
+										callback(err);
+									},
+									function(err) {
+										locals.indicator.years = [];
+
+										if (years && years.length > 0) {
+											for (var i = 0; i < years.length; i++) {
+												locals.indicator.years.push({ year: years[i]});
+											}
+										}
+
+										console.log('Years: ', locals.indicator.years);
+										callback(err);
+									}
+								);
 							}
 							else {
 								callback(err);

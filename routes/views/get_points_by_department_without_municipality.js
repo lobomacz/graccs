@@ -4,9 +4,10 @@ var _ = require('underscore');
 
 exports = module.exports = function (req, res) {
 	req.params = _.extend(req.params || {}, req.query || {}, req.body || {});
+	
 	var indicator_id = req.params.indicator_id;
 	var department_id = req.params.department_id;
-
+	var year = req.params.year;
 	var points = [];
 	var global_communities = [];
 
@@ -29,7 +30,8 @@ exports = module.exports = function (req, res) {
 									var q_community = keystone.list('IndicatorValue').model.find()
 										.where('indicator', indicator_id)
 										.where('communityArea', community._id)
-										.sort('monthlyFrequency quarterlyFrequency biannualFrequency startYear');
+										.where('startYear', year)
+										.sort('monthlyFrequency quarterlyFrequency biannualFrequency');
 
 									q_community.exec(function(err, values) {
 										if (!err && values) {

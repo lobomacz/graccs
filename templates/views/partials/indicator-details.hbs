@@ -30,7 +30,16 @@
 							{{/if}}
 						{{/if}}
                     </label>
-					<label id="target" hidden>{{indicator.target}}</label>
+                    <label id="point_year" hidden>
+						{{#if indicator.point}}
+							{{indicator.point.startYear}}
+						{{/if}}
+                    </label>
+                    <label id="frequency_type" hidden>
+						{{#if indicator.frequency}}
+							{{indicator.frequency}}
+						{{/if}}
+                    </label>
 				</div>
                 <div class="col-xs-5 text-right">
                     <form role="search" method="get" class="search-form" action="/buscar">
@@ -147,10 +156,10 @@
 									<!-- Nav tabs -->
 									<ul id="graph_tab" class="nav nav-tabs" role="tablist">
 										<li role="presentation" class="active">
-											<a href="#graph_by_date" aria-controls="home" role="tab" data-toggle="tab">Filtros por fecha</a>
+											<a href="#graph_by_date" aria-controls="graph_by_date" role="tab" data-id="1" data-toggle="tab">Filtros por fecha</a>
 										</li>
 										<li role="presentation">
-											<a href="#graph_by_area" aria-controls="profile" role="tab" data-toggle="tab">Filtros por desagregaciones</a>
+											<a href="#graph_by_area" aria-controls="graph_by_area" role="tab" data-id="2" data-toggle="tab">Filtros por desagregaciones</a>
 										</li>
 									</ul>
 									<!-- Tab panes -->
@@ -206,12 +215,12 @@
                                                         </dt>
                                                         <dd>
                                                             <select id="years" class="form-control select">
-																{{#if deparmentalAreas}}
-																	{{#each deparmentalAreas}}
-                                                                        <option id="{{_id}}" value="{{_id}}">{{name}}</option>
+																{{#if indicator.years}}
+																	{{#each indicator.years}}
+                                                                        <option id="{{year}}" value="{{year}}">{{year}}</option>
 																	{{/each}}
 																{{/if}}
-                                                            </select>
+															</select>
                                                         </dd>
                                                     </dl>
                                                 </div>
@@ -222,16 +231,20 @@
                                                 <div class="col-lg-4">
                                                     <dl>
                                                         <dt>
-                                                            <label for="area_type">Tipo de desagregación:</label>
+                                                            <label for="area_types">Tipo de desagregación:</label>
                                                         </dt>
                                                         <dd>
-                                                            <select id="area_type" class="form-control select">
-																{{#if deparmentalAreas}}
-																	{{#each deparmentalAreas}}
-                                                                        <option id="{{_id}}" value="{{_id}}">{{name}}</option>
-																	{{/each}}
-																{{/if}}
-                                                            </select>
+                                                            <select id="area_types" class="form-control select">
+																{{#compare indicator.areaNumber 1 operator=">="}}
+                                                                    <option value="department">Regional</option>
+																{{/compare}}
+																{{#compare indicator.areaNumber 2 operator=">="}}
+                                                                    <option value="municipal">Municipal</option>
+																{{/compare}}
+																{{#compare indicator.areaNumber 3 operator="==="}}
+                                                                    <option value="community">Urbano-Rural</option>
+																{{/compare}}
+															</select>
                                                         </dd>
                                                     </dl>
                                                 </div>
@@ -242,9 +255,9 @@
                                                         </dt>
                                                         <dd>
                                                             <select id="years_tab_2" class="form-control select">
-																{{#if deparmentalAreas}}
-																	{{#each deparmentalAreas}}
-                                                                        <option id="{{_id}}" value="{{_id}}">{{name}}</option>
+																{{#if indicator.years}}
+																	{{#each indicator.years}}
+                                                                        <option id="{{year}}" value="{{year}}">{{year}}</option>
 																	{{/each}}
 																{{/if}}
                                                             </select>
@@ -252,18 +265,12 @@
                                                     </dl>
                                                 </div>
                                                 <div class="col-lg-4">
-                                                    <dl>
+                                                    <dl {{#ifeq indicator.frequency_values.length 0}}hidden{{/ifeq}}>
                                                         <dt>
                                                             <label for="frequency">Frecuencia:</label>
                                                         </dt>
                                                         <dd>
-                                                            <select id="frequency" class="form-control select">
-																{{#if deparmentalAreas}}
-																	{{#each deparmentalAreas}}
-                                                                        <option id="{{_id}}" value="{{_id}}">{{name}}</option>
-																	{{/each}}
-																{{/if}}
-                                                            </select>
+                                                            <select id="frequency" class="form-control select"></select>
                                                         </dd>
                                                     </dl>
                                                 </div>

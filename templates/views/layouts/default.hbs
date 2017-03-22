@@ -234,26 +234,20 @@
 				var $departments = $('#departments');
                 var $municipalities = $('#municipalities');
                 var $communities = $('#communities');
+                var $years = $('#years');
+                var $area_types = $('#area_types');
+                var $years_tab_2 = $('#years_tab_2');
+                var $frequency = $('#frequency');
 
                 var area = $('#area_id').text().trim();
                 var areaParent = $('#area_parent_id').text().trim();
+				var frequency_type = $('#frequency_type').text().trim();
 
                 var indicator_id = "{{indicator._id}}";
 				var title = "{{indicator.title}}";
                 var slug = "{{indicator.slug}}";
-                var code = "{{indicator.code}}";
-                var version = "{{indicator.version}}";
-                var date = "{{date indicator.startDate format='MMMM DD, YYYY'}}";
-                var sector = "{{indicator.sector.name}}";
-				var minAreaToApply = "{{indicator.minAreaToApply}}";
-				var frequency = "{{indicator.frequency}}";
-				var source = "{{indicator.source}}";
-                var target = $('#target').text();//$('#target').html().replace('&lt;p&gt;', '').replace('&lt;/p&gt;', '');
-                var collector = "{{indicator.collector}}";
-                var analizer = "{{indicator.analizer}}";
-                var authorizer = "{{indicator.authorizer}}";
-                var publisher = "{{indicator.publisher}}";
-				var global_points = [];
+                var minAreaToApply = "{{indicator.minAreaToApply}}";
+                var global_points = [];
 				var years = [];
 
                 var formula = "{{indicator.formula}}";
@@ -439,429 +433,49 @@
 
                 $('#bBuildGraph').click(function(e) {
                     $('#chartdiv').empty();
+					var tab = $('#graph_tab li[class="active"] > a').data('id');
+					
+					if (tab === 1) {
+                        var department = $departments.val();
+                        var municipality = $municipalities.val();
+                        var community = $communities.val();
+                        var year = $years.val();
 
-                    var department = $departments.val();
-                    var municipality = $municipalities.val();
-                    var community = $communities.val();
-
-                    switch (areaType) {
-                        case 1:
-                            if (department)
-                                get_points(indicator_id, 'department', department);
-                            break;
-                        case 2:
-                            if (municipality) {
-                                get_points(indicator_id, 'municipal', municipality);
-                            }
-                            else if (department) {
-                                get_points_by_department(indicator_id, department);
-                            }
-                            break;
-                        case 3:
-                            if (community) {
-                                get_points(indicator_id, 'community', community);
-                            }
-                            else {
+                        switch (areaType) {
+                            case 1:
+                                if (department)
+                                    get_points(indicator_id, 'department', department, year);
+                                break;
+                            case 2:
                                 if (municipality) {
-                                    get_points_by_municipality(indicator_id, municipality);
+                                    get_points(indicator_id, 'municipal', municipality, year);
                                 }
                                 else if (department) {
-                                    get_points_by_department_without_municipality(indicator_id, department);
+                                    get_points_by_department(indicator_id, department, year);
                                 }
-                            }
-                            break;
-                    }
-                });
-
-                $('#download-pdf-button').click(function(e) {
-                    //e.preventDefault();
-
-                    /*var areasToApply = '';
-                    var area_header = '';
-                    switch (minAreaToApply) {
-                        case 'department':
-                            areasToApply = "Regionales";
-                            area_header = 'Región';
-                            break;
-                        case 'municipal':
-                            areasToApply = "Regionales, Municipales";
-                            area_header = 'Municipio';
-                            break;
-                        case 'community':
-                            areasToApply = "Regionales, Municipales, Urbano-rurales";
-                            area_header = 'Localidad';
-                            break;
-                    }
-                    
-                    var frequencyEs = '';
-                    switch (frequency) {
-                        case 'monthly':
-                            frequencyEs = "Mensual";
-                            break;
-                        case 'quarterly':
-                            frequencyEs = "Trimestral";
-                            break;
-                        case 'biannual':
-                            frequencyEs = "Semestral";
-                            break;
-                        case 'annual':
-                            frequencyEs = "Anual";
-                            break;
-                        case 'fifthly':
-                            frequencyEs = "Cada cinco años";
-                            break;
-                        case 'decade':
-                            frequencyEs = "Cada diez años";
-                            break;
-                    }
-                    
-                    var values_table = {};
-                    if (global_points) {
-                        var header = [];
-                        var body = [];
-                        
-                        if (useDenominator) {
-                            
-                        }
-                        else {
-                            header = [{ rowSpan: 2, text: area_header, style: 'tableHeader'}, { colSpan: 3, style: 'tableHeader' } ];
-                        }
-                        
-                        for (var i = 0; i < global_points.length; i++) {
-                            
-                        }
-                    }
-
-                    var docDefinition = {
-                        compress: false,
-                        // a string or { width: number, height: number }
-                        pageSize: 'A4',
-                        // by default we use portrait, you can change it to landscape if you wish
-                        pageOrientation: 'portrait',
-                        // [left, top, right, bottom] or [horizontal, vertical] or just a number for equal margins
-                        pageMargins: [ 40, 60, 40, 60 ],
-                        info: {
-                            title: title,
-                            author: 'Casabe', 
-                            subject: 'GRACCS - Sistema de Información y Comunicación Regional',
-                            keywords: 'indicadores'
-                        },
-                        content: [
-                            { text: 'Información General', style: 'title' },
-                            {
-                                columns: [
-                                    {
-                                        style: 'label',
-                                        width: 'auto',
-                                        text: 'Nombre del Indicador: '
-                                    },
-                                    {
-                                        width: '*',
-                                        text: title
-                                    }
-                                ]
-                            },
-                            {
-                                columns: [
-                                    {
-                                        style: 'label',
-                                        width: 'auto',
-                                        text: 'Código: '
-                                    },
-                                    {
-                                        width: '*',
-                                        text: code
-                                    }
-                                ]
-                            },
-                            {
-                                columns: [
-                                    {
-                                        style: 'label',
-                                        width: 'auto',
-                                        text: 'Versión: '
-                                    },
-                                    {
-                                        width: '*',
-                                        text: version
-                                    }
-                                ]
-                            },
-                            {
-                                columns: [
-                                    {
-                                        style: 'label',
-                                        width: 'auto',
-                                        text: 'Fecha de creación: '
-                                    },
-                                    {
-                                        width: '*',
-                                        text: date
-                                    }
-                                ]
-                            },
-                            {
-                                columns: [
-                                    {
-                                        style: 'label',
-                                        width: 'auto',
-                                        text: 'Sector al que pertenece: '
-                                    },
-                                    {
-                                        width: '*',
-                                        text: sector
-                                    }
-                                ]
-                            },
-                            {
-                                columns: [
-                                    {
-                                        style: 'label',
-                                        width: 'auto',
-                                        text: 'Desagregaciones a las que se aplica: '
-                                    },
-                                    {
-                                        width: '*',
-                                        text: areasToApply
-                                    }
-                                ]
-                            },
-                            {
-                                columns: [
-                                    {
-                                        style: 'label',
-                                        width: 'auto',
-                                        text: 'Fuente: '
-                                    },
-                                    {
-                                        width: '*',
-                                        text: source && source != '' ? source : '-'
-                                    }
-                                ]
-                            },
-                            {
-                                columns: [
-                                    {
-                                        style: 'label',
-                                        width: 'auto',
-                                        text: 'Objetivo: '
-                                    },
-                                    {
-                                        width: '*',
-                                        text: target && target != "" ? target : '-'
-                                    }
-                                ]
-                            },
-                            { text: 'Responsables del proceso', style: 'title' },
-                            {
-                                columns: [
-                                    {
-                                        style: 'label',
-                                        width: 'auto',
-                                        text: 'Recolectar la información: '
-                                    },
-                                    {
-                                        width: '*',
-                                        text: collector && collector != "" ? collector : '-'
-                                    }
-                                ]
-                            },
-                            {
-                                columns: [
-                                    {
-                                        style: 'label',
-                                        width: 'auto',
-                                        text: 'Analizar la información: '
-                                    },
-                                    {
-                                        width: '*',
-                                        text: analizer && analizer != "" ? analizer : '-'
-                                    }
-                                ]
-                            },
-                            {
-                                columns: [
-                                    {
-                                        style: 'label',
-                                        width: 'auto',
-                                        text: 'Autorizar la información: '
-                                    },
-                                    {
-                                        width: '*',
-                                        text: authorizer && authorizer != "" ? authorizer : '-'
-                                    }
-                                ]
-                            },
-                            {
-                                columns: [
-                                    {
-                                        style: 'label',
-                                        width: 'auto',
-                                        text: 'Publicar la información: '
-                                    },
-                                    {
-                                        width: '*',
-                                        text: publisher && publisher != "" ? publisher : '-'
-                                    }
-                                ]
-                            },
-                            { text: 'Valores tabulares', style: 'title' },
-                            {
-                                style: 'tableExample',
-                                table: {
-                                    headerRows: 1,
-                                    // dontBreakRows: true,
-                                    // keepWithHeaderRows: 1,
-                                    body: [
-                                        [{text: 'Header 1', style: 'tableHeader'}, {text: 'Header 2', style: 'tableHeader'}, {text: 'Header 3', style: 'tableHeader'}],
-                                        [
-                                            'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
-                                            'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
-                                            'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
-                                        ]
-                                    ]
+                                break;
+                            case 3:
+                                if (community) {
+                                    get_points(indicator_id, 'community', community, year);
                                 }
-                            },
-                            {
-                                style: 'tableExample',
-                                table: {
-                                    body: [
-                                        [
-                                            {
-                                                border: [false, true, false, false],
-                                                fillColor: '#eeeeee',
-                                                text: 'border:\n[false, true, false, false]'
-                                            },
-                                            {
-                                                border: [false, false, false, false],
-                                                fillColor: '#dddddd',
-                                                text: 'border:\n[false, false, false, false]'
-                                            },
-                                            {
-                                                border: [true, true, true, true],
-                                                fillColor: '#eeeeee',
-                                                text: 'border:\n[true, true, true, true]'
-                                            }
-                                        ],
-                                        [
-                                            {
-                                                rowSpan: 3,
-                                                border: [true, true, true, true],
-                                                fillColor: '#eeeeff',
-                                                text: 'rowSpan: 3\n\nborder:\n[true, true, true, true]'
-                                            },
-                                            {
-                                                border: undefined,
-                                                fillColor: '#eeeeee',
-                                                text: 'border:\nundefined'
-                                            },
-                                            {
-                                                border: [true, false, false, false],
-                                                fillColor: '#dddddd',
-                                                text: 'border:\n[true, false, false, false]'
-                                            }
-                                        ],
-                                        [
-                                            '',
-                                            {
-                                                colSpan: 2,
-                                                border: [true, true, true, true],
-                                                fillColor: '#eeffee',
-                                                text: 'colSpan: 2\n\nborder:\n[true, true, true, true]'
-                                            },
-                                            ''
-                                        ],
-                                        [
-                                            '',
-                                            {
-                                                border: undefined,
-                                                fillColor: '#eeeeee',
-                                                text: 'border:\nundefined'
-                                            },
-                                            {
-                                                border: [false, false, true, true],
-                                                fillColor: '#dddddd',
-                                                text: 'border:\n[false, false, true, true]'
-                                            }
-                                        ]
-                                    ]
-                                },
-                                layout: {
-                                    defaultBorder: false
+                                else {
+                                    if (municipality) {
+                                        get_points_by_municipality(indicator_id, municipality, year);
+                                    }
+                                    else if (department) {
+                                        get_points_by_department_without_municipality(indicator_id, department, year);
+                                    }
                                 }
-                            },
-                            {
-                                style: 'tableExample',
-                                table: {
-                                    body: [
-                                        [
-                                            { rowSpan: 2, text: 'Municipio', style: 'tableHeader'}, 
-                                             { colSpan: 3, text: 'Enero 2016', style: 'tableHeader' }, '', '',
-                                            { colSpan: 3, text: 'Febrero 2016', style: 'tableHeader' }, '', '',
-                                            { colSpan: 3, text: 'Marzo 2016', style: 'tableHeader' }, '', '',
-                                            { colSpan: 3, text: 'Abril 2016', style: 'tableHeader' }, '', '',
-                                            { colSpan: 3, text: 'Mayo 2016', style: 'tableHeader' }, '', '',
-                                        ],
-                                        ['', 
-                                            { text: 'Realizado', style: 'tableHeader' }, { text: 'Planificado', style: 'tableHeader' }, { text: '%', style: 'tableHeader' },
-                                            { text: 'Realizado', style: 'tableHeader' }, { text: 'Planificado', style: 'tableHeader' }, { text: '%', style: 'tableHeader' },
-                                            { text: 'Realizado', style: 'tableHeader' }, { text: 'Planificado', style: 'tableHeader' }, { text: '%', style: 'tableHeader' },
-                                            { text: 'Realizado', style: 'tableHeader' }, { text: 'Planificado', style: 'tableHeader' }, { text: '%', style: 'tableHeader' },
-                                            { text: 'Realizado', style: 'tableHeader' }, { text: 'Planificado', style: 'tableHeader' }, { text: '%', style: 'tableHeader' },
-                                        ],
-                                        [ 	{ text: 'Bluefields', },
-                                            { text: 'Realizado', style: 'tableHeader' }, { text: 'Planificado', style: 'tableHeader' }, { text: '%', style: 'tableHeader' },
-                                            { text: 'Realizado', style: 'tableHeader' }, { text: 'Planificado', style: 'tableHeader' }, { text: '%', style: 'tableHeader' },
-                                            { text: 'Realizado', style: 'tableHeader' }, { text: 'Planificado', style: 'tableHeader' }, { text: '%', style: 'tableHeader' },
-                                            { text: 'Realizado', style: 'tableHeader' }, { text: 'Planificado', style: 'tableHeader' }, { text: '%', style: 'tableHeader' },
-                                            { text: 'Realizado', style: 'tableHeader' }, { text: 'Planificado', style: 'tableHeader' }, { text: '%', style: 'tableHeader' },
-                                        ]
-                                    ]
-                                }
-                            }
-                        ],
-                        styles: {
-                            title: {
-                                fontSize: 14,
-                                bold: true,
-                                color: '#678B0D',
-                                margin: [0, 10]
-                            },
-                            label: {
-                                fontSize: 12,
-                                bold: true,
-                                margin: [0, 0, 5, 10],
-                                alignment: 'left'
-                            },
-                            description: {
-                                fontSize: 12,
-                                margin: [0, 0, 0, 10],
-                                alignment: 'left'
-                            },
-                            header: {
-                                fontSize: 18,
-                                bold: true,
-                                margin: [0, 0, 0, 10]
-                            },
-                            subheader: {
-                                fontSize: 16,
-                                bold: true,
-                                margin: [0, 10, 0, 5]
-                            },
-                            tableExample: {
-                                margin: [0, 5, 0, 15]
-                            },
-                            tableHeader: {
-                                bold: true,
-                                fontSize: 13,
-                                color: 'black',
-                                alignment: 'center'
-                            }
+                                break;
                         }
-                    };
-                    
-                    // open the PDF in a new window
-                    pdfMake.createPdf(docDefinition).download(slug + '.pdf');*/
+					}
+					else if (tab === 2) {
+                        var year = $years_tab_2.val();
+						var area_type = $area_types.val();
+						var frequency_value = $frequency.val();
+						
+						get_points_two(indicator_id, year, frequency_type, frequency_value);
+                    }
                 });
 				
 				$('.form-control.select').select2({
@@ -923,23 +537,31 @@
 				});
 				
                 function get_initial_data() {
-                    if (indicator_id && areaTypeName != '' && area != '') {
-						select_areas_value(area, areaParent);
+					var point_year = $('#point_year').text().trim();
+					
+                    if (indicator_id && areaTypeName != '' && area != '' && point_year) {
+                        get_areas_value(area, areaParent);
+                        get_graph_by_area_values();
+
+                        $years.val(point_year).trigger("change");
+                        $years_tab_2.val(point_year).trigger("change");
 						
                         var req = $.ajax({
                             url: '/get-initial-data',
-                            data: { indicator: indicator_id, type: areaTypeName, area: area }
+                            data: { indicator: indicator_id, type: areaTypeName, area: area, year: point_year }
                         });
 
                         req.done(function (results) {
                             console.log('Getting initial data success', results);
 
-                            if (results && results.points && results.points.length > 0) {
-                                $('#download-excel-button').attr('href', '/generate-csv?id='+ indicator_id +'&slug='+ slug +'&area_type='+ areaTypeName +'&area_id='+ area);
-                                build_points(results.points);
-                            }
-							else {
-                                $('#download-excel-button').attr('href', '/indicador/' + slug);
+                            if (results) {
+								if (results.points && results.points.length > 0) {
+                                    $('#download-excel-button').attr('href', '/generate-csv?id='+ indicator_id +'&slug='+ slug +'&area_type='+ areaTypeName +'&area_id='+ area);
+                                    build_points(results.points);
+								}
+                                else {
+                                    $('#download-excel-button').attr('href', '/indicador/' + slug);
+                                }
                             }
                         });
 
@@ -948,6 +570,59 @@
                         });
 					}
 				}
+
+                function get_areas_value(area_id, parent_id) {
+                    if (areaType === 1) {
+                        $departments.val(area_id).trigger("change");
+                    }
+                    else if (areaType === 2) {
+                        get_municipalities(parent_id, area_id);
+                    }
+                    else  if (areaType === 3) {
+                        get_municipality(parent_id);
+                    }
+                }
+				
+				function get_graph_by_area_values() {
+					var frequency = frequency_type;
+					var frequency_values = [];
+					
+                    switch (frequency) {
+                        case 'monthly':
+                            frequency_values.push({ id: '1', text: 'Enero' });
+                            frequency_values.push({ id: '2', text: 'Febrero' });
+                            frequency_values.push({ id: '3', text: 'Marzo' });
+                            frequency_values.push({ id: '4', text: 'Abril' });
+                            frequency_values.push({ id: '5', text: 'Mayo' });
+                            frequency_values.push({ id: '6', text: 'Junio' });
+                            frequency_values.push({ id: '7', text: 'Julio' });
+                            frequency_values.push({ id: '8', text: 'Agosto' });
+                            frequency_values.push({ id: '9', text: 'Septiembre' });
+                            frequency_values.push({ id: '10', text: 'Octubre' });
+                            frequency_values.push({ id: '11', text: 'Noviembre' });
+                            frequency_values.push({ id: '12', text: 'Diciembre' });
+                            break;
+                        case 'quarterly':
+                            frequency_values.push({ id: '1', text: 'I Trimestre' });
+                            frequency_values.push({ id: '2', text: 'II Trimestre' });
+                            frequency_values.push({ id: '3', text: 'III Trimestre' });
+                            frequency_values.push({ id: '4', text: 'IV Trimestre' });
+                            break;
+                        case 'biannual':
+                            frequency_values.push({ id: '1', text: 'I Semestre' });
+                            frequency_values.push({ id: '2', text: 'II Semestre' });
+                            break;
+                    }
+
+                    $frequency.html('').select2({
+                        theme: "bootstrap",
+                        placeholder: "-- Seleccionar --",
+                        allowClear: true,
+                        data: frequency_values
+                    });
+
+                    $area_types.val(minAreaToApply).trigger("change");
+                }
 
                 function get_municipalities(parent, municipality) {
                     if (parent) {
@@ -1063,23 +738,11 @@
 					}
 				}
 				
-				function select_areas_value(area_id, parent_id) {
-					if (areaType === 1) {
-						$departments.val(area_id).trigger("change");
-                    }
-					else if (areaType === 2) {
-						get_municipalities(parent_id, area_id);
-                    }
-					else  if (areaType === 3) {
-						get_municipality(parent_id);
-                    }
-				}
-
-                function get_points(indicator, type, area) {
-                    if (indicator && type && area) {
+                function get_points(indicator, type, area, year) {
+                    if (indicator && type && area && year) {
                         var req = $.ajax({
                             url: '/get-points',
-                            data: { area_type: type, area_id: area, indicator_id: indicator }
+                            data: { area_type: type, area_id: area, indicator_id: indicator, year: year }
                         });
 
                         req.done(function (results) {
@@ -1098,11 +761,32 @@
                     }
                 }
 
-                function get_points_by_municipality(indicator, municipality) {
-                    if (indicator && municipality) {
+                function get_points_two(indicator, year, frequency_type, frequency_value) {
+                    if (indicator && year && frequency_type && frequency_value) {
+                        var req = $.ajax({
+                            url: '/get-points-two',
+                            data: { indicator_id: indicator, year: year, frequency_type: frequency_type, frequency_value: frequency_value }
+                        });
+
+                        req.done(function (results) {
+                            console.log('Getting points successed', results);
+
+                            if (results && results.points && results.points.length > 0) {
+								
+                            }
+                        });
+
+                        req.fail(function (res) {
+                            console.log('Getting points has failed', res);
+                        });
+                    }
+                }
+
+                function get_points_by_municipality(indicator, municipality, year) {
+                    if (indicator && municipality && year) {
                         var req = $.ajax({
                             url: '/get-points-by-municipality',
-                            data: { indicator_id: indicator, municipality_id: municipality }
+                            data: { indicator_id: indicator, municipality_id: municipality, year: year }
                         });
 
                         req.done(function (results) {
@@ -1270,11 +954,11 @@
                     }
                 }
 				
-				function get_points_by_department(indicator, department) {
-                    if (indicator && department) {
+				function get_points_by_department(indicator, department, year) {
+                    if (indicator && department && year) {
                         var req = $.ajax({
                             url: '/get-points-by-department',
-                            data: { indicator_id: indicator, department_id: department }
+                            data: { indicator_id: indicator, department_id: department, year: year }
                         });
 
                         req.done(function (results) {
@@ -1441,11 +1125,11 @@
                     }
                 }
 				
-				function get_points_by_department_without_municipality(indicator, department) {
-                    if (indicator && department) {
+				function get_points_by_department_without_municipality(indicator, department, year) {
+                    if (indicator && department && year) {
                         var req = $.ajax({
                             url: '/get-points-by-department-without-municipality',
-                            data: { indicator_id: indicator, department_id: department }
+                            data: { indicator_id: indicator, department_id: department, year: year }
                         });
 
                         req.done(function (results) {
@@ -1823,7 +1507,7 @@
                     chart = new AmCharts.AmSerialChart();
 
                     chart.dataProvider = points;
-                    chart.marginLeft = 10;
+                    chart.marginLeft = 30;
                     chart.categoryField = "year";
                     chart.startDuration = 1;
 

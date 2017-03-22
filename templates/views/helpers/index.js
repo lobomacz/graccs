@@ -528,7 +528,7 @@ module.exports = function () {
 			'<=':       function(l,r) { return l <= r; },
 			'>=':       function(l,r) { return l >= r; },
 			'typeof':   function(l,r) { return typeof l == r; }
-		}
+		};
 
 		if (!operators[operator])
 			throw new Error("Handlerbars Helper 'compare' doesn't know the operator "+operator);
@@ -550,7 +550,7 @@ module.exports = function () {
 			return context;
 		}
 	};
-	
+
 
 	//  ### Flash Message Helper
 	//  KeystoneJS supports a message interface for information/errors to be passed from server
