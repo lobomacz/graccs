@@ -21,6 +21,9 @@ DepartmentalArea.add({
 	parent: { label: 'Desagregación a la que pertenece', type: Types.Relationship, ref: 'NationalArea', many: false, initial: true }
 });
 
+DepartmentalArea.relationship({ ref: 'IndicatorValue', path: 'indicator-values', refPath: 'indicator'});
+DepartmentalArea.relationship({ ref: 'MunicipalArea', path: 'municipalities', refPath: 'parent'});
+
 /**
  * Registration
  */

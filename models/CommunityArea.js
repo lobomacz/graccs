@@ -21,6 +21,8 @@ CommunityArea.add({
 	parent: { label: 'Desagregación a la que pertenece', type: Types.Relationship, ref: 'MunicipalArea', many: false, initial: true }
 });
 
+CommunityArea.relationship({ ref: 'IndicatorValue', path: 'indicator-values', refPath: 'indicator'});
+
 /**
  * Registration
  */

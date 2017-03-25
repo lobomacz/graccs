@@ -12,7 +12,8 @@ exports = module.exports = function (req, res) {
 	
 	var q = keystone.list('CommunityArea').model.find()
 		.where('parent', municipality_id)
-		.sort('position name');
+		.sort('position name')
+		.populate('parent');
 
 	q.exec(function (err, results) {
 		if (!err && results) {
@@ -22,7 +23,8 @@ exports = module.exports = function (req, res) {
 						.where('indicator', indicator_id)
 						.where('communityArea', community._id)
 						.where('startYear', year)
-						.sort('monthlyFrequency quarterlyFrequency biannualFrequency');
+						.sort('monthlyFrequency quarterlyFrequency biannualFrequency')
+						.populate('communityArea');
 					
 					q_community.exec(function(err, values) {
 						if (!err && values) {
@@ -36,7 +38,7 @@ exports = module.exports = function (req, res) {
 					});
 				}, 
 				function (err) {
-					res.send({ status: 'OK', points_array: points });
+					res.send({ status: 'OK', communities: results, points_array: points });
 				}
 			);
 		}

@@ -10,8 +10,6 @@ exports = module.exports = function (req, res) {
 	var year = req.params.year;
 	var points = [];
 	
-	console.log('Parameters: ', indicator_id, department_id, year);
-
 	var q = keystone.list('MunicipalArea').model.find()
 		.where('parent', department_id)
 		.sort('position name');
@@ -40,7 +38,7 @@ exports = module.exports = function (req, res) {
 					});
 				},
 				function (err) {
-					res.send({ status: 'OK', points_array: points });
+					res.send({ status: 'OK', points_array: points, municipalities: results });
 				}
 			);
 		}

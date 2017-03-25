@@ -17,21 +17,24 @@ exports = module.exports = function (req, res) {
 				.where('indicator', indicator)
 				.where('departmentArea', area)
 				.where('startYear', year)
-				.sort('-startYear monthlyFrequency quarterlyFrequency biannualFrequency');
+				.sort('-startYear monthlyFrequency quarterlyFrequency biannualFrequency')
+				.populate('departmentArea');
 			break;
 		case 'municipal':
 			q = keystone.list('IndicatorValue').model.find()
 				.where('indicator', indicator)
 				.where('municipalArea', area)
 				.where('startYear', year)
-				.sort('-startYear monthlyFrequency quarterlyFrequency biannualFrequency');
+				.sort('-startYear monthlyFrequency quarterlyFrequency biannualFrequency')
+				.populate('municipalArea');
 			break;
 		case 'community':
 			q = keystone.list('IndicatorValue').model.find()
 				.where('indicator', indicator)
 				.where('communityArea', area)
 				.where('startYear', year)
-				.sort('-startYear monthlyFrequency quarterlyFrequency biannualFrequency');
+				.sort('-startYear monthlyFrequency quarterlyFrequency biannualFrequency')
+				.populate('communityArea');
 			break;
 	}
 

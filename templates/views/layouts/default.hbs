@@ -226,9 +226,6 @@
 	{{/if}}
 	
 	{{#if isIndicatorDetailsSection}}
-        <script type="text/javascript" src="/assets/js/pdfmake.js"></script>
-        <script type="text/javascript" src="/assets/js/vfs_fonts.js"></script>
-		
         <script type="text/javascript">
             $(function () {
 				var $departments = $('#departments');
@@ -247,8 +244,8 @@
 				var title = "{{indicator.title}}";
                 var slug = "{{indicator.slug}}";
                 var minAreaToApply = "{{indicator.minAreaToApply}}";
-                var global_points = [];
 				var years = [];
+				var csv = '';
 
                 var formula = "{{indicator.formula}}";
                 var realValueLabel = "{{indicator.realValue}}";
@@ -256,7 +253,8 @@
 				var targetValueLabel = useDenominator ? "{{indicator.targetValue}}" : "";
 				var areaType = {{indicator.areaNumber}};
                 var areaTypeName = areaType === 3 ? 'community' : (areaType === 2 ? 'municipal' : (areaType === 1 ? 'department' : ''));
-
+				var selected_community = '';
+				
                 var stockData = [
                     {
                         Symbol: "AAPL",
@@ -272,7 +270,7 @@
                         Symbol: "GOOG",
                         Company: "Google Inc",
                         Price: "554.52"
-                    },
+                    }
                 ];
 
                 function convertArrayOfObjectsToCSV(args) {
@@ -309,9 +307,9 @@
                 window.downloadCSV = function(args) {
                     var data, filename, link;
 
-                    var csv = convertArrayOfObjectsToCSV({
+                    /*var csv = convertArrayOfObjectsToCSV({
                         data: stockData
-                    });
+                    });*/
                     if (csv == null) return;
 
                     filename = args.filename || 'export.csv';
@@ -433,6 +431,7 @@
 
                 $('#bBuildGraph').click(function(e) {
                     $('#chartdiv').empty();
+					csv = '';
 					var tab = $('#graph_tab li[class="active"] > a').data('id');
 					
 					if (tab === 1) {
@@ -470,11 +469,10 @@
                         }
 					}
 					else if (tab === 2) {
-                        var year = $years_tab_2.val();
-						var area_type = $area_types.val();
+                        var year_2 = $years_tab_2.val();
 						var frequency_value = $frequency.val();
-						
-						get_points_two(indicator_id, year, frequency_type, frequency_value);
+
+                        get_points_two(indicator_id, year_2, frequency_type, frequency_value);
                     }
                 });
 				
@@ -495,10 +493,30 @@
                         placeholder: "-- Seleccionar --",
                         allowClear: true
                     });
+					
+					var tab = $('#graph_tab li[class="active"] > a').data('id');
+					
+					if (tab === 1) {
+						var html = '<li>' +
+                                		'<span>Descargar</span>' +
+                                	'</li>' +
+                                	'<li>' +
+                                		'<a id="download-excel-button" href="#" title="Descargar Excel" onclick="downloadCSV({ filename: \''+ title +'.csv\' });"></a>' +
+                                	'</li>';
+
+                        $('#download-wrapper > ul').html(html);
+					}
+					else if (tab === 2) {
+						$('#download-wrapper > ul').empty();
+						
+						//$('#download-excel-button').attr('disabled', 'disabled');
+					}
 				});
 
                 $departments.change(function(e) {
                     var department = $departments.val();
+                    //console.log('department', department);
+                    //console.log('areaType', areaType);
 
                     if (department && areaType >= 2) {
                         get_municipalities(department);
@@ -522,6 +540,7 @@
 				
 				$municipalities.change(function(e) {
                     var municipality = $municipalities.val();
+                    //console.log('municipality', municipality);
 
                     if (municipality) {
 						if (areaType === 3) get_communities(municipality);
@@ -534,6 +553,12 @@
                             data: []
                         });
                     }
+				});
+				
+				$communities.change(function(e) {
+                    var community = $communities.val();
+					selected_community = community;
+                    //console.log('community', community);
 				});
 				
                 function get_initial_data() {
@@ -556,12 +581,8 @@
 
                             if (results) {
 								if (results.points && results.points.length > 0) {
-                                    $('#download-excel-button').attr('href', '/generate-csv?id='+ indicator_id +'&slug='+ slug +'&area_type='+ areaTypeName +'&area_id='+ area);
                                     build_points(results.points);
 								}
-                                else {
-                                    $('#download-excel-button').attr('href', '/indicador/' + slug);
-                                }
                             }
                         });
 
@@ -576,10 +597,12 @@
                         $departments.val(area_id).trigger("change");
                     }
                     else if (areaType === 2) {
-                        get_municipalities(parent_id, area_id);
+                        $departments.val(parent_id).trigger("change");
+
+                        //get_municipalities(parent_id, area_id);
                     }
                     else  if (areaType === 3) {
-                        get_municipality(parent_id);
+                        get_municipality(parent_id, area_id);
                     }
                 }
 				
@@ -636,9 +659,12 @@
 
                             if (results && results.data && results.data.length > 0) {
                                 var data = [];
+								var first_time = true;
 								
                                 $.each(results.data, function (key,val) {
 									data.push({ id: val._id, text: val.name });
+									
+									if (!municipality && first_time) municipality = val._id;
                                 });
 
                                 $municipalities.html('').select2({
@@ -665,7 +691,7 @@
                     }
                 }
 
-                function get_municipality(municipality) {
+                function get_municipality(municipality, selected_community_id) {
                     if (municipality) {
                         var req = $.ajax({
                             url: '/get-municipality',
@@ -674,7 +700,7 @@
 
                         req.done(function (results) {
                             console.log('Getting municipality successfully: ', results);
-
+							
                             if (results && results.related_municipal_areas && results.related_municipal_areas.length > 0) {
                                 var data = [];
 
@@ -688,12 +714,11 @@
                                     allowClear: true,
                                     data: data
                                 });
-								
-								$municipalities.val(municipality).trigger("change");
-								get_communities(municipality);
-								
+
                                 if (results.municipal_area) $departments.val(results.municipal_area.parent).trigger("change");
-                            }
+                                $municipalities.val(municipality).trigger("change");
+								get_communities(municipality, selected_community_id);
+							}
                         });
 
                         req.fail(function (res) {
@@ -714,11 +739,15 @@
 
                             if (results && results.data && results.data.length > 0) {
                                 var data = [];
+								var first_time = true;
                                 var selected_option = '';
 
                                 $.each(results.data, function (key,val) {
                                     data.push({ id: val._id, text: val.name });
-                                    if (community) selected_option = val._id;
+                                    if (!community && first_time) {
+										selected_option = val._id;
+										first_time = false;
+                                    }
                                 });
 
                                 $communities.html('').select2({
@@ -728,8 +757,9 @@
                                     data: data
                                 });
 
-                                if (selected_option) $communities.value = selected_option;
-                            }
+                                if (community) $communities.val(community).trigger("change");
+								else if (selected_option) $communities.val(selected_option).trigger("change");
+							}
                         });
 
                         req.fail(function (res) {
@@ -747,11 +777,7 @@
 
                         req.done(function (results) {
                             if (results && results.points && results.points.length > 0) {
-								$('#download-excel-button').attr('href', '/generate-csv?id='+ indicator_id +'&slug='+ slug +'&area_type='+ type +'&area_id='+ area);
                                 build_points(results.points);
-                            }
-							else {
-                                $('#download-excel-button').attr('href', '/indicador/' + slug);
                             }
                         });
 
@@ -771,8 +797,19 @@
                         req.done(function (results) {
                             console.log('Getting points successed', results);
 
-                            if (results && results.points && results.points.length > 0) {
-								
+                            if (results && results.indicator_values && results.indicator_values.length > 0) {
+                                var area_type = $area_types.val();
+
+                                if (areaTypeName === area_type) {
+                                    build_points_two(results.indicator_values);
+                                }
+                                else if ((areaTypeName === 'community' && area_type === 'municipal') ||
+                                        (areaTypeName === 'municipal' && area_type === 'department')) {
+                                    build_points_two_by_parent(results.indicator_values, results.parents)
+                                }
+                                else if (areaTypeName === 'community' && area_type === 'department') {
+                                    build_points_two_by_grandpa(results.indicator_values, results.parents);
+                                }
                             }
                         });
 
@@ -790,6 +827,8 @@
                         });
 
                         req.done(function (results) {
+                            console.log('get_points_by_municipality: ', results);
+
                             if (results && results.points_array && results.points_array.length > 0) {
                                 var years = [];
                                 var realValues = [];
@@ -799,152 +838,243 @@
                                 var comparativeValues = [];
                                 var comparativeValuesCount = [];
                                 var points = [];
+                                var dates = '';
+                                var dates_header = '';
+                                var values = '';
+                                var percent;
+                                csv = '';
+								
+								var i = 0;
+								var total_real_values = 0, total_target_values = 0, total_comparative_values = 0;
 								
 								$.each(results.points_array, function(key, points) {
-									$.each(points, function(key_1, point) {
-                                        var year = '';
+									percent = "";
+									values += title + ", " + results.communities[i].name + ", ";
+                                    var real_values = 0, target_values = 0, comparative_values = 0;
 
-                                        if (point.isMonthlyFrequency) {
-                                            var month = '';
+									if (points && points.length > 0) {
+                                        $.each(points, function(key_1, point) {
+                                            var year = '';
+                                            real_values += point.realValue;
+                                            target_values += point.targetValue;
+                                            comparative_values += point.comparativeValue;
 
-                                            switch (parseInt(point.monthlyFrequency)) {
-                                                case 1:
-                                                    month = 'Enero';
-                                                    break;
-                                                case 2:
-                                                    month = 'Febrero';
-                                                    break;
-                                                case 3:
-                                                    month = 'Marzo';
-                                                    break;
-                                                case 4:
-                                                    month = 'Abril';
-                                                    break;
-                                                case 5:
-                                                    month = 'Mayo';
-                                                    break;
-                                                case 6:
-                                                    month = 'Junio';
-                                                    break;
-                                                case 7:
-                                                    month = 'Julio';
-                                                    break;
-                                                case 8:
-                                                    month = 'Agosto';
-                                                    break;
-                                                case 9:
-                                                    month = 'Septiembre';
-                                                    break;
-                                                case 10:
-                                                    month = 'Octubre';
-                                                    break;
-                                                case 11:
-                                                    month = 'Noviembre';
-                                                    break;
-                                                case 12:
-                                                    month = 'Diciembre';
-                                                    break;
+                                            if (point.isMonthlyFrequency) {
+                                                var month = '';
+
+                                                switch (parseInt(point.monthlyFrequency)) {
+                                                    case 1:
+                                                        month = 'Enero';
+                                                        break;
+                                                    case 2:
+                                                        month = 'Febrero';
+                                                        break;
+                                                    case 3:
+                                                        month = 'Marzo';
+                                                        break;
+                                                    case 4:
+                                                        month = 'Abril';
+                                                        break;
+                                                    case 5:
+                                                        month = 'Mayo';
+                                                        break;
+                                                    case 6:
+                                                        month = 'Junio';
+                                                        break;
+                                                    case 7:
+                                                        month = 'Julio';
+                                                        break;
+                                                    case 8:
+                                                        month = 'Agosto';
+                                                        break;
+                                                    case 9:
+                                                        month = 'Septiembre';
+                                                        break;
+                                                    case 10:
+                                                        month = 'Octubre';
+                                                        break;
+                                                    case 11:
+                                                        month = 'Noviembre';
+                                                        break;
+                                                    case 12:
+                                                        month = 'Diciembre';
+                                                        break;
+                                                }
+
+                                                year = month + ' ' + point.startYear;
+                                            }
+                                            else if (point.isQuarterlyFrequency) {
+                                                var quarter = '';
+
+                                                switch (parseInt(point.quarterlyFrequency)) {
+                                                    case 1:
+                                                        quarter = 'I Trimestre';
+                                                        break;
+                                                    case 2:
+                                                        quarter = 'II Trimestre';
+                                                        break;
+                                                    case 3:
+                                                        quarter = 'III Trimestre';
+                                                        break;
+                                                    case 4:
+                                                        quarter = 'IV Trimestre';
+                                                        break;
+                                                }
+
+                                                year = quarter + ' ' + point.startYear;
+                                            }
+                                            else if (point.isBiannualFrequency) {
+                                                var biannual = '';
+
+                                                switch (parseInt(point.biannualFrequency)) {
+                                                    case 1:
+                                                        biannual = 'I Semestre';
+                                                        break;
+                                                    case 2:
+                                                        biannual = 'II Semestre';
+                                                        break;
+                                                }
+
+                                                year = biannual + ' ' + point.startYear;
+                                            }
+                                            else {
+                                                year = point.startYear;
                                             }
 
-                                            year = month + ' ' + point.startYear;
-                                        }
-                                        else if (point.isQuarterlyFrequency) {
-                                            var quarter = '';
-
-                                            switch (parseInt(point.quarterlyFrequency)) {
-                                                case 1:
-                                                    quarter = 'I Trimestre';
-                                                    break;
-                                                case 2:
-                                                    quarter = 'II Trimestre';
-                                                    break;
-                                                case 3:
-                                                    quarter = 'III Trimestre';
-                                                    break;
-                                                case 4:
-                                                    quarter = 'IV Trimestre';
-                                                    break;
+                                            if (years.indexOf(year) === -1) {
+                                                years.push(year);
+                                                dates += year + ", , , ";
                                             }
 
-                                            year = quarter + ' ' + point.startYear;
-                                        }
-                                        else if (point.isBiannualFrequency) {
-                                            var biannual = '';
+                                            if (!realValues[year]) {
+                                                realValues[year] = point.realValue;
+                                                realValuesCount[year] = 1;
 
-                                            switch (parseInt(point.biannualFrequency)) {
-                                                case 1:
-                                                    biannual = 'I Semestre';
-                                                    break;
-                                                case 2:
-                                                    biannual = 'II Semestre';
-                                                    break;
+                                                if (useDenominator)
+                                                    dates_header += realValueLabel + ", " + targetValueLabel + ", " + "%, ";
+                                                else
+                                                    dates_header += realValueLabel + ", Valor comparativo, " + "%, ";
+                                            }
+                                            else {
+                                                realValues[year] += point.realValue;
+                                                realValuesCount[year]++;
                                             }
 
-                                            year = biannual + ' ' + point.startYear;
+                                            if (!targetValues[year]) {
+                                                targetValues[year] = point.targetValue;
+                                                targetValuesCount[year] = 1;
+                                            }
+                                            else {
+                                                targetValues[year] += point.targetValue;
+                                                targetValuesCount[year]++;
+                                            }
+
+                                            if (!comparativeValues[year]) {
+                                                comparativeValues[year] = point.comparativeValue;
+                                                comparativeValuesCount[year] = 1;
+                                            }
+                                            else {
+                                                comparativeValues[year] += point.comparativeValue;
+                                                comparativeValuesCount[year]++;
+                                            }
+
+                                            values += point.realValue + ", ";
+
+                                            if (useDenominator) {
+                                                percent = point.targetValue !== 0 ? Number((point.realValue / point.targetValue) * 100).toPrecision(4) + "%" : "0";
+                                                values += point.targetValue + ", " + percent + ", ";
+                                            }
+                                            else {
+                                                percent = point.comparativeValue !== 0 ? Number((point.realValue / point.comparativeValue) * 100).toPrecision(4) + "%" : "0";
+                                                values += point.comparativeValue + ", " + percent + ", ";
+                                            }
+                                        });
+
+                                        values += real_values + ", ";
+                                        total_real_values += real_values;
+
+                                        if (useDenominator) {
+                                            percent = target_values !== 0 ? Number((real_values / target_values) * 100).toPrecision(4) + "%" : "";
+                                            values += target_values + ", ";
+                                            values += percent + ", ";
+                                            total_target_values += target_values;
                                         }
                                         else {
-                                            year = point.startYear;
+                                            percent = comparative_values !== 0 ? Number((real_values / comparative_values) * 100).toPrecision(4) + "%" : "";
+                                            values += comparative_values + ", ";
+                                            values += percent + ", ";
+                                            total_comparative_values += comparative_values;
                                         }
-
-                                        if (years.indexOf(year) === -1) years.push(year);
-
-                                        if (!realValues[year]) {
-                                            realValues[year] = point.realValue;
-                                            realValuesCount[year] = 1;
-                                        }
-                                        else {
-                                            realValues[year] += point.realValue;
-                                            realValuesCount[year]++;
-                                        }
-
-                                        if (!targetValues[year]) {
-                                            targetValues[year] = point.targetValue;
-                                            targetValuesCount[year] = 1;
-                                        }
-                                        else {
-                                            targetValues[year] += point.targetValue;
-                                            targetValuesCount[year]++;
-                                        }
-
-                                        if (!comparativeValues[year]) {
-                                            comparativeValues[year] = point.comparativeValue;
-                                            comparativeValuesCount[year] = 1;
-                                        }
-                                        else {
-                                            comparativeValues[year] += point.comparativeValue;
-                                            comparativeValuesCount[year]++;
-                                        }
-									});
+									}
+									
+                                    values += "\n";		
+									i++;
                                 });
+								
+								values += ", Total, ";
 								
 								$.each(years, function(key, year) {
 									var point;
-
+									var percent;
                                     var real_value = formula === 'sum' ? realValues[year] : (realValuesCount[year] != 0 ? realValues[year] / realValuesCount[year] : 0);
                                     var comparative_value = formula === 'sum' ? comparativeValues[year] : (comparativeValuesCount[year] != 0 ? comparativeValues[year] / comparativeValuesCount[year] : 0);
 									
                                     if (useDenominator) {
                                         var target_value = formula === 'sum' ? targetValues[year] : (targetValuesCount[year] != 0 ? targetValues[year] / targetValuesCount[year] : 0);
-
-                                        point = { "year": year, "value": real_value, "value_2": target_value, "value_3": comparative_value,
+                                        percent = targetValues[year] !== 0 ? Number((realValues[year] / targetValues[year]) * 100).toPrecision(4) + "%" : "0";
+										values += realValues[year] + ", " + targetValues[year] + ", " + percent + ", ";
+										
+										point = { 
+											"year": year, 
+											"value": real_value, 
+											"value_2": target_value, 
+											"value_3": comparative_value,
                                             "percent": targetValues[year] !== 0 ? "<br />Representa: " + Number((realValues[year] / targetValues[year]) * 100).toPrecision(4) + "%" : "" };
                                     }
                                     else {
-                                        point = { "year": year, "value": real_value, "value_3": comparative_value,
+                                        percent = comparativeValues[year] !== 0 ? Number((realValues[year] / comparativeValues[year]) * 100).toPrecision(4) + "%" : "0";
+                                        values += realValues[year] + ", " + comparativeValues[year] + ", " + percent + ", ";
+										
+                                        point = { 
+											"year": year, 
+											"value": real_value, 
+											"value_3": comparative_value,
                                             "percent": comparativeValues[year] !== 0 ? "<br />Representa: " + Number((realValues[year] / targetValues[year]) * 100).toPrecision(4) + "%" : ""};
                                     }
 
                                     points.push(point);
 								});
 
-                                if (useDenominator) {
-                                    $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(2));
-                                    drawGraph(points);
+                                var area = "Localidades de " + $municipalities.find('option:selected').text();
+                                values += total_real_values + ", ";
+                                csv += ", , " + dates + " Total, , ";
+                                csv += "\n";
+								
+								if (useDenominator) {
+									percent = total_target_values !== 0 ? Number((total_real_values / total_target_values) * 100).toPrecision(4) + "%" : "";
+                                	values += total_real_values + ", ";
+                                    csv += "Indicador, " + area + ", " + dates_header + realValueLabel + ", " + targetValueLabel + ", %";
                                 }
-                                else {
-                                    $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(2));
-                                    drawGraphOneLine(points);
+								else {
+                                    percent = total_comparative_values !== 0 ? Number((total_real_values / total_comparative_values) * 100).toPrecision(4) + "%" : "";
+                                    values += total_comparative_values + ", ";
+                                    csv += "Indicador, " + area + ", " + dates_header + realValueLabel + ", Valor comparativo" + ", %";
                                 }
+
+                                csv += "\n";
+                                csv += values;
+                                console.log('CSV: ', csv);
+								
+                                if (points && points.length > 0) {
+                                    if (useDenominator) {
+                                        $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
+                                        draw_graph(points, 1);
+                                    }
+                                    else {
+                                        $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(4));
+                                        draw_graph_one_line(points, 1);
+                                    }
+								}
                             }
                         });
 
@@ -971,11 +1101,26 @@
                                 var comparativeValues = [];
                                 var comparativeValuesCount = [];
                                 var points = [];
+                                var dates = '';
+                                var dates_header = '';
+                                var values = '';
+                                var percent;
+                                csv = '';
+
+                                var i = 0;
+                                var total_real_values = 0, total_target_values = 0, total_comparative_values = 0;
 
                                 $.each(results.points_array, function(key, points) {
+                                    percent = "";
+                                    values += title + ", " + results.municipalities[i].name + ", ";
+                                    var real_values = 0, target_values = 0, comparative_values = 0;
+
                                     $.each(points, function(key_1, point) {
                                         var year = '';
-
+                                        real_values += point.realValue;
+                                        target_values += point.targetValue;
+                                        comparative_values += point.comparativeValue;
+										
                                         if (point.isMonthlyFrequency) {
                                             var month = '';
 
@@ -1058,11 +1203,19 @@
                                             year = point.startYear;
                                         }
 
-                                        if (years.indexOf(year) === -1) years.push(year);
+                                        if (years.indexOf(year) === -1) {
+											years.push(year);
+                                            dates += year + ", , , ";
+                                        }
 
                                         if (!realValues[year]) {
                                             realValues[year] = point.realValue;
 											realValuesCount[year] = 1;
+
+                                            if (useDenominator)
+                                                dates_header += realValueLabel + ", " + targetValueLabel + ", " + "%, ";
+                                            else
+                                                dates_header += realValueLabel + ", Valor comparativo, " + "%, ";
                                         }
                                         else {
                                             realValues[year] += point.realValue;
@@ -1086,21 +1239,59 @@
                                             comparativeValues[year] += point.comparativeValue;
                                             comparativeValuesCount[year]++;
                                         }
+
+                                        values += point.realValue + ", ";
+
+                                        if (useDenominator) {
+                                            percent = point.targetValue !== 0 ? Number((point.realValue / point.targetValue) * 100).toPrecision(4) + "%" : "0";
+                                            values += point.targetValue + ", " + percent + ", ";
+                                        }
+                                        else {
+                                            percent = point.comparativeValue !== 0 ? Number((point.realValue / point.comparativeValue) * 100).toPrecision(4) + "%" : "0";
+                                            values += point.comparativeValue + ", " + percent + ", ";
+                                        }
                                     });
+
+                                    values += real_values + ", ";
+                                    total_real_values += real_values;
+
+                                    if (useDenominator) {
+                                        percent = target_values !== 0 ? Number((real_values / target_values) * 100).toPrecision(4) + "%" : "";
+                                        values += target_values + ", ";
+                                        values += percent + ", ";
+                                        total_target_values += target_values;
+                                    }
+                                    else {
+                                        percent = comparative_values !== 0 ? Number((real_values / comparative_values) * 100).toPrecision(4) + "%" : "";
+                                        values += comparative_values + ", ";
+                                        values += percent + ", ";
+                                        total_comparative_values += comparative_values;
+                                    }
+
+                                    values += "\n";
+                                    i++;
                                 });
+
+                                values += ", Total, ";
 
                                 $.each(years, function(key, year) {
                                     var point;
-									var real_value = formula === 'sum' ? realValues[year] : (realValuesCount[year] != 0 ? realValues[year] / realValuesCount[year] : 0);
+                                    var percent;
+                                    var real_value = formula === 'sum' ? realValues[year] : (realValuesCount[year] != 0 ? realValues[year] / realValuesCount[year] : 0);
                                     var comparative_value = formula === 'sum' ? comparativeValues[year] : (comparativeValuesCount[year] != 0 ? comparativeValues[year] / comparativeValuesCount[year] : 0);
                                     
 									if (useDenominator) {
                                         var target_value = formula === 'sum' ? targetValues[year] : (targetValuesCount[year] != 0 ? targetValues[year] / targetValuesCount[year] : 0);
-
+                                        percent = targetValues[year] !== 0 ? Number((realValues[year] / targetValues[year]) * 100).toPrecision(4) + "%" : "";
+                                        values += realValues[year] + ", " + targetValues[year] + ", " + percent + ", ";
+										
                                         point = { "year": year, "value": real_value, "value_2": target_value, "value_3": comparative_value,
                                             "percent": targetValues[year] !== 0 ? "<br />Representa: " + Number((realValues[year] / targetValues[year]) * 100).toPrecision(4) + "%" : "" };
                                     }
                                     else {
+                                        percent = comparativeValues[year] !== 0 ? Number((realValues[year] / comparativeValues[year]) * 100).toPrecision(4) + "%" : "";
+                                        values += realValues[year] + ", " + comparativeValues[year] + ", " + percent + ", ";
+										
                                         point = { "year": year, "value": real_value, "value_3": comparative_value,
                                             "percent": comparativeValues[year] !== 0 ? "<br />Representa: " + Number((realValues[year] / targetValues[year]) * 100).toPrecision(4) + "%" : ""};
                                     }
@@ -1108,14 +1299,36 @@
                                     points.push(point);
                                 });
 
+                                var area = "Municipios de " + $departments.find('option:selected').text();
+                                values += total_real_values + ", ";
+                                csv += ", , " + dates + " Total, , ";
+                                csv += "\n";
+
                                 if (useDenominator) {
-                                    $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(2));
-                                    drawGraph(points);
+                                    percent = total_target_values !== 0 ? Number((total_real_values / total_target_values) * 100).toPrecision(4) + "%" : "";
+                                    values += total_real_values + ", ";
+                                    csv += "Indicador, " + area + ", " + dates_header + realValueLabel + ", " + targetValueLabel + ", %";
                                 }
                                 else {
-                                    $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(2));
-                                    drawGraphOneLine(points);
+                                    percent = total_comparative_values !== 0 ? Number((total_real_values / total_comparative_values) * 100).toPrecision(4) + "%" : "";
+                                    values += total_comparative_values + ", ";
+                                    csv += "Indicador, " + area + ", " + dates_header + realValueLabel + ", Valor comparativo" + ", %";
                                 }
+
+                                csv += "\n";
+                                csv += values;
+                                console.log('CSV: ', csv);
+								
+								if (points && points.length > 0) {
+                                    if (useDenominator) {
+                                        $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
+                                        draw_graph(points, 1);
+                                    }
+                                    else {
+                                        $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(4));
+                                        draw_graph_one_line(points, 1);
+                                    }
+								}
                             }
                         });
 
@@ -1133,7 +1346,7 @@
                         });
 
                         req.done(function (results) {
-                            console.log('Getting points by department successfully: ', results);
+                            console.log('get_points_by_department_without_municipality: ', results);
 
                             if (results && results.points_array && results.points_array.length > 0) {
                                 var years = [];
@@ -1144,7 +1357,30 @@
                                 var comparativeValues = [];
                                 var comparativeValuesCount = [];
                                 var points = [];
-
+								var municipalities_csv = [];
+                                var dates = '';
+                                var dates_header = '';
+                                var values = '';
+                                var percent;
+                                csv = '';
+                                var total_real_values = 0, total_target_values = 0, total_comparative_values = 0;
+								
+								$.each(results.municipalities, function(key, municipality) {
+									var item = { 
+										name: municipality.name,
+										years: [], 
+										realValues: [], 
+										realValuesCount: [],
+                                        targetValues: [],
+                                        targetValuesCount: [],
+                                        comparativeValues: [],
+                                        comparativeValuesCount: []
+									};
+									
+                                    municipalities_csv.push(municipality._id);
+                                    municipalities_csv[municipality._id] = item;
+								});                                
+								
                                 $.each(results.points_array, function(key, points) {
                                     $.each(points, function(key_1, point) {
                                         var year = '';
@@ -1231,7 +1467,13 @@
                                             year = point.startYear;
                                         }
 
-                                        if (years.indexOf(year) === -1) years.push(year);
+                                        if (years.indexOf(year) === -1) {
+                                            years.push(year);
+                                            dates += year + ", , , ";
+                                        }
+                                        if (municipalities_csv[point.communityArea.parent].years.indexOf(year) === -1) {
+                                            municipalities_csv[point.communityArea.parent].years.push(year);
+                                        }
 
                                         if (!realValues[year]) {
                                             realValues[year] = point.realValue;
@@ -1240,6 +1482,22 @@
                                         else {
                                             realValues[year] += point.realValue;
                                             realValuesCount[year]++;
+                                        }
+                                        if (municipalities_csv[point.communityArea.parent].realValues.indexOf(year) === -1) {
+                                            municipalities_csv[point.communityArea.parent].realValues.push(year);
+                                            municipalities_csv[point.communityArea.parent].realValuesCount.push(year);
+											
+                                            municipalities_csv[point.communityArea.parent].realValues[year] = point.realValue;
+                                            municipalities_csv[point.communityArea.parent].realValuesCount[year] = 1;
+
+                                            if (useDenominator)
+                                                dates_header += realValueLabel + ", " + targetValueLabel + ", " + "%, ";
+                                            else
+                                                dates_header += realValueLabel + ", Valor comparativo, " + "%, ";
+                                        }
+                                        else {
+                                            municipalities_csv[point.communityArea.parent].realValues[year] += point.realValue;
+                                            municipalities_csv[point.communityArea.parent].realValuesCount[year]++;
                                         }
 
                                         if (!targetValues[year]) {
@@ -1250,6 +1508,17 @@
                                             targetValues[year] += point.targetValue;
                                             targetValuesCount[year]++;
                                         }
+                                        if (municipalities_csv[point.communityArea.parent].targetValues.indexOf(year) === -1) {
+                                            municipalities_csv[point.communityArea.parent].targetValues.push(year);
+                                            municipalities_csv[point.communityArea.parent].targetValuesCount.push(year);
+											
+                                            municipalities_csv[point.communityArea.parent].targetValues[year] = point.targetValue;
+                                            municipalities_csv[point.communityArea.parent].targetValuesCount[year] = 1;
+                                        }
+                                        else {
+                                            municipalities_csv[point.communityArea.parent].targetValues[year] += point.targetValue;
+                                            municipalities_csv[point.communityArea.parent].targetValuesCount[year]++;
+                                        }
 
                                         if (!comparativeValues[year]) {
                                             comparativeValues[year] = point.comparativeValue;
@@ -1259,36 +1528,149 @@
                                             comparativeValues[year] += point.comparativeValue;
                                             comparativeValuesCount[year]++;
                                         }
+                                        if (municipalities_csv[point.communityArea.parent].comparativeValues.indexOf(year) === -1) {
+                                            municipalities_csv[point.communityArea.parent].comparativeValues.push(year);
+                                            municipalities_csv[point.communityArea.parent].comparativeValuesCount.push(year);
+											
+											municipalities_csv[point.communityArea.parent].comparativeValues[year] = point.comparativeValue;
+                                            municipalities_csv[point.communityArea.parent].comparativeValuesCount[year] = 1;
+                                        }
+                                        else {
+                                            municipalities_csv[point.communityArea.parent].comparativeValues[year] += point.comparativeValue;
+                                            municipalities_csv[point.communityArea.parent].comparativeValuesCount[year]++;
+                                        }
                                     });
                                 });
+								
+                                var area = "Municipios de " + $departments.find('option:selected').text();
+								var second_row = useDenominator 
+										? "Indicador, " + area + ", " + dates_header + realValueLabel + ", " + targetValueLabel + ", %"
+										: "Indicador, " + area + ", " + dates_header + realValueLabel + ", Valor comparativo" + ", %";
+                                
+								csv += ", , " + dates + " Total, , ";
+                                csv += "\n";
+								csv += second_row;
+                                csv += "\n";
 
+                                $.each(municipalities_csv, function(key, municipality) {									
+									var total_real = 0, total_target = 0, total_comparative = 0;
+									var row = title + ", " + municipalities_csv[municipality].name + ", ";
+									
+									$.each(years, function(key_1, year) {
+										if (!years[year]) {
+                                            years[year] = {
+                                                realValueTotal: 0,
+                                                targetValueTotal: 0,
+                                                comparativeValueTotal: 0
+											};
+                                        }
+										
+										if (municipalities_csv[municipality].years && municipalities_csv[municipality].years.length > 0 && municipalities_csv[municipality].years.indexOf(year) !== -1) {
+                                            years[year].realValueTotal += municipalities_csv[municipality].realValues[year];
+											
+											row += municipalities_csv[municipality].realValues[year] + ", ";
+                                            total_real += municipalities_csv[municipality].realValues[year];
+
+                                            if (useDenominator) {
+                                                years[year].targetValueTotal += municipalities_csv[municipality].targetValues[year];
+
+                                                percent = municipalities_csv[municipality].targetValues[year] !== 0
+                                                        ? Number((municipalities_csv[municipality].realValues[year] / municipalities_csv[municipality].targetValues[year]) * 100).toPrecision(4) + "%"
+                                                        : "0";
+                                                row += municipalities_csv[municipality].targetValues[year] + ", ";
+                                                row += percent + ", ";
+                                                total_target += municipalities_csv[municipality].targetValues[year];
+                                            }
+                                            else {
+                                                years[year].comparativeValueTotal += municipalities_csv[municipality].comparativeValues[year];
+
+                                                percent = municipalities_csv[municipality].comparativeValues[year] !== 0
+                                                        ? Number((municipalities_csv[municipality].realValues[year] / municipalities_csv[municipality].comparativeValues[year]) * 100).toPrecision(4) + "%"
+                                                        : "0";
+                                                row += municipalities_csv[municipality].comparativeValues[year] + ", ";
+                                                row += percent + ", ";
+                                                total_comparative += municipalities_csv[municipality].comparativeValues[year];
+                                            }
+										}
+										else {
+											row += " , , ,";
+										}
+									});
+									
+									if (total_real !== 0) {
+                                        row += total_real + ", ";
+
+                                        if (useDenominator) {
+                                            percent = total_target !== 0 ? Number((total_real / total_target) * 100).toPrecision(4) + "%" : "0";
+                                            row += total_target + ", ";
+                                        }
+                                        else  {
+                                            percent = total_comparative !== 0 ? Number((total_real / total_comparative) * 100).toPrecision(4) + "%" : "0";
+                                            row += total_comparative + ", ";
+                                        }
+
+                                        row += percent + ", ";
+									}
+									
+                                    row += "\n";
+									csv += row;
+                                });
+
+                                csv += "\n";
+                                csv += " , Total, ";
+								
                                 $.each(years, function(key, year) {
                                     var point;
                                     var real_value = formula === 'sum' ? realValues[year] : (realValuesCount[year] != 0 ? realValues[year] / realValuesCount[year] : 0);
-                                    var comparative_value = formula === 'sum' ? comparativeValues[year] : (comparativeValuesCount[year] != 0 ? comparativeValues[year] / comparativeValuesCount[year] : 0);
-
+                                    var comparative_value = formula === 'sum' ? comparativeValues[year] : (comparativeValuesCount[year] != 0 ? comparativeValues[year] / comparativeValuesCount[year] : 0);									
+									csv += years[year].realValueTotal + ", ";
+                                    total_real_values += years[year].realValueTotal;
+									
                                     if (useDenominator) {
                                         var target_value = formula === 'sum' ? targetValues[year] : (targetValuesCount[year] != 0 ? targetValues[year] / targetValuesCount[year] : 0);
+                                        percent = years[year].targetValueTotal !== 0 ? Number((years[year].realValueTotal / years[year].targetValueTotal) * 100).toPrecision(4) + "%" : "0";
+                                        csv += years[year].targetValueTotal + ", ";
+										total_target_values += years[year].targetValueTotal;
 
                                         point = { "year": year, "value": real_value, "value_2": target_value, "value_3": comparative_value,
                                             "percent": targetValues[year] !== 0 ? "<br />Representa: " + Number((realValues[year] / targetValues[year]) * 100).toPrecision(4) + "%" : "" };
                                     }
                                     else {
+                                        percent = years[year].comparativeValueTotal !== 0 ? Number((years[year].realValueTotal / years[year].comparativeValueTotal) * 100).toPrecision(4) + "%" : "0";
+                                        csv += years[year].comparativeValueTotal + ", ";
+										total_comparative_values += years[year].comparativeValueTotal;
+
                                         point = { "year": year, "value": real_value, "value_3": comparative_value,
-                                            "percent": comparativeValues[year] !== 0 ? "<br />Representa: " + Number((realValues[year] / targetValues[year]) * 100).toPrecision(4) + "%" : ""};
+                                            "percent": comparativeValues[year] !== 0 ? "<br />Representa: " + Number((realValues[year] / comparativeValues[year]) * 100).toPrecision(4) + "%" : ""};
                                     }
 
+                                    csv += percent + ", ";
                                     points.push(point);
                                 });
+								
+								csv += total_real_values + ", ";
+								
+								if (useDenominator) {
+									percent = total_target_values !== 0 ? Number((total_real_values / total_target_values) * 100).toPrecision(4) + "%" : "0";
+                                    csv += total_target_values + ", ";
+                                    csv += percent + ", ";
+                                }
+								else {
+                                    percent = total_comparative_values !== 0 ? Number((total_real_values / total_comparative_values) * 100).toPrecision(4) + "%" : "0";
+                                    csv += total_comparative_values + ", ";
+                                    csv += percent + ", ";
+								}
 
-                                if (useDenominator) {
-                                    $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(2));
-                                    drawGraph(points);
-                                }
-                                else {
-                                    $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(2));
-                                    drawGraphOneLine(points);
-                                }
+                                if (points && points.length) {
+                                    if (useDenominator) {
+                                        $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
+                                        draw_graph(points, 1);
+                                    }
+                                    else {
+                                        $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(4));
+                                        draw_graph_one_line(points, 1);
+                                    }
+								}
                             }
                         });
 
@@ -1297,10 +1679,15 @@
                         });
                     }
                 }
-
+				
                 function build_points(data_points) {
                     if (data_points && data_points.length > 0) {
                         var points = [];
+						var dates = '';
+						var dates_header = '';
+						var values = '';
+                        var percent;
+                        csv = '';
 
                         for (var i = 0; i < data_points.length; i++) {
                             var point = null;
@@ -1308,7 +1695,6 @@
 
                             if (data_points[i].isMonthlyFrequency) {
                                 var month = '';
-
                                 switch (parseInt(data_points[i].monthlyFrequency)) {
                                     case 1:
                                         month = 'Enero';
@@ -1347,7 +1733,7 @@
                                         month = 'Diciembre';
                                         break;
                                 }
-
+								
                                 year = month + ' ' + data_points[i].startYear;
                             }
                             else if (data_points[i].isQuarterlyFrequency) {
@@ -1388,9 +1774,84 @@
                                 year = data_points[i].startYear;
                             }
 
+							dates += year + ", , , ";
+							
                             if (useDenominator) {
+								percent = data_points[i].targetValue !== 0 ? Number((data_points[i].realValue / data_points[i].targetValue) * 100).toPrecision(4) + "%" : "0";
+                                values += data_points[i].realValue + ", " + data_points[i].targetValue + ", " + percent + ", ";
+                                dates_header += realValueLabel + ", " + targetValueLabel + ", " + "%, ";
+
                                 point = {
                                     "year": year,
+                                    "value": data_points[i].realValue,
+                                    "value_2": data_points[i].targetValue,
+                                    "value_3": data_points[i].comparativeValue ? data_points[i].comparativeValue : 0,
+                                    "percent": data_points[i].targetValue !== 0 ? "<br />Representa: " + Number((data_points[i].realValue / data_points[i].targetValue) * 100).toPrecision(4) + "%" : ""
+                                };
+							}
+                            else {
+                                percent = data_points[i].targetValue !== 0 ? Number((data_points[i].realValue / data_points[i].targetValue) * 100).toPrecision(4) + "%" : "0";
+                                values += data_points[i].realValue + ", " + data_points[i].comparativeValue + ", " + percent + ", ";
+                                dates_header += realValueLabel + ", " + "Comparativo, %, ";
+
+                                point = {
+                                    "year": year, 
+									"value": data_points[i].realValue,
+                                    "value_3": data_points[i].comparativeValue ? data_points[i].comparativeValue : 0,
+                                    "percent": data_points[i].targetValue !== 0 ? "<br />Representa: " + Number((data_points[i].realValue / data_points[i].targetValue) * 100).toPrecision(4) + "%" : "0"
+                                };
+                            }
+
+                            points.push(point);
+                        }
+
+                        var community = areaType === 3 ? data_points[0].communityArea.name : '';
+                        var municipality = areaType === 2 ? data_points[0].municipalArea.name : '';
+                        var department = areaType === 1 ? data_points[0].departmentArea.name : '';
+						var area = areaType === 3 ? "Localidad" : (areaType === 2 ? "Municipio" : (areaType === 1 ? "Región" : ""));
+						var area_value = community ? community : (municipality ? municipality : (department ? department : ', '));
+						
+						csv += ", , " + dates;
+						csv += "\n";
+						csv += "Indicador, " + area + ", " + dates_header;
+                        csv += "\n";
+                        csv += title + ", " + area_value + ", " + values;
+						console.log('CSV: ', csv);
+						
+						if (points && points.length > 0) {
+                            if (useDenominator) {
+                                $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(2));
+                                draw_graph(points, 1);
+                            }
+                            else {
+                                $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(2));
+                                draw_graph_one_line(points, 1);
+                            }
+						}
+                    }
+                }
+
+                function build_points_two(data_points) {
+                    if (data_points && data_points.length > 0) {
+                        var points = [];
+
+                        for (var i = 0; i < data_points.length; i++) {
+                            var point = null;
+							var area = '';
+
+							if (data_points[i].isDepartmentArea && data_points[i].departmentArea) {
+								area = data_points[i].departmentArea.name;
+							}
+							else if (data_points[i].isMunicipalArea && data_points[i].municipalArea) {
+                                area = data_points[i].municipalArea.name;
+                            }
+							else if (data_points[i].isCommunityArea && data_points[i].communityArea) {
+                                area = data_points[i].communityArea.name;
+                            }
+
+                            if (useDenominator) {
+                                point = {
+                                    "area": area,
                                     "value": data_points[i].realValue,
                                     "value_2": data_points[i].targetValue,
                                     "value_3": data_points[i].comparativeValue ? data_points[i].comparativeValue : 0,
@@ -1399,7 +1860,8 @@
                             }
                             else {
                                 point = {
-                                    "year": year, "value": data_points[i].realValue,
+                                    "area": area, 
+									"value": data_points[i].realValue,
                                     "value_3": data_points[i].comparativeValue ? data_points[i].comparativeValue : 0,
                                     "percent": data_points[i].targetValue !== 0 ? "<br />Representa: " + Number((data_points[i].realValue / data_points[i].targetValue) * 100).toPrecision(4) + "%" : ""
                                 };
@@ -1408,21 +1870,216 @@
                             points.push(point);
                         }
 
-                        if (useDenominator) {
-                            $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(2));
-                            drawGraph(points);
-                        }
-                        else {
-                            $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(2));
-                            drawGraphOneLine(points);
-                        }
-						
-						global_points = points;
-						console.log('global_points: ', global_points);
+						if (points && points.length) {
+                            if (useDenominator) {
+                                $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(2));
+                                draw_graph(points, 2);
+                            }
+                            else {
+                                $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(2));
+                                draw_graph_one_line(points, 2);
+                            }
+						}
                     }
                 }
-				
-                function drawGraphOneLine(points) {
+
+                function build_points_two_by_parent(data_points, parents) {
+                    if (data_points && data_points.length > 0 && parents && parents.length > 0) {
+						var global_array = [];
+                        var points = [];
+
+                        for (var k = 0; k < parents.length; k++) {
+							var parent = parents[k];
+							parent.points = [];
+							parent.values = { 
+								real_values: 0, 
+								real_values_count: 0, 
+								target_values: 0,
+                                target_values_count: 0,
+								comparative_values: 0,
+                                comparative_values_count: 0
+							};
+							
+							global_array.push(parents[k]._id);
+                            global_array[parents[k]._id] = parent;
+							//global_array[parents[k]._id] = parent;
+						}
+
+                        console.log('global_array: ', global_array);
+
+                        for (var i = 0; i < data_points.length; i++) {
+                            if (data_points[i].isDepartmentArea && data_points[i].departmentArea) {
+                                global_array[data_points[i].departmentArea.parent].points.push(data_points[i]);
+								
+                                global_array[data_points[i].departmentArea.parent].values.real_values += data_points[i].realValue;
+                                global_array[data_points[i].departmentArea.parent].values.real_values_count++;
+                                global_array[data_points[i].departmentArea.parent].values.target_values += data_points[i].targetValue;
+                                global_array[data_points[i].departmentArea.parent].values.target_values_count++;
+                                global_array[data_points[i].departmentArea.parent].values.comparative_values += data_points[i].comparativeValue;
+                                global_array[data_points[i].departmentArea.parent].values.comparative_values_count++;
+                            }
+                            else if (data_points[i].isMunicipalArea && data_points[i].municipalArea) {
+                                global_array[data_points[i].municipalArea.parent].points.push(data_points[i]);
+
+                                global_array[data_points[i].municipalArea.parent].values.real_values += data_points[i].realValue;
+                                global_array[data_points[i].municipalArea.parent].values.real_values_count++;
+                                global_array[data_points[i].municipalArea.parent].values.target_values += data_points[i].targetValue;
+                                global_array[data_points[i].municipalArea.parent].values.target_values_count++;
+                                global_array[data_points[i].municipalArea.parent].values.comparative_values += data_points[i].comparativeValue;
+                                global_array[data_points[i].municipalArea.parent].values.comparative_values_count++;
+                            }
+                            else if (data_points[i].isCommunityArea && data_points[i].communityArea) {
+                                global_array[data_points[i].communityArea.parent].points.push(data_points[i]);
+
+                                global_array[data_points[i].communityArea.parent].values.real_values += data_points[i].realValue;
+                                global_array[data_points[i].communityArea.parent].values.real_values_count++;
+                                global_array[data_points[i].communityArea.parent].values.target_values += data_points[i].targetValue;
+                                global_array[data_points[i].communityArea.parent].values.target_values_count++;
+                                global_array[data_points[i].communityArea.parent].values.comparative_values += data_points[i].comparativeValue;
+                                global_array[data_points[i].communityArea.parent].values.comparative_values_count++;
+                            }
+                        }
+
+                        $.each(global_array, function(key, area) {
+							console.log('Area: ', area);
+                            console.log('Area object: ', global_array[area]);
+
+                            var point;
+                            var real_value = formula === 'sum' ? global_array[area].values.real_values : (global_array[area].values.real_values_count != 0 ? global_array[area].values.real_values / global_array[area].values.real_values_count : 0);
+                            var comparative_value = formula === 'sum' ? global_array[area].values.comparative_values : (global_array[area].values.comparative_values_count != 0 ? global_array[area].values.comparative_values / global_array[area].values.comparative_values_count : 0);
+
+                            if (useDenominator) {
+                                var target_value = formula === 'sum' ? global_array[area].values.target_values : (global_array[area].values.target_values_count != 0 ? global_array[area].values.target_values / global_array[area].values.target_values_count : 0);
+
+                                point = { 
+									"area": global_array[area].name, 
+									"value": real_value, 
+									"value_2": target_value, 
+									"value_3": comparative_value,
+                                    "percent": global_array[area].values.target_values !== 0 ? "<br />Representa: " + Number((global_array[area].values.real_values / global_array[area].values.target_values) * 100).toPrecision(4) + "%" : "" 
+								};
+                            }
+                            else {
+                                point = { 
+									"area": global_array[area].name, 
+									"value": real_value, 
+									"value_3": comparative_value,
+                                    "percent": global_array[area].values.comparative_values !== 0 ? "<br />Representa: " + Number((global_array[area].values.real_values / global_array[area].values.comparative_values) * 100).toPrecision(4) + "%" : ""
+								};
+                            }
+
+                            points.push(point);
+                        });
+						
+						if (points && points.length > 0) {
+                            if (useDenominator) {
+                                $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
+                                draw_graph(points, 2);
+                            }
+                            else {
+                                $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(4));
+                                draw_graph_one_line(points, 2);
+                            }
+						}
+					}
+                }
+
+                function build_points_two_by_grandpa(data_points, parents) {
+                    if (data_points && data_points.length > 0 && parents && parents.length > 0) {
+                        var global_array = [];
+						var areas = [];
+                        var points = [];
+
+                        for (var k = 0; k < parents.length; k++) {
+                            var parent = parents[k].parent;
+                            parent.values = {
+                                real_values: 0,
+                                real_values_count: 0,
+                                target_values: 0,
+                                target_values_count: 0,
+                                comparative_values: 0,
+                                comparative_values_count: 0
+                            };
+
+                            global_array.push(parents[k].parent._id);
+                            global_array[parents[k].parent._id] = parent;
+							
+							areas.push(parents[k]._id);
+                            areas[parents[k]._id] = parents[k].parent;
+                        }
+
+                        for (var i = 0; i < data_points.length; i++) {
+                            if (data_points[i].isDepartmentArea && data_points[i].departmentArea) {
+                                global_array[areas[data_points[i].communityArea.parent]._id].values.real_values += data_points[i].realValue;
+                                global_array[areas[data_points[i].communityArea.parent]._id].values.real_values_count++;
+                                global_array[areas[data_points[i].communityArea.parent]._id].values.target_values += data_points[i].targetValue;
+                                global_array[areas[data_points[i].communityArea.parent]._id].values.target_values_count++;
+                                global_array[areas[data_points[i].communityArea.parent]._id].values.comparative_values += data_points[i].comparativeValue;
+                                global_array[areas[data_points[i].communityArea.parent]._id].values.comparative_values_count++;
+                            }
+                            else if (data_points[i].isMunicipalArea && data_points[i].municipalArea) {
+                                global_array[areas[data_points[i].communityArea.parent]._id].values.real_values += data_points[i].realValue;
+                                global_array[areas[data_points[i].communityArea.parent]._id].values.real_values_count++;
+                                global_array[areas[data_points[i].communityArea.parent]._id].values.target_values += data_points[i].targetValue;
+                                global_array[areas[data_points[i].communityArea.parent]._id].values.target_values_count++;
+                                global_array[areas[data_points[i].communityArea.parent]._id].values.comparative_values += data_points[i].comparativeValue;
+                                global_array[areas[data_points[i].communityArea.parent]._id].values.comparative_values_count++;
+                            }
+                            else if (data_points[i].isCommunityArea && data_points[i].communityArea) {
+                                global_array[areas[data_points[i].communityArea.parent]._id].values.real_values += data_points[i].realValue;
+                                global_array[areas[data_points[i].communityArea.parent]._id].values.real_values_count++;
+                                global_array[areas[data_points[i].communityArea.parent]._id].values.target_values += data_points[i].targetValue;
+                                global_array[areas[data_points[i].communityArea.parent]._id].values.target_values_count++;
+                                global_array[areas[data_points[i].communityArea.parent]._id].values.comparative_values += data_points[i].comparativeValue;
+                                global_array[areas[data_points[i].communityArea.parent]._id].values.comparative_values_count++;
+                            }
+                        }
+
+                        $.each(global_array, function(key, area) {
+                            console.log('Area: ', area);
+                            console.log('Area object: ', global_array[area]);
+
+                            var point;
+                            var real_value = formula === 'sum' ? global_array[area].values.real_values : (global_array[area].values.real_values_count != 0 ? global_array[area].values.real_values / global_array[area].values.real_values_count : 0);
+                            var comparative_value = formula === 'sum' ? global_array[area].values.comparative_values : (global_array[area].values.comparative_values_count != 0 ? global_array[area].values.comparative_values / global_array[area].values.comparative_values_count : 0);
+
+                            if (useDenominator) {
+                                var target_value = formula === 'sum' ? global_array[area].values.target_values : (global_array[area].values.target_values_count != 0 ? global_array[area].values.target_values / global_array[area].values.target_values_count : 0);
+
+                                point = {
+                                    "area": global_array[area].name,
+                                    "value": real_value,
+                                    "value_2": target_value,
+                                    "value_3": comparative_value,
+                                    "percent": global_array[area].values.target_values !== 0 ? "<br />Representa: " + Number((global_array[area].values.real_values / global_array[area].values.target_values) * 100).toPrecision(4) + "%" : ""
+                                };
+                            }
+                            else {
+                                point = {
+                                    "area": global_array[area].name,
+                                    "value": real_value,
+                                    "value_3": comparative_value,
+                                    "percent": global_array[area].values.comparative_values !== 0 ? "<br />Representa: " + Number((global_array[area].values.real_values / global_array[area].values.comparative_values) * 100).toPrecision(4) + "%" : ""
+                                };
+                            }
+
+                            points.push(point);
+                        });
+
+                        if (points && points.length > 0) {
+                            if (useDenominator) {
+                                $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
+                                draw_graph(points, 2);
+                            }
+                            else {
+                                $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(4));
+                                draw_graph_one_line(points, 2);
+                            }
+                        }
+                    }
+                }
+
+                function draw_graph_one_line(points, tab) {
                     var chart;
                     var graph, graph_3;
 
@@ -1431,7 +2088,7 @@
 
                     chart.dataProvider = points;
                     chart.marginLeft = 10;
-                    chart.categoryField = "year";
+                    chart.categoryField = tab === 1 ? "year" : "area";
 
                     // AXES
                     // category
@@ -1499,7 +2156,7 @@
                     $('.amChartsLegend.amcharts-legend-div').css('margin-top', '18px');
                 }
 
-                function drawGraph(points) {
+                function draw_graph(points, tab) {
                     var chart;
                     var graph, graph_2, graph_3;
 
@@ -1508,7 +2165,7 @@
 
                     chart.dataProvider = points;
                     chart.marginLeft = 30;
-                    chart.categoryField = "year";
+                    chart.categoryField = tab === 1 ? "year" : "area";
                     chart.startDuration = 1;
 
                     // AXES

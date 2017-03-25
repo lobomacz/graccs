@@ -60,11 +60,11 @@ exports = module.exports = function (app) {
 	app.get('/get-points-by-department', routes.views.get_points_by_department);
 	app.get('/get-points-by-department-without-municipality', routes.views.get_points_by_department_without_municipality);
 	app.get('/get-points-by-municipality', routes.views.get_points_by_municipality);
+	app.get('/get-points-by-parent', routes.views.get_points_by_parent);
 	app.get('/get-municipalities', routes.views.get_municipalities);
 	app.get('/get-municipality', routes.views.get_municipality);
 	app.get('/get-communities', routes.views.get_communities);
 	app.get('/get-initial-data', routes.views.get_initial_data);
-	app.get('/get-indicator-initial-data', routes.views.get_indicator_initial_data);
 	
 	// Generate documents
 	app.get('/generate-docx', routes.views.generate_docx);
