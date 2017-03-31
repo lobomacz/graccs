@@ -103,6 +103,7 @@
     left: 0;
     height: 50%;
     width: 50%;
+	cursor: pointer;
 }
 
 .grid-news-five li:nth-child(2) {
@@ -110,6 +111,7 @@
     left: 0;
     height: 50%;
     width: 50%;
+	cursor: pointer;
 }
 
 .grid-news-five li:nth-child(3) {
@@ -117,6 +119,7 @@
     left: 50%;
     height: 50%;
     width: 25%;
+	cursor: pointer;
 }
 
 .grid-news-five li:nth-child(4) {
@@ -124,13 +127,15 @@
     left: 75%;
     height: 50%;
     width: 25%;
+	cursor: pointer;
 }
 
 .grid-news-five li:nth-child(5) {
     top: 50%;
     left: 50%;
     height: 50%;
-    width: 25%;;
+    width: 25%;
+	cursor: pointer;
 }
 
 .grid-news-five li:nth-child(6) {
@@ -138,6 +143,7 @@
     left: 75%;
     height: 50%;
     width: 25%;
+	cursor: pointer;
 }
 
 /*****************/
@@ -181,6 +187,7 @@
     left: 66.66666666%;
     height: 50%;
     width: 33.33333333%;
+	cursor: pointer;
 }
 
 /*****************/

@@ -13,6 +13,7 @@ var PostComment = new keystone.List('PostComment', {
 	singular: 'Comentario de Noticia',
 	plural: 'Comentarios de Noticias',
 	nocreate: true,
+	noedit: true,
 	track: true
 });
 

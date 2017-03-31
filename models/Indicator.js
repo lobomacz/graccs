@@ -17,8 +17,7 @@ var Indicator = new keystone.List('Indicator', {
 	track: true
 });
 
-Indicator.add(
-	{
+Indicator.add({
 		title: { label: 'Nombre', type: Types.Text, required: true },
 		code: { label: 'Código', type: Types.Number, default: 1, min: 1, unique: true, required: true, initial: true },
 		sector: { label: 'Sector', type: Types.Relationship, ref: 'IndicatorSector', required: true, many: false, initial: true },

@@ -823,6 +823,7 @@ body.menu-visible .icon-bar:nth-of-type(2) {
     left: 0;
     height: 100%;
     width: 25%;
+	cursor: pointer;
 }
 
 .grid-three li:nth-child(2) {
@@ -837,6 +838,7 @@ body.menu-visible .icon-bar:nth-of-type(2) {
     left: 25%;
     height: 50%;
     width: 50%;
+	cursor: pointer;
 }
 
 .grid-three li:nth-child(4) {
@@ -850,7 +852,8 @@ body.menu-visible .icon-bar:nth-of-type(2) {
     top: 50%;
     left: 50%;
     height: 50%;
-    width: 25%;;
+    width: 25%;
+	cursor: pointer;
 }
 
 .grid-three li:nth-child(6) {
@@ -865,6 +868,7 @@ body.menu-visible .icon-bar:nth-of-type(2) {
     left: 0;
     height: 50%;
     width: 50%;
+	cursor: pointer;
 }
 
 .grid-two li:nth-child(2) {
@@ -879,6 +883,7 @@ body.menu-visible .icon-bar:nth-of-type(2) {
     left: 50%;
     height: 50%;
     width: 50%;
+	cursor: pointer;
 
 }
 
@@ -894,6 +899,7 @@ body.menu-visible .icon-bar:nth-of-type(2) {
     left: 0;
     height: 100%;
     width: 50%;
+	cursor: pointer;
 }
 
 .grid-one li:nth-child(2) {
@@ -1034,6 +1040,7 @@ body.menu-visible .icon-bar:nth-of-type(2) {
     margin-bottom: 20px;
     height: auto;
     display: block;
+	text-transform: uppercase;
 }
 
 .grid-promoted .item-meta-title:hover h2 {
@@ -1046,8 +1053,9 @@ body.menu-visible .icon-bar:nth-of-type(2) {
 }
 
 .grid-promoted .item-meta-title h2:first-child {
-    font-size: 18px;
-    font-weight: normal;
+    font-size: 13px;
+    font-weight: bold;
+	line-height: 1.4;
 }
 
 .grid-promoted .item-meta-title h2:nth-child(2) {
@@ -1058,6 +1066,10 @@ body.menu-visible .icon-bar:nth-of-type(2) {
 .grid-promoted .item-meta-title h2:nth-child(3) {
     font-size: 20px;
     font-weight: 900;
+}
+
+.grid-content .item-meta-title {
+	text-transform: uppercase;
 }
 
 .item-meta-info {
@@ -1337,6 +1349,7 @@ body.menu-visible .icon-bar:nth-of-type(2) {
         left: 0;
         height: 50%;
         width: 33.33333333%;
+		cursor: pointer;
     }
 
     .grid-three li:nth-child(2) {
@@ -1350,7 +1363,8 @@ body.menu-visible .icon-bar:nth-of-type(2) {
         top: 0;
         left: 33.33333333%;
         height: 50%;
-        width: 33.33333333%
+        width: 33.33333333%;
+		cursor: pointer;
     }
 
     .grid-three li:nth-child(4) {
@@ -1365,6 +1379,7 @@ body.menu-visible .icon-bar:nth-of-type(2) {
         left: 33.3333%;
         height: 50%;
         width: 33.33333333%;
+		cursor: pointer;
     }
 
     .grid-three li:nth-child(6) {

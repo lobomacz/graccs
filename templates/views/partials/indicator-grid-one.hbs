@@ -1,21 +1,22 @@
 {{#if indicators.results}}
 	{{#each indicators.results}}
-        <li class="grid-cover grid-orange" style="background-image: url('/indicators/files/{{relatedImage.filename}}')">
+        <li data-url="/indicador/{{slug}}" class="grid-cover grid-orange" style="background-image: url('/indicators/files/{{relatedImage.filename}}')">
             <div class="set-bottom hidden-xs">
                 <span class="dotted-wrap item-meta-info">{{title}}</span>
             </div>
         </li>
         <li class="grid-content grid-promoted" data-color-target=".grid-orange">
             <div class="set-top">
-                <h2 class="item-meta-title visible-xxs" style="text-transform: uppercase;">
+                <h2 class="item-meta-title visible-xxs">
                     <a href="/indicador/{{slug}}">{{title}}</a>
                 </h2>
-                <a href="/indicador/{{slug}}" class="item-meta-title hidden-xxs" style="text-transform: uppercase;">
+                <a href="/indicador/{{slug}}" class="item-meta-title hidden-xxs">
 					<h2>{{title}}</h2>
                 </a>
             </div>
             <div class="set-bottom">
-				{{#substring 150 target}}{{/substring}}
+				{{#substring 140 target}}{{/substring}}
+                <a href="/indicador/{{slug}}" style="color: #fff; font-size: 12px; text-decoration: underline;">Leer más</a>
                 <div class="item-meta-info">
                     <span>{{date startDate format='MMMYYYY'}} - {{date endDate format='MMMYYYY'}}</span>
                     <span class="meta-separator">|</span>

@@ -19,7 +19,7 @@
         <ul class="sidebar-nav">
 			{{#if indSector}}
 				{{#each indSector}}
-                    <li>
+                    <li {{#if active}}class="active" {{/if}} data-active="{{active}}">
 						{{#if icono.filename}}
                             <span>
 								<i class="si"></i>

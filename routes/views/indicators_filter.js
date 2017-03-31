@@ -41,7 +41,16 @@ exports = module.exports = function (req, res) {
 
 				q.exec(function (err, results) {
 					locals.indSector = results;
-					callback(err);
+
+					async.each(locals.indSector,
+						function (sector, callback) {
+							sector.active = sector._id == filter;
+							callback(err);
+						},
+						function (err) {
+							next(err);
+						}
+					);
 				});
 			}],
 			function (err) {
@@ -68,7 +77,7 @@ exports = module.exports = function (req, res) {
 				async.each(locals.indicators.results,
 					function (indicator, callback) {
 						keystone.list('IndicatorComment').model.count().where('indicator', indicator._id).exec(function (err, count) {
-							indicator.commentsCount = count;
+							indicator.commentsCount = count;							
 							callback(err);
 						});
 					},

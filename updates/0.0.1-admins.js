@@ -8,9 +8,18 @@
  */
 
 exports.create = {
-	User: [
-		{ 'name.first': 'Admin', 'name.last': 'User', 'email': 'admin@graccs.gov.ni', 'password': 'admin', 'isAdmin': true }
-	]
+	User: [{ 
+		'name.first': 'Admin', 
+		'name.last': 'User', 
+		'email': 'admin@graccs.gov.ni', 
+		'password': 'admin',
+		'role': 'admin',
+		'isAdmin': true,
+		'isPreparer': true,
+		'isEditor': true,
+		'isPublisher': true,
+		'isFiler': true
+	 }]
 };
 
 /*

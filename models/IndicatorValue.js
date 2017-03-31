@@ -18,6 +18,20 @@ IndicatorValue.add({
 	indicator: { label: 'Indicador', type: Types.Relationship, ref: 'Indicator', required: true, many: false, initial: true, index: true },
 	startYear: { label: 'Fecha de comienzo', type: Types.Number, default: 2000, min: 1900, required: true, initial: true },
 	realValue: { label: 'Valor ejecutado', type: Types.Number, default: 0, min: 0, required: true, initial: true },
+	state: {
+		label: 'Estado',
+		type: Types.Select,
+		options: [
+			{ value: 'draft', label: 'Borrador' },
+			{ value: 'ready-to-publish', label: 'Listo para publicar' },
+			{ value: 'published', label: 'Publicado' },
+			{ value: 'archived', label: 'Archivado' }
+		],
+		default: 'draft',
+		required: true,
+		index: true,
+		initial: true
+	},
 	useDenominator: { label: 'Usar denominador', type: Types.Boolean, watch: true, value: checkIndicatorDenominator, hidden: true },
 	targetValue: { label: 'Valor planificado', type: Types.Number, default: 0, min: 0, dependsOn: { useDenominator: true } },
 	comparativeValue: { label: 'Valor para comparar', type: Types.Number, default: 0, min: 0 },
@@ -69,7 +83,6 @@ IndicatorValue.add({
 		default: '1',
 		dependsOn: { isBiannualFrequency: true }
 	},
-	/*nationalArea: { label: 'Desagregación Nacional', type: Types.Relationship, ref: 'NationalArea', many: false, dependsOn: { areaType: 'national' } },*/
 	isDepartmentArea: { label: 'Es una desagregación departamental', type: Types.Boolean, watch: true, value: checkDepartmentArea, hidden: true },
 	departmentArea: { label: 'Desagregación Departamental (regional)', type: Types.Relationship, ref: 'DepartmentalArea', many: false, dependsOn: { isDepartmentArea: true } },
 	isMunicipalArea: { label: 'Es una desagregación municipal', type: Types.Boolean, watch: true, value: checkMunicipalArea, hidden: true },
@@ -108,7 +121,6 @@ function checkMonthlyFrequency(callback) {
 			return callback(err);
 		}
 
-		console.log(ind);
 		callback(null, ind.frequency === 'monthly');
 	});
 }
@@ -121,7 +133,6 @@ function checkQuarterlyFrequency(callback) {
 			return callback(err);
 		}
 
-		console.log(ind);
 		callback(null, ind.frequency === 'quarterly');
 	});
 }
@@ -134,7 +145,6 @@ function checkBiannualFrequency(callback) {
 			return callback(err);
 		}
 
-		console.log(ind);
 		callback(null, ind.frequency === 'biannual');
 	});
 }
@@ -147,7 +157,6 @@ function checkDepartmentArea(callback) {
 			return callback(err);
 		}
 
-		console.log(ind);
 		callback(null, ind.minAreaToApply === 'department');
 	});
 }
@@ -160,7 +169,6 @@ function checkMunicipalArea(callback) {
 			return callback(err);
 		}
 
-		console.log(ind);
 		callback(null, ind.minAreaToApply === 'municipal');
 	});
 }
@@ -173,7 +181,6 @@ function checkCommunityArea(callback) {
 			return callback(err);
 		}
 
-		console.log(ind);
 		callback(null, ind.minAreaToApply === 'community');
 	});
 }
@@ -181,6 +188,6 @@ function checkCommunityArea(callback) {
 /**
  * Registration
  */
-IndicatorValue.defaultColumns = 'indicator, startYear, realValue';
+IndicatorValue.defaultColumns = 'indicator, startYear, realValue, state';
 IndicatorValue.defaultSort = 'startYear';
 IndicatorValue.register();

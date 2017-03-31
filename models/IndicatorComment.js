@@ -13,6 +13,7 @@ var IndicatorComment = new keystone.List('IndicatorComment', {
 	singular: 'Comentario de Indicador',
 	plural: 'Comentarios de Indicadores',
 	nocreate: true,
+	noedit: true,
 	track: true
 });
 

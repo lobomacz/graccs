@@ -43,7 +43,16 @@ exports = module.exports = function (req, res) {
 
 				q.exec(function (err, results) {
 					locals.indSector = results;
-					callback(err);
+					
+					async.each(locals.indSector,
+						function (sector, callback) {
+							sector.active = sector._id == filter;
+							callback(err);
+						},
+						function (err) {
+							next(err);
+						}
+					);
 				});
 			}],
 			function (err) {

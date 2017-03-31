@@ -167,18 +167,26 @@
                     <div class="va-middle hidden-xs col-sm-6 col-md-3 text-center">
                         <ul class="nav links social-links">
 							{{#if generalInfo}}
-                                <li>
-                                    <a href="{{generalInfo.facebook}}"><img src="/assets/img/icon-facebook.svg" width="28" alt=""></a>
-                                </li>
-                                <li>
-                                    <a href="{{generalInfo.twitter}}"><img src="/assets/img/icon-twitter.svg" width="28" alt=""></a>
-                                </li>
-                                <li>
-                                    <a href="{{generalInfo.instagram}}"><img src="/assets/img/icon-instagram.svg" width="28" alt=""></a>
-                                </li>
-                                <li>
-                                    <a href="{{generalInfo.youtube}}"><img src="/assets/img/icon-youtube.svg" width="28" alt=""></a>
-                                </li>
+								{{#if generalInfo.facebook}}
+                                    <li>
+                                        <a href="{{generalInfo.facebook}}" target="_blank"><img src="/assets/img/icon-facebook.svg" width="28" alt=""></a>
+                                    </li>
+								{{/if}}
+                                {{#if generalInfo.twitter}}
+                                    <li>
+                                        <a href="{{generalInfo.twitter}}" target="_blank"><img src="/assets/img/icon-twitter.svg" width="28" alt=""></a>
+                                    </li>
+                                {{/if}}
+                                {{#if generalInfo.instagram}}
+                                    <li>
+                                        <a href="{{generalInfo.instagram}}" target="_blank"><img src="/assets/img/icon-instagram.svg" width="28" alt=""></a>
+                                    </li>
+                                {{/if}}
+                                {{#if generalInfo.youtube}}
+                                    <li>
+                                        <a href="{{generalInfo.youtube}}" target="_blank"><img src="/assets/img/icon-youtube.svg" width="28" alt=""></a>
+                                    </li>
+                                {{/if}}
 							{{/if}}
                         </ul>
                     </div>
@@ -245,34 +253,18 @@
                 var slug = "{{indicator.slug}}";
                 var minAreaToApply = "{{indicator.minAreaToApply}}";
 				var years = [];
-				var csv = '';
+				var csv = '', csv_2 = '';
 
                 var formula = "{{indicator.formula}}";
                 var realValueLabel = "{{indicator.realValue}}";
                 var useDenominator = {{indicator.useDenominator}};
+				var source = "{{indicator.source}}";
+				var metricsType = "{{indicator.metrics.type}}";
 				var targetValueLabel = useDenominator ? "{{indicator.targetValue}}" : "";
 				var areaType = {{indicator.areaNumber}};
                 var areaTypeName = areaType === 3 ? 'community' : (areaType === 2 ? 'municipal' : (areaType === 1 ? 'department' : ''));
 				var selected_community = '';
 				
-                var stockData = [
-                    {
-                        Symbol: "AAPL",
-                        Company: "Apple Inc.",
-                        Price: "132.54"
-                    },
-                    {
-                        Symbol: "INTC",
-                        Company: "Intel Corporation",
-                        Price: "33.45"
-                    },
-                    {
-                        Symbol: "GOOG",
-                        Company: "Google Inc",
-                        Price: "554.52"
-                    }
-                ];
-
                 function convertArrayOfObjectsToCSV(args) {
                     var result, ctr, keys, columnDelimiter, lineDelimiter, data;
 
@@ -306,23 +298,32 @@
 
                 window.downloadCSV = function(args) {
                     var data, filename, link;
-
-                    /*var csv = convertArrayOfObjectsToCSV({
-                        data: stockData
-                    });*/
-                    if (csv == null) return;
-
+                    var tab = $('#graph_tab li[class="active"] > a').data('id');
                     filename = args.filename || 'export.csv';
 
-                    if (!csv.match(/^data:text\/csv/i)) {
-                        csv = 'data:text/csv;charset=utf-8,' + csv;
-                    }
-                    data = encodeURI(csv);
+                    if (csv == '' && csv_2 == '') return;
 
-                    link = document.createElement('a');
-                    link.setAttribute('href', data);
-                    link.setAttribute('download', filename);
-                    link.click();
+                    if (tab === 1) {
+                        if (!csv.match(/^data:text\/csv/i)) {
+                            csv = 'data:text/csv;charset=utf-8,' + csv;
+                        }
+                        
+						data = encodeURI(csv);
+					}
+					else  if (tab === 2) {
+                        if (!csv_2.match(/^data:text\/csv/i)) {
+                            csv_2 = 'data:text/csv;charset=utf-8,' + csv_2;
+                        }
+
+                        data = encodeURI(csv_2);
+					}
+
+					if (data) {
+                        link = document.createElement('a');
+                        link.setAttribute('href', data);
+                        link.setAttribute('download', filename);
+                        link.click();
+					}
                 };
 				
                 $('#vote-positive-button').click(function(e) {
@@ -475,8 +476,58 @@
                         get_points_two(indicator_id, year_2, frequency_type, frequency_value);
                     }
                 });
-				
-				$('.form-control.select').select2({
+
+                $('#bBuildGraph_1').click(function(e) {
+                    $('#chartdiv').empty();
+                    csv = '';
+                    var tab = $('#graph_tab li[class="active"] > a').data('id');
+
+                    var department = $departments.val();
+                    var municipality = $municipalities.val();
+                    var community = $communities.val();
+                    var year = $years.val();
+
+                    switch (areaType) {
+                        case 1:
+                            if (department)
+                                get_points(indicator_id, 'department', department, year);
+                            break;
+                        case 2:
+                            if (municipality) {
+                                get_points(indicator_id, 'municipal', municipality, year);
+                            }
+                            else if (department) {
+                                get_points_by_department(indicator_id, department, year);
+                            }
+                            break;
+                        case 3:
+                            if (community) {
+                                get_points(indicator_id, 'community', community, year);
+                            }
+                            else {
+                                if (municipality) {
+                                    get_points_by_municipality(indicator_id, municipality, year);
+                                }
+                                else if (department) {
+                                    get_points_by_department_without_municipality(indicator_id, department, year);
+                                }
+                            }
+                            break;
+                    }
+                });
+
+                $('#bBuildGraph_2').click(function(e) {
+                    $('#chartdiv').empty();
+                    csv = '';
+                    var tab = $('#graph_tab li[class="active"] > a').data('id');
+
+                    var year_2 = $years_tab_2.val();
+                    var frequency_value = $frequency.val();
+
+                    get_points_two(indicator_id, year_2, frequency_type, frequency_value);
+                });
+
+                $('.form-control.select').select2({
                     theme: "bootstrap",
                     placeholder: "-- Seleccionar --",
                     allowClear: true
@@ -494,7 +545,7 @@
                         allowClear: true
                     });
 					
-					var tab = $('#graph_tab li[class="active"] > a').data('id');
+					/*var tab = $('#graph_tab li[class="active"] > a').data('id');
 					
 					if (tab === 1) {
 						var html = '<li>' +
@@ -508,9 +559,7 @@
 					}
 					else if (tab === 2) {
 						$('#download-wrapper > ul').empty();
-						
-						//$('#download-excel-button').attr('disabled', 'disabled');
-					}
+					}*/
 				});
 
                 $departments.change(function(e) {
@@ -1063,16 +1112,40 @@
 
                                 csv += "\n";
                                 csv += values;
-                                console.log('CSV: ', csv);
+								
+                                if (source) {
+                                    csv += "\n";
+                                    csv += "\n";
+                                    csv += "Fuente: " + source;
+                                }
 								
                                 if (points && points.length > 0) {
-                                    if (useDenominator) {
-                                        $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
-                                        draw_graph(points, 1);
+                                    $('.indicator-info').html('Retraso del Plan');
+
+                                    if (metricsType === 'increasing') {
+                                        if (useDenominator) {
+                                            draw_graph(points, 1);
+                                            $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
+                                        }
+                                        else {
+                                            draw_graph_one_line(points, 1);
+                                            if (points[points.length - 1].value_3 != 0)
+                                                $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(4));
+                                            else {
+                                                $('.indicator-value').html('');
+                                                $('.indicator-info').html('');
+                                            }
+                                        }
                                     }
                                     else {
-                                        $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(4));
-                                        draw_graph_one_line(points, 1);
+                                        if (useDenominator) {
+                                            draw_graph(points, 1);
+                                            $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_2).toPrecision(4));
+                                        }
+                                        else {
+                                            draw_graph_one_line(points, 1);
+                                            $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_3).toPrecision(4));
+                                        }
                                     }
 								}
                             }
@@ -1317,16 +1390,40 @@
 
                                 csv += "\n";
                                 csv += values;
-                                console.log('CSV: ', csv);
+
+                                if (source) {
+                                    csv += "\n";
+                                    csv += "\n";
+                                    csv += "Fuente: " + source;
+                                }
 								
 								if (points && points.length > 0) {
-                                    if (useDenominator) {
-                                        $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
-                                        draw_graph(points, 1);
+                                    $('.indicator-info').html('Retraso del Plan');
+
+                                    if (metricsType === 'increasing') {
+                                        if (useDenominator) {
+                                            draw_graph(points, 1);
+                                            $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
+                                        }
+                                        else {
+                                            draw_graph_one_line(points, 1);
+                                            if (points[points.length - 1].value_3 != 0)
+                                                $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(4));
+                                            else {
+                                                $('.indicator-value').html('');
+                                                $('.indicator-info').html('');
+                                            }
+                                        }
                                     }
                                     else {
-                                        $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(4));
-                                        draw_graph_one_line(points, 1);
+                                        if (useDenominator) {
+                                            draw_graph(points, 1);
+                                            $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_2).toPrecision(4));
+                                        }
+                                        else {
+                                            draw_graph_one_line(points, 1);
+                                            $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_3).toPrecision(4));
+                                        }
                                     }
 								}
                             }
@@ -1661,14 +1758,39 @@
                                     csv += percent + ", ";
 								}
 
+                                if (source) {
+                                    csv += "\n";
+                                    csv += "\n";
+                                    csv += "Fuente: " + source;
+                                }
+
                                 if (points && points.length) {
-                                    if (useDenominator) {
-                                        $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
-                                        draw_graph(points, 1);
+                                    $('.indicator-info').html('Retraso del Plan');
+
+                                    if (metricsType === 'increasing') {
+                                        if (useDenominator) {
+                                            draw_graph(points, 1);
+                                            $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
+                                        }
+                                        else {
+                                            draw_graph_one_line(points, 1);
+                                            if (points[points.length - 1].value_3 != 0)
+                                                $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(4));
+                                            else {
+                                                $('.indicator-value').html('');
+                                                $('.indicator-info').html('');
+                                            }
+                                        }
                                     }
                                     else {
-                                        $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(4));
-                                        draw_graph_one_line(points, 1);
+                                        if (useDenominator) {
+                                            draw_graph(points, 1);
+                                            $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_2).toPrecision(4));
+                                        }
+                                        else {
+                                            draw_graph_one_line(points, 1);
+                                            $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_3).toPrecision(4));
+                                        }
                                     }
 								}
                             }
@@ -1798,7 +1920,7 @@
                                     "year": year, 
 									"value": data_points[i].realValue,
                                     "value_3": data_points[i].comparativeValue ? data_points[i].comparativeValue : 0,
-                                    "percent": data_points[i].targetValue !== 0 ? "<br />Representa: " + Number((data_points[i].realValue / data_points[i].targetValue) * 100).toPrecision(4) + "%" : "0"
+                                    "percent": data_points[i].targetValue !== 0 ? "<br />Representa: " + Number((data_points[i].realValue / data_points[i].targetValue) * 100).toPrecision(4) + "%" : ""
                                 };
                             }
 
@@ -1816,16 +1938,42 @@
 						csv += "Indicador, " + area + ", " + dates_header;
                         csv += "\n";
                         csv += title + ", " + area_value + ", " + values;
-						console.log('CSV: ', csv);
+						
+						if (source) {
+                            csv += "\n";
+                            csv += "\n";
+                            csv += "Fuente: " + source;
+                        }	
+						
+						csv_2 = csv;
 						
 						if (points && points.length > 0) {
-                            if (useDenominator) {
-                                $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(2));
-                                draw_graph(points, 1);
+                            $('.indicator-info').html('Retraso del Plan');
+
+                            if (metricsType === 'increasing') {
+                                if (useDenominator) {
+                                    draw_graph(points, 1);
+                                    $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
+                                }
+                                else {
+                                    draw_graph_one_line(points, 1);
+                                    if (points[points.length - 1].value_3 != 0)
+                                        $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(4));
+                                    else {
+                                        $('.indicator-value').html('');
+										$('.indicator-info').html('');
+									}
+                                }
                             }
                             else {
-                                $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(2));
-                                draw_graph_one_line(points, 1);
+                                if (useDenominator) {
+                                    draw_graph(points, 1);
+                                    $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_2).toPrecision(4));
+                                }
+                                else {
+                                    draw_graph_one_line(points, 1);
+                                    $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_3).toPrecision(4));
+                                }
                             }
 						}
                     }
@@ -1871,13 +2019,32 @@
                         }
 
 						if (points && points.length) {
-                            if (useDenominator) {
-                                $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(2));
-                                draw_graph(points, 2);
+                            $('.indicator-info').html('Retraso del Plan');
+
+                            if (metricsType === 'increasing') {
+                                if (useDenominator) {
+                                    draw_graph(points, 2);
+                                    $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
+                                }
+                                else {
+                                    draw_graph_one_line(points, 2);
+                                    if (points[points.length - 1].value_3 != 0)
+                                        $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(4));
+                                    else {
+                                        $('.indicator-value').html('');
+                                        $('.indicator-info').html('');
+                                    }
+                                }
                             }
                             else {
-                                $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(2));
-                                draw_graph_one_line(points, 2);
+                                if (useDenominator) {
+                                    draw_graph(points, 2);
+                                    $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_2).toPrecision(4));
+                                }
+                                else {
+                                    draw_graph_one_line(points, 2);
+                                    $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_3).toPrecision(4));
+                                }
                             }
 						}
                     }
@@ -1904,8 +2071,6 @@
                             global_array[parents[k]._id] = parent;
 							//global_array[parents[k]._id] = parent;
 						}
-
-                        console.log('global_array: ', global_array);
 
                         for (var i = 0; i < data_points.length; i++) {
                             if (data_points[i].isDepartmentArea && data_points[i].departmentArea) {
@@ -1956,15 +2121,16 @@
 									"value": real_value, 
 									"value_2": target_value, 
 									"value_3": comparative_value,
-                                    "percent": global_array[area].values.target_values !== 0 ? "<br />Representa: " + Number((global_array[area].values.real_values / global_array[area].values.target_values) * 100).toPrecision(4) + "%" : "" 
+                                    "percent": target_value !== 0 ? "<br />Representa: " + Number((real_value / target_value) * 100).toPrecision(4) + "%" : "" 
 								};
                             }
                             else {
                                 point = { 
 									"area": global_array[area].name, 
-									"value": real_value, 
-									"value_3": comparative_value,
-                                    "percent": global_array[area].values.comparative_values !== 0 ? "<br />Representa: " + Number((global_array[area].values.real_values / global_array[area].values.comparative_values) * 100).toPrecision(4) + "%" : ""
+									"value": real_value,
+                                    "value_2": target_value,
+                                    "value_3": comparative_value,
+                                    "percent": comparative_value !== 0 ? "<br />Representa: " + Number((real_value / comparative_value) * 100).toPrecision(4) + "%" : ""
 								};
                             }
 
@@ -1972,13 +2138,32 @@
                         });
 						
 						if (points && points.length > 0) {
-                            if (useDenominator) {
-                                $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
-                                draw_graph(points, 2);
+                            $('.indicator-info').html('Retraso del Plan');
+
+                            if (metricsType === 'increasing') {
+                                if (useDenominator) {
+                                    draw_graph(points, 2);
+                                    $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
+                                }
+                                else {
+                                    draw_graph_one_line(points, 2);
+                                    if (points[points.length - 1].value_3 != 0)
+                                        $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(4));
+                                    else {
+                                        $('.indicator-value').html('');
+                                        $('.indicator-info').html('');
+                                    }
+                                }
                             }
                             else {
-                                $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(4));
-                                draw_graph_one_line(points, 2);
+                                if (useDenominator) {
+                                    draw_graph(points, 2);
+                                    $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_2).toPrecision(4));
+                                }
+                                else {
+                                    draw_graph_one_line(points, 2);
+                                    $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_3).toPrecision(4));
+                                }
                             }
 						}
 					}
@@ -2067,13 +2252,32 @@
                         });
 
                         if (points && points.length > 0) {
-                            if (useDenominator) {
-                                $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
-                                draw_graph(points, 2);
+                            $('.indicator-info').html('Retraso del Plan');
+
+                            if (metricsType === 'increasing') {
+                                if (useDenominator) {
+                                    draw_graph(points, 2);
+                                    $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
+                                }
+                                else {
+                                    draw_graph_one_line(points, 2);
+                                    if (points[points.length - 1].value_3 != 0)
+                                        $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(4));
+                                    else {
+                                        $('.indicator-value').html('');
+                                        $('.indicator-info').html('');
+                                    }
+                                }
                             }
                             else {
-                                $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(4));
-                                draw_graph_one_line(points, 2);
+                                if (useDenominator) {
+                                    draw_graph(points, 2);
+                                    $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_2).toPrecision(4));
+                                }
+                                else {
+                                    draw_graph_one_line(points, 2);
+                                    $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_3).toPrecision(4));
+                                }
                             }
                         }
                     }

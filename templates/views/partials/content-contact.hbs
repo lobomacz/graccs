@@ -65,38 +65,48 @@
 			</div>
             <div class="contact-right-wrapper">
                 <ul class="social-links-square">
-                    <li class="text-center">
-                        <a class="va-container">
-                            <div class="va-middle">
-                                <i class="si si-social-facebook social-icon"></i>
-                                <span class="social-text"><b>Nuestra </b>Página</span>
-                            </div>
-                        </a>
-                    </li>
-                    <li class="text-center">
-                        <a class="va-container">
-                            <div class="va-middle">
-                                <i class="si si-social-twitter social-icon"></i>
-                                <span class="social-text">Sígue<b>nos</b></span>
-                            </div>
-                        </a>
-                    </li>
-                    <li class="text-center">
-                        <a class="va-container">
-                            <div class="va-middle">
-                                <i class="si si-social-youtube social-icon"></i>
-                                <span class="social-text"><b>Nuestro </b>Canal</span>
-                            </div>
-                        </a>
-                    </li>
-                    <li class="text-center">
-                        <a class="va-container">
-                            <div class="va-middle">
-                                <i class="si si-camera social-icon"></i>
-                                <span class="social-text"><b>Tus </b>Fotos</span>
-                            </div>
-                        </a>
-                    </li>
+					{{#if generalInfo}}
+						{{#if generalInfo.facebook}}
+                            <li class="text-center">
+                                <a class="va-container" href="{{generalInfo.facebook}}" target="_blank">
+                                    <div class="va-middle">
+                                        <i class="si si-social-facebook social-icon"></i>
+                                        <span class="social-text"><b>Nuestra </b>Página</span>
+                                    </div>
+                                </a>
+                            </li>
+						{{/if}}
+						{{#if generalInfo.twitter}}
+                            <li class="text-center">
+                                <a class="va-container" href="{{generalInfo.twitter}}" target="_blank">
+                                    <div class="va-middle">
+                                        <i class="si si-social-twitter social-icon"></i>
+                                        <span class="social-text">Sígue<b>nos</b></span>
+                                    </div>
+                                </a>
+                            </li>
+						{{/if}}
+						{{#if generalInfo.instagram}}
+                            <li class="text-center">
+                                <a class="va-container" href="{{generalInfo.instagram}}" target="_blank">
+                                    <div class="va-middle">
+                                        <i class="si si-camera social-icon"></i>
+                                        <span class="social-text"><b>Tus </b>Fotos</span>
+                                    </div>
+                                </a>
+                            </li>
+						{{/if}}
+						{{#if generalInfo.youtube}}
+                            <li class="text-center">
+                                <a class="va-container" href="{{generalInfo.youtube}}" target="_blank">
+                                    <div class="va-middle">
+                                        <i class="si si-social-youtube social-icon"></i>
+                                        <span class="social-text"><b>Nuestro </b>Canal</span>
+                                    </div>
+                                </a>
+                            </li>
+						{{/if}}
+					{{/if}}
                 </ul>
             </div>
         </div>

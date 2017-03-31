@@ -11,7 +11,8 @@ var ContactMessage = new keystone.List('ContactMessage', {
 	label: 'Mensajes de Contacto',
 	singular: 'Mensaje de Contacto',
 	plural: 'Mensajes de Contacto',
-	nocreate: true
+	nocreate: true,
+	noedit: true
 });
 
 ContactMessage.add({

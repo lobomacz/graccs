@@ -166,6 +166,49 @@ $(function () {
 	initIndicatorRating();
     focusSearch();
 
-    //drawGraphics();
+    $('.grid-one').find('li:first-child').click(function(e) {
+		var url = $(this).data('url');
+		window.location.replace(url);
+	});
+
+	$('.grid-two').find('li:first-child').click(function(e) {
+		var url = $(this).data('url');
+		window.location.replace(url);
+	});
+	
+	$('.grid-two').find('li:nth-child(3)').click(function(e) {
+		var url = $(this).data('url');
+		window.location.replace(url);
+	});
+
+	$('.grid-three').find('li:first-child').click(function(e) {
+		var url = $(this).data('url');
+		window.location.replace(url);
+	});
+
+	$('.grid-three').find('li:nth-child(2)').click(function(e) {
+		var url = $(this).data('url');
+		window.location.replace(url);
+	});
+	
+	$('.grid-three').find('li:nth-child(3)').click(function(e) {
+		var url = $(this).data('url');
+		window.location.replace(url);
+	});
+
+	$('.grid-three').find('li:nth-child(4)').click(function(e) {
+		var url = $(this).data('url');
+		window.location.replace(url);
+	});
+	
+	$('.grid-three').find('li:nth-child(5)').click(function(e) {
+		var url = $(this).data('url');
+		window.location.replace(url);
+	});
+
+	$('.grid-three').find('li:nth-child(6)').click(function(e) {
+		var url = $(this).data('url');
+		window.location.replace(url);
+	});
 });
 
