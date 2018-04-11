@@ -1,6 +1,6 @@
 {{#if indicators.results}}
 	{{#each indicators.results}}
-		{{#ifeq @index 0 }}
+		{{#ifeq @index 0}}
             <li data-url="/indicador/{{slug}}" class="grid-cover grid-blue" style="background-image: url('/indicators/files/{{relatedImage.filename}}')">
                 <div class="set-bottom">
                     <span class="dotted-wrap item-meta-info">{{title}}</span>
@@ -11,8 +11,10 @@
                     <h2 class="item-meta-title">
                         <a href="/indicador/{{slug}}">{{title}}</a>
                     </h2>
-					{{#substring 140 target}}{{/substring}}
-                    <a href="/indicador/{{slug}}" style="color: #fff; font-size: 12px; text-decoration: underline;">Leer más</a>
+					<p>
+						{{#substring 140 target}}{{/substring}}
+                        <a class="read-more" href="/indicador/{{slug}}">Leer más</a>
+					</p>
 				</div>
                 <div class="set-bottom">
                     <div class="item-meta-info">
@@ -46,8 +48,10 @@
                     <a href="/indicador/{{slug}}" class="item-meta-title hidden-xxs">
                         <h2>{{title}}</h2>
                     </a>
-					{{#substring 140 target}}{{/substring}}
-                    <a href="/indicador/{{slug}}" style="color: #fff; font-size: 12px; text-decoration: underline;">Leer más</a>
+					<p>
+						{{#substring 140 target}}{{/substring}}
+                        <a class="read-more" href="/indicador/{{slug}}">Leer más</a>
+					</p>
                     <div class="item-meta-info">
                         <span>{{date startDate format='MMM YYYY'}} - {{date endDate format='MMM YYYY'}}</span>
                         <span class="meta-separator">|</span>

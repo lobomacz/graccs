@@ -39,6 +39,20 @@ IndicatorSector.add({
 /*Relationships*/
 IndicatorSector.relationship({ ref: 'Indicator', path: 'indicator', refPath: 'sector' });
 
+IndicatorSector.schema.pre('remove', function(next) {
+	var q = keystone.list('Indicator').model.find()
+		.where('sector', this._id);
+
+	q.exec(function (err, values) {
+		if (err || values.length > 0) {
+			return next(new Error('No puede eliminar el sector porque tiene indicadores asociados.'));
+		}
+		else {
+			return next();
+		}
+	});
+});
+
 /**
  * Registration
  */

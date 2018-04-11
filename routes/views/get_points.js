@@ -16,6 +16,7 @@ exports = module.exports = function (req, res) {
                 .where('indicator', indicator_id)
                 .where('nationalArea', area_id)
 				.where('startYear', year)
+				.where('state', 'published')
 				.sort('monthlyFrequency quarterlyFrequency biannualFrequency')
 				.populate('nationalArea');
 			break;
@@ -24,6 +25,7 @@ exports = module.exports = function (req, res) {
                 .where('indicator', indicator_id)
                 .where('departmentArea', area_id)
 				.where('startYear', year)
+				.where('state', 'published')
 				.sort('monthlyFrequency quarterlyFrequency biannualFrequency')
 				.populate('departmentArea');
 			break;
@@ -32,6 +34,7 @@ exports = module.exports = function (req, res) {
                 .where('indicator', indicator_id)
                 .where('municipalArea', area_id)
 				.where('startYear', year)
+				.where('state', 'published')
 				.sort('monthlyFrequency quarterlyFrequency biannualFrequency')
 				.populate('municipalArea');
 			break;
@@ -40,6 +43,7 @@ exports = module.exports = function (req, res) {
                 .where('indicator', indicator_id)
                 .where('communityArea', area_id)
 				.where('startYear', year)
+				.where('state', 'published')
 				.sort('monthlyFrequency quarterlyFrequency biannualFrequency')
 				.populate('communityArea');
 			break;

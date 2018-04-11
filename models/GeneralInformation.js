@@ -14,6 +14,7 @@ var GeneralInfo = new keystone.List('GeneralInformation', {
 	plural: 'Información General',
 	track: true,
 	nocreate: true,
+	nodelete: true,
 	defaultSort: 'createdAt'
 });
 
@@ -21,7 +22,7 @@ GeneralInfo.add({
 	title: { label: 'Título', type: Types.Text, default: 'GRACCS', unique: true, required: true, initial: true },
 	websiteUrl: { label: 'Enlace Principal', type: Types.Url, note: 'http://', default: 'http://www.graccs.ni' },
 	heroSubtitle: { label: 'Subtítulo', type: Types.Html, wysiwyg: true, default: 'GOBIERNO REGIONAL AUTÓNOMO DE LA COSTA CARIBE SUR', required: true },
-	heroDescription: { label: 'Descripción Principal', type: Types.Textarea, required: true },
+	heroDescription: { label: 'Descripción Principal', type: Types.Textarea },
 	conditionsAndPolitics: { label: 'Condiciones y Políticas', type: Types.Textarea }
 }, 'Redes Sociales', {
 		facebook: { type: Types.Url, note: 'http://' },

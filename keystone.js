@@ -1,4 +1,4 @@
-// Simulate config options from your production environment by
+﻿// Simulate config options from your production environment by
 // customising the .env file in your project's root folder.
 require('dotenv').load();
 
@@ -21,7 +21,7 @@ var host = nconf.get('mongodb:host') || '127.0.0.1';
 var post = nconf.get('mongodb:post') || '27017';
 var user = nconf.get('mongodb:user');
 var password = nconf.get('mongodb:password');
-var database = nconf.get('mongodb:database') || 'graccs_good';
+var database = nconf.get('mongodb:database') || 'graccs';
 
 if (user && password) {
 	mongoURI += user + ':' + password + '@';
@@ -55,13 +55,14 @@ keystone.init({
 	// Database and User Auth Options
 	'auth': true,
 	'session': true,
-	'mongo': mongoURI/*process.env.MONGO_URI || mongoURI*/,
+	'mongo': process.env.MONGO_URI || mongoURI,
 	'session store': 'mongo',
 	'user model': 'User',
 	'cookie secret': process.env.COOKIE_SECRET || uuid.v4(),
 	// Admin UI Options
 	'wysiwyg images': true,
-	'emails': 'templates/views/emails'
+	'emails': 'templates/views/emails',
+	// 'port': '80'
 });
 
 var dashes = '------------------------------------------------\n';

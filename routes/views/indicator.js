@@ -56,7 +56,7 @@ exports = module.exports = function (req, res) {
 			},
 			function (callback) {
 				// Get departmental areas
-				var q = keystone.list('DepartmentalArea').model.find().sort('name');
+				var q = keystone.list('DepartmentalArea').model.find().sort('position name');
 
 				q.exec(function (err, results) {
 					locals.deparmentalAreas = results;
@@ -111,21 +111,24 @@ exports = module.exports = function (req, res) {
 								q_value = keystone.list('IndicatorValue').model.find()
 									.where('indicator', indicator._id)
 									.where('isDepartmentArea', true)
-									.sort('-startYear departmentArea')
+									.where('state', 'published')
+									.sort('-startYear')
 									.populate('departmentArea');
 								break;
 							case 'municipal':
 								q_value = keystone.list('IndicatorValue').model.find()
 									.where('indicator', indicator._id)
 									.where('isMunicipalArea', true)
-									.sort('-startYear municipalArea')
+									.where('state', 'published')
+									.sort('-startYear')
 									.populate('municipalArea');
 								break;
 							case 'community':
 								q_value = keystone.list('IndicatorValue').model.find()
 									.where('indicator', indicator._id)
 									.where('isCommunityArea', true)
-									.sort('-startYear communityArea')
+									.where('state', 'published')
+									.sort('-startYear')
 									.populate('communityArea');
 								break;
 						}
@@ -151,8 +154,7 @@ exports = module.exports = function (req, res) {
 												locals.indicator.years.push({ year: years[i]});
 											}
 										}
-
-										console.log('Years: ', locals.indicator.years);
+										
 										callback(err);
 									}
 								);

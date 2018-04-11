@@ -17,7 +17,8 @@ exports = module.exports = function (req, res) {
 				.where('indicator', indicator)
 				.where('departmentArea', area)
 				.where('startYear', year)
-				.sort('-startYear monthlyFrequency quarterlyFrequency biannualFrequency')
+				.where('state', 'published')
+				.sort('monthlyFrequency quarterlyFrequency biannualFrequency')
 				.populate('departmentArea');
 			break;
 		case 'municipal':
@@ -25,7 +26,8 @@ exports = module.exports = function (req, res) {
 				.where('indicator', indicator)
 				.where('municipalArea', area)
 				.where('startYear', year)
-				.sort('-startYear monthlyFrequency quarterlyFrequency biannualFrequency')
+				.where('state', 'published')
+				.sort('monthlyFrequency quarterlyFrequency biannualFrequency')
 				.populate('municipalArea');
 			break;
 		case 'community':
@@ -33,7 +35,8 @@ exports = module.exports = function (req, res) {
 				.where('indicator', indicator)
 				.where('communityArea', area)
 				.where('startYear', year)
-				.sort('-startYear monthlyFrequency quarterlyFrequency biannualFrequency')
+				.where('state', 'published')
+				.sort('monthlyFrequency quarterlyFrequency biannualFrequency')
 				.populate('communityArea');
 			break;
 	}
@@ -49,7 +52,7 @@ exports = module.exports = function (req, res) {
 			else if (results) {
 				async.each(results,
 					function(indicator_value, callback) {
-						if(years.indexOf(indicator_value.startYear) === -1) years.push(indicator_value.startYear);
+						if (years.indexOf(indicator_value.startYear) === -1) years.push(indicator_value.startYear);
 						callback(err);
 					},
 					function(err) {

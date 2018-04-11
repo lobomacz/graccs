@@ -545,6 +545,8 @@ module.exports = function () {
 
 	_helpers.substring = function(length, context, options) {
 		if ( context.length > length ) {
+			context = context.replace(/(<([^>]+)>)/ig,"");
+			
 			return context.substring(0, length) + "...";
 		} else {
 			return context;

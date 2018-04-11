@@ -12,8 +12,10 @@
             </div>
             <div class="set-bottom">
                 <div class="item-meta-desc hidden-xxs">
-					{{#substring 140 content.brief}}{{/substring}}
-                    <a href="/noticia/{{slug}}" style="color: {{#ifeq @index 0}}#D65B00{{/ifeq}}{{#ifeq @index 1}}#6479ff{{/ifeq}}; font-size: 12px; text-decoration: underline;">Leer más</a>
+					<p>
+						{{#substring 140 content.brief}}{{/substring}}
+                        <a href="/noticia/{{slug}}" style="color: {{#ifeq @index 0}}#D65B00{{/ifeq}}{{#ifeq @index 1}}#6479ff{{/ifeq}}; font-size: 12px; text-decoration: underline;">Leer más</a>
+					</p>
 				</div>
                 <div class="item-meta-info">
                     <span>{{date startDate format='DD MMM YYYY HH:MM'}}</span>

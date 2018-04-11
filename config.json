@@ -11,12 +11,12 @@
     "privateKey": "6Le7rR4TAAAAANlIeDTqY3Y04fWgXXFKKHzD9CBL"
   },
   "admin": {
-    "email": "admin@graccs.gov.ni"
+    "email": "admin@graccs.gob.ni"
   },
   "mongodb":{
     "host":"127.0.0.1",
     "port":"27017",
-    "database": "graccs_good",
+    "database": "graccs",
     "user": "",
     "password": ""
   }

@@ -8,57 +8,11 @@ var keystone = require('keystone'),
  */
 
 var User = new keystone.List('User', {
+	map: { name: 'name' },
 	label: 'Usuarios',
 	singular: 'Usuario',
 	plural: 'Usuarios',
 	track: true
-	/*nodelete: function() {
-		console.log('THIS USER: ', this.user);
-		
-		var q = keystone.list('User').model.findById(this.user);
-
-		q.exec(function (err, loggedUser) {
-			if (!err && loggedUser) {
-				console.log('nodelete: ', loggedUser.role);
-				return loggedUser.role != 'admin';
-			}
-			else {
-				return false;
-			}
-		});
-		
-		//return !this.user.role.canWriteMetadata;
-	},
-	nocreate: function() {
-		var q = keystone.list('User').model.findById(this.user);
-
-		q.exec(function (err, loggedUser) {
-			if (!err && loggedUser) {
-				console.log('nocreate: ', loggedUser.role);
-				return loggedUser.role != 'admin';
-			}
-			else {
-				return false;
-			}
-		});
-		
-		//return !this.user.role.canWriteMetadata;
-	},
-	noedit: function() {
-		var q = keystone.list('User').model.findById(this.user);
-
-		q.exec(function (err, loggedUser) {
-			if (!err && loggedUser) {
-				console.log('noedit: ', loggedUser.role);
-				return loggedUser.role != 'admin';
-			}
-			else {
-				return false;
-			}
-		});
-		
-		//return !this.user.role.canWriteMetadata;
-	}*/
 });
 
 User.add({
@@ -77,11 +31,12 @@ User.add({
 	}
 }, 
 'Permisos', {
-	isAdmin: { label: 'Puede acceder a la administración', type: Types.Boolean, index: true, default: true },
+	isAdmin: { label: 'Puede acceder a la administración', type: Types.Boolean, index: true, default: true, hidden: true },
 	isPreparer: { label: 'Puede preparar los borradores', type: Types.Boolean, index: true, default: false },
 	isEditor: { label: 'Puede dejar listo para publicar', type: Types.Boolean, index: true, default: false },
 	isPublisher: { label: 'Puede publicar', type: Types.Boolean, index: true, default: false },
-	isFiler: { label: 'Puede archivar', type: Types.Boolean, index: true, default: false }
+	isFiler: { label: 'Puede archivar', type: Types.Boolean, index: true, default: false },
+	isEraser: { label: 'Puede eliminar', type: Types.Boolean, index: true, default: false }
 });
 
 // Provide access to Keystone
@@ -89,9 +44,10 @@ User.schema.virtual('canAccessKeystone').get(function() {
 	return this.isAdmin;
 });
 
+User.relationship({ ref: 'Indicator', path: 'indicators', refPath: 'infoRegisters'});
+
 /**
  * Registration
  */
-
 User.defaultColumns = 'name, email, role, isAdmin';
 User.register();

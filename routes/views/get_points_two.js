@@ -10,13 +10,18 @@ exports = module.exports = function (req, res) {
 	var frequency_type = req.params.frequency_type;
 	var frequency_value = req.params.frequency_value;
 	var q_indicator;
-	
+
+	console.log('indicator_id', indicator_id);
+	console.log('year', year);
+	console.log('frequency_value', frequency_value);
+
 	switch (frequency_type) {
 		case 'monthly':
 			q_indicator = keystone.list('IndicatorValue').model.find()
 				.where('indicator', indicator_id)
 				.where('startYear', year)
 				.where('monthlyFrequency', frequency_value)
+				.where('state', 'published')
 				.sort('departmentArea municipalArea communityArea')
 				.populate('departmentArea municipalArea communityArea');
 			break;
@@ -25,6 +30,7 @@ exports = module.exports = function (req, res) {
 				.where('indicator', indicator_id)
 				.where('startYear', year)
 				.where('quarterlyFrequency', frequency_value)
+				.where('state', 'published')
 				.sort('departmentArea municipalArea communityArea')
 				.populate('departmentArea municipalArea communityArea');
 			break;
@@ -33,15 +39,15 @@ exports = module.exports = function (req, res) {
 				.where('indicator', indicator_id)
 				.where('startYear', year)
 				.where('biannualFrequency', frequency_value)
+				.where('state', 'published')
 				.sort('departmentArea municipalArea communityArea')
 				.populate('departmentArea municipalArea communityArea');
 			break;
-		case 'annual':
-		case 'fifthly':
-		case 'decade':
+		default:
 			q_indicator = keystone.list('IndicatorValue').model.find()
 				.where('indicator', indicator_id)
 				.where('startYear', year)
+				.where('state', 'published')
 				.sort('departmentArea municipalArea communityArea')
 				.populate('departmentArea municipalArea communityArea');
 			break;
@@ -53,6 +59,8 @@ exports = module.exports = function (req, res) {
 	if (q_indicator) {
 		q_indicator.exec(function (err, indicator_values) {
 			if (!err && indicator_values) {
+				console.log('indicator_values', indicator_values);
+				
 				async.each(indicator_values,
 					function (value, callback) {
 						var q_parent;
@@ -86,7 +94,8 @@ exports = module.exports = function (req, res) {
 					function (err) {
 						console.log('parents', parents);
 						console.log('parents', parents_ids);
-						
+						console.log('indicator_values', indicator_values);
+
 						res.send({ status: 'OK', indicator_values: indicator_values, parents: parents });
 					}
 				);

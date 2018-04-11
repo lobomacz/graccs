@@ -1,3 +1,4 @@
+var async = require('async');
 var keystone = require('keystone');
 var Types = keystone.Field.Types;
 
@@ -16,8 +17,14 @@ var IndicatorValue = new keystone.List('IndicatorValue', {
 
 IndicatorValue.add({
 	indicator: { label: 'Indicador', type: Types.Relationship, ref: 'Indicator', required: true, many: false, initial: true, index: true },
+	infoRegisters: { type: Types.Relationship, ref: 'User', many: true, index: true, hidden: true },
+	realValueOriginal: { type: Types.Text, trim: true },
+	targetValueOriginal: { type: Types.Text, trim: true },
 	startYear: { label: 'Fecha de comienzo', type: Types.Number, default: 2000, min: 1900, required: true, initial: true },
 	realValue: { label: 'Valor ejecutado', type: Types.Number, default: 0, min: 0, required: true, initial: true },
+	useDenominator: { label: 'Usar denominador', type: Types.Boolean, watch: true, value: checkIndicatorDenominator, hidden: true },
+	targetValue: { label: 'Valor planificado', type: Types.Number, default: 0, min: 0, dependsOn: { useDenominator: true } },
+	comparativeValue: { label: 'Valor para comparar', type: Types.Number, default: 0, min: 0 },
 	state: {
 		label: 'Estado',
 		type: Types.Select,
@@ -32,35 +39,34 @@ IndicatorValue.add({
 		index: true,
 		initial: true
 	},
-	useDenominator: { label: 'Usar denominador', type: Types.Boolean, watch: true, value: checkIndicatorDenominator, hidden: true },
-	targetValue: { label: 'Valor planificado', type: Types.Number, default: 0, min: 0, dependsOn: { useDenominator: true } },
-	comparativeValue: { label: 'Valor para comparar', type: Types.Number, default: 0, min: 0 },
 	isMonthlyFrequency: { label: 'Es una frecuencia mensual', type: Types.Boolean, watch: true, value: checkMonthlyFrequency, hidden: true },
 	monthlyFrequency: {
 		label: 'Frecuencia mensual',
 		required: true,
+		index: true,
 		type: Types.Select,
 		options: [
-			{ value: '1', label: 'Enero' },
-			{ value: '2', label: 'Febrero' },
-			{ value: '3', label: 'Marzo' },
-			{ value: '4', label: 'Abril' },
-			{ value: '5', label: 'Mayo' },
-			{ value: '6', label: 'Junio' },
-			{ value: '7', label: 'Julio' },
-			{ value: '8', label: 'Agosto' },
-			{ value: '9', label: 'Septiembre' },
+			{ value: '01', label: 'Enero' },
+			{ value: '02', label: 'Febrero' },
+			{ value: '03', label: 'Marzo' },
+			{ value: '04', label: 'Abril' },
+			{ value: '05', label: 'Mayo' },
+			{ value: '06', label: 'Junio' },
+			{ value: '07', label: 'Julio' },
+			{ value: '08', label: 'Agosto' },
+			{ value: '09', label: 'Septiembre' },
 			{ value: '10', label: 'Octubre' },
 			{ value: '11', label: 'Noviembre' },
 			{ value: '12', label: 'Diciembre' }
 		],
-		default: '1',
+		default: '01',
 		dependsOn: { isMonthlyFrequency: true }
 	},
 	isQuarterlyFrequency: { label: 'Es una frecuencia trimestral', type: Types.Boolean, watch: true, value: checkQuarterlyFrequency, hidden: true },
 	quarterlyFrequency: {
 		label: 'Frecuencia trimestral',
 		required: true,
+		index: true,
 		type: Types.Select,
 		options: [
 			{ value: '1', label: 'I Trimestre' },
@@ -75,6 +81,7 @@ IndicatorValue.add({
 	biannualFrequency: {
 		label: 'Frecuencia semestral',
 		required: true,
+		index: true,
 		type: Types.Select,
 		options: [
 			{ value: '1', label: 'I Semestre' },
@@ -84,11 +91,11 @@ IndicatorValue.add({
 		dependsOn: { isBiannualFrequency: true }
 	},
 	isDepartmentArea: { label: 'Es una desagregación departamental', type: Types.Boolean, watch: true, value: checkDepartmentArea, hidden: true },
-	departmentArea: { label: 'Desagregación Departamental (regional)', type: Types.Relationship, ref: 'DepartmentalArea', many: false, dependsOn: { isDepartmentArea: true } },
+	departmentArea: { label: 'Desagregación Departamental (regional)', type: Types.Relationship, ref: 'DepartmentalArea', many: false, dependsOn: { isDepartmentArea: true }, index: true },
 	isMunicipalArea: { label: 'Es una desagregación municipal', type: Types.Boolean, watch: true, value: checkMunicipalArea, hidden: true },
-	municipalArea: { label: 'Desagregación Municipal', type: Types.Relationship, ref: 'MunicipalArea', many: false, dependsOn: { isMunicipalArea: true } },
+	municipalArea: { label: 'Desagregación Municipal', type: Types.Relationship, ref: 'MunicipalArea', many: false, dependsOn: { isMunicipalArea: true }, index: true },
 	isCommunityArea: { label: 'Es una desagregación urbano-rural', type: Types.Boolean, watch: true, value: checkCommunityArea, hidden: true },
-	communityArea: { label: 'Desagregación Urbano-Rural (comunidad)', type: Types.Relationship, ref: 'CommunityArea', many: false, dependsOn: { isCommunityArea: true } },
+	communityArea: { label: 'Desagregación Urbano-Rural (comunidad)', type: Types.Relationship, ref: 'CommunityArea', many: false, dependsOn: { isCommunityArea: true }, index: true },
 	relatedFiles: {
 		label: 'Evidencias',
 		type: Types.LocalFiles,
@@ -184,6 +191,36 @@ function checkCommunityArea(callback) {
 		callback(null, ind.minAreaToApply === 'community');
 	});
 }
+
+IndicatorValue.schema.methods.addInfoRegisters = function(target, done) {
+	if (this.indicator) {
+		var q = keystone.list('Indicator').model.findById(this.indicator);
+
+		q.exec(function (err, indicator) {
+			if (!err && indicator) {
+				target.realValueOriginal = indicator.realValue;
+				target.targetValueOriginal = indicator.targetValue;
+				target.infoRegisters = indicator.infoRegisters;				
+				done();
+			}
+			else {
+				done(err);
+			}
+		});
+	} 
+	else {
+		done();
+	}
+};
+
+IndicatorValue.schema.pre('save', function(done) {
+	if (this.indicator != null) {
+		this.addInfoRegisters(this, done);
+	} 
+	else {
+		process.nextTick(done);
+	}
+});
 
 /**
  * Registration

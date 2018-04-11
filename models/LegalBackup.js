@@ -9,9 +9,9 @@ var Types = keystone.Field.Types;
  **/
 var LegalBackup = new keystone.List('LegalBackup', {
 	map: { name: 'name' },
-	label: 'Apoyo Legal',
-	singular: 'Apoyo Legal',
-	plural: 'Apoyo Legal',
+	label: 'Marco Jurídico',
+	singular: 'Marco Jurídico',
+	plural: 'Marco Jurídico',
 	track: true
 });
 
@@ -21,7 +21,21 @@ LegalBackup.add({
 	url: { label: 'Enlace del sitio web', type: Types.Url, required: true, note: 'http://', initial: true }
 });
 
-LegalBackup.relationship({ ref: 'Indicator', path: 'indicators', refPath: 'instance'});
+LegalBackup.relationship({ ref: 'Indicator', path: 'indicators', refPath: 'legalBackup.instance'});
+
+LegalBackup.schema.pre('remove', function(next) {
+	var q = keystone.list('Indicator').model.find()
+		.where('legalBackup.instance', this._id);
+
+	q.exec(function (err, values) {
+		if (err || values.length > 0) {
+			return next(new Error('No puede eliminar el marco jurídico porque tiene indicadores asociados.'));
+		}
+		else {
+			return next();
+		}
+	});
+});
 
 /**
  * Registration

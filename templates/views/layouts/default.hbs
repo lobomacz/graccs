@@ -219,6 +219,27 @@
 	{{/if}}
     <script type="text/javascript" src="/assets/js/graccs.app.js"></script>
 
+    <script type="text/javascript">
+		$(function () {
+            function save_new_monthly_value() {
+                var req = $.ajax({
+                    method: 'POST',
+                    url: '/save-new-monthly-value'
+                });
+
+                req.done(function (res) {
+                    console.log('save new monthly values successfully', res);
+                });
+
+                req.fail(function (res) {
+                    console.log('save new monthly values has failed', res);
+                });
+            }
+			
+			//save_new_monthly_value();
+        });
+	</script>
+	
 	{{#if isIndicatorsSection}}
         <script type="text/javascript">
             $('document').ready(function() {				
@@ -325,58 +346,6 @@
                         link.click();
 					}
                 };
-				
-                $('#vote-positive-button').click(function(e) {
-                    e.preventDefault();
-
-                    var $item = $(this);
-                    var id = $item.data('comment-id');
-
-                    if (id) {
-                        var req = $.ajax({
-                            method: 'POST',
-                            url: '/post-comment/' + id + '/vote',
-                            data: {vote: 1}
-                        });
-
-                        req.done(function (res) {
-                            var value = parseInt($item.find('span:first-child').text()) + 1;
-                            $item.find('span:first-child').text(value);
-                            $item.unbind('click');
-                            console.log('Comment vote updated successfully', res);
-                        });
-
-                        req.fail(function (res) {
-                            console.log('Updating comment vote has failed', res);
-                        });
-                    }
-                });
-
-                $('#vote-negative-button').click(function(e) {
-                    e.preventDefault();
-
-                    var $item = $(this);
-                    var id = $item.data('comment-id');
-
-                    if (id) {
-                        var req = $.ajax({
-                            method: 'POST',
-                            url: '/post-comment/' + id + '/vote',
-                            data: {vote: -1}
-                        });
-
-                        req.done(function (res) {
-                            var value = parseInt($item.find('span').text()) + 1;
-                            $item.find('span').text(value);
-                            $item.unbind('click');
-                            console.log('Comment vote updated successfully', res);
-                        });
-
-                        req.fail(function (res) {
-                            console.log('Updating comment vote has failed', res);
-                        });
-                    }
-                });
 
                 $('#vote-indicator-positive-button').click(function(e) {
                     e.preventDefault();
@@ -519,6 +488,7 @@
                 $('#bBuildGraph_2').click(function(e) {
                     $('#chartdiv').empty();
                     csv = '';
+                    csv_2 = '';
                     var tab = $('#graph_tab li[class="active"] > a').data('id');
 
                     var year_2 = $years_tab_2.val();
@@ -564,8 +534,6 @@
 
                 $departments.change(function(e) {
                     var department = $departments.val();
-                    //console.log('department', department);
-                    //console.log('areaType', areaType);
 
                     if (department && areaType >= 2) {
                         get_municipalities(department);
@@ -589,7 +557,6 @@
 				
 				$municipalities.change(function(e) {
                     var municipality = $municipalities.val();
-                    //console.log('municipality', municipality);
 
                     if (municipality) {
 						if (areaType === 3) get_communities(municipality);
@@ -607,7 +574,6 @@
 				$communities.change(function(e) {
                     var community = $communities.val();
 					selected_community = community;
-                    //console.log('community', community);
 				});
 				
                 function get_initial_data() {
@@ -615,11 +581,11 @@
 					
                     if (indicator_id && areaTypeName != '' && area != '' && point_year) {
                         get_areas_value(area, areaParent);
-                        get_graph_by_area_values();
+                        get_graph_by_area_values(point_year);
 
                         $years.val(point_year).trigger("change");
                         $years_tab_2.val(point_year).trigger("change");
-						
+
                         var req = $.ajax({
                             url: '/get-initial-data',
                             data: { indicator: indicator_id, type: areaTypeName, area: area, year: point_year }
@@ -655,21 +621,20 @@
                     }
                 }
 				
-				function get_graph_by_area_values() {
-					var frequency = frequency_type;
+				function get_graph_by_area_values(point_year) {
 					var frequency_values = [];
 					
-                    switch (frequency) {
+                    switch (frequency_type) {
                         case 'monthly':
-                            frequency_values.push({ id: '1', text: 'Enero' });
-                            frequency_values.push({ id: '2', text: 'Febrero' });
-                            frequency_values.push({ id: '3', text: 'Marzo' });
-                            frequency_values.push({ id: '4', text: 'Abril' });
-                            frequency_values.push({ id: '5', text: 'Mayo' });
-                            frequency_values.push({ id: '6', text: 'Junio' });
-                            frequency_values.push({ id: '7', text: 'Julio' });
-                            frequency_values.push({ id: '8', text: 'Agosto' });
-                            frequency_values.push({ id: '9', text: 'Septiembre' });
+                            frequency_values.push({ id: '01', text: 'Enero' });
+                            frequency_values.push({ id: '02', text: 'Febrero' });
+                            frequency_values.push({ id: '03', text: 'Marzo' });
+                            frequency_values.push({ id: '04', text: 'Abril' });
+                            frequency_values.push({ id: '05', text: 'Mayo' });
+                            frequency_values.push({ id: '06', text: 'Junio' });
+                            frequency_values.push({ id: '07', text: 'Julio' });
+                            frequency_values.push({ id: '08', text: 'Agosto' });
+                            frequency_values.push({ id: '09', text: 'Septiembre' });
                             frequency_values.push({ id: '10', text: 'Octubre' });
                             frequency_values.push({ id: '11', text: 'Noviembre' });
                             frequency_values.push({ id: '12', text: 'Diciembre' });
@@ -686,17 +651,30 @@
                             break;
                     }
 
-                    $frequency.html('').select2({
-                        theme: "bootstrap",
-                        placeholder: "-- Seleccionar --",
-                        allowClear: true,
-                        data: frequency_values
-                    });
+					if (frequency_values && frequency_values.length > 0) {
+                        $frequency.html('').select2({
+                            theme: "bootstrap",
+                            placeholder: "-- Seleccionar --",
+                            allowClear: true,
+                            data: frequency_values
+                        });
+					}
+					else  {
+                        $frequency.val(point_year).trigger("change");
+                        $('#frequency').attr('disabled', 'disabled');
+                    }
 
                     $area_types.val(minAreaToApply).trigger("change");
                 }
 
                 function get_municipalities(parent, municipality) {
+                    $municipalities.html('').select2({
+                        theme: "bootstrap",
+                        placeholder: "-- Seleccionar --",
+                        allowClear: true,
+                        data: []
+                    });
+					
                     if (parent) {
                         var req = $.ajax({
                             url: '/get-municipalities',
@@ -844,7 +822,7 @@
                         });
 
                         req.done(function (results) {
-                            console.log('Getting points successed', results);
+                            console.log('Getting points two successed', results);
 
                             if (results && results.indicator_values && results.indicator_values.length > 0) {
                                 var area_type = $area_types.val();
@@ -1120,31 +1098,31 @@
                                 }
 								
                                 if (points && points.length > 0) {
-                                    $('.indicator-info').html('Retraso del Plan');
+                                    //$('.indicator-info').html('Retraso del Plan');
 
                                     if (metricsType === 'increasing') {
                                         if (useDenominator) {
                                             draw_graph(points, 1);
-                                            $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
+                                            //$('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
                                         }
                                         else {
                                             draw_graph_one_line(points, 1);
-                                            if (points[points.length - 1].value_3 != 0)
+                                            /*if (points[points.length - 1].value_3 != 0)
                                                 $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(4));
                                             else {
                                                 $('.indicator-value').html('');
-                                                $('.indicator-info').html('');
-                                            }
+                                                //$('.indicator-info').html('');
+                                            }*/
                                         }
                                     }
                                     else {
                                         if (useDenominator) {
                                             draw_graph(points, 1);
-                                            $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_2).toPrecision(4));
+                                            //$('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_2).toPrecision(4));
                                         }
                                         else {
                                             draw_graph_one_line(points, 1);
-                                            $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_3).toPrecision(4));
+                                            //$('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_3).toPrecision(4));
                                         }
                                     }
 								}
@@ -1398,31 +1376,31 @@
                                 }
 								
 								if (points && points.length > 0) {
-                                    $('.indicator-info').html('Retraso del Plan');
+                                    //$('.indicator-info').html('Retraso del Plan');
 
                                     if (metricsType === 'increasing') {
                                         if (useDenominator) {
                                             draw_graph(points, 1);
-                                            $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
+                                            //$('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
                                         }
                                         else {
                                             draw_graph_one_line(points, 1);
-                                            if (points[points.length - 1].value_3 != 0)
+                                            /*if (points[points.length - 1].value_3 != 0)
                                                 $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(4));
                                             else {
                                                 $('.indicator-value').html('');
-                                                $('.indicator-info').html('');
-                                            }
+                                                //$('.indicator-info').html('');
+                                            }*/
                                         }
                                     }
                                     else {
                                         if (useDenominator) {
                                             draw_graph(points, 1);
-                                            $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_2).toPrecision(4));
+                                            //$('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_2).toPrecision(4));
                                         }
                                         else {
                                             draw_graph_one_line(points, 1);
-                                            $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_3).toPrecision(4));
+                                            //$('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_3).toPrecision(4));
                                         }
                                     }
 								}
@@ -1765,31 +1743,31 @@
                                 }
 
                                 if (points && points.length) {
-                                    $('.indicator-info').html('Retraso del Plan');
+                                    //$('.indicator-info').html('Retraso del Plan');
 
                                     if (metricsType === 'increasing') {
                                         if (useDenominator) {
                                             draw_graph(points, 1);
-                                            $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
+                                            //$('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
                                         }
                                         else {
                                             draw_graph_one_line(points, 1);
-                                            if (points[points.length - 1].value_3 != 0)
+                                            /*if (points[points.length - 1].value_3 != 0)
                                                 $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(4));
                                             else {
                                                 $('.indicator-value').html('');
-                                                $('.indicator-info').html('');
-                                            }
+                                                //$('.indicator-info').html('');
+                                            }*/
                                         }
                                     }
                                     else {
                                         if (useDenominator) {
                                             draw_graph(points, 1);
-                                            $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_2).toPrecision(4));
+                                            //$('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_2).toPrecision(4));
                                         }
                                         else {
                                             draw_graph_one_line(points, 1);
-                                            $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_3).toPrecision(4));
+                                            //$('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_3).toPrecision(4));
                                         }
                                     }
 								}
@@ -1948,31 +1926,31 @@
 						csv_2 = csv;
 						
 						if (points && points.length > 0) {
-                            $('.indicator-info').html('Retraso del Plan');
+                            //$('.indicator-info').html('Retraso del Plan');
 
                             if (metricsType === 'increasing') {
                                 if (useDenominator) {
                                     draw_graph(points, 1);
-                                    $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
+                                    //$('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
                                 }
                                 else {
                                     draw_graph_one_line(points, 1);
-                                    if (points[points.length - 1].value_3 != 0)
+                                    /*if (points[points.length - 1].value_3 != 0)
                                         $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(4));
                                     else {
                                         $('.indicator-value').html('');
-										$('.indicator-info').html('');
-									}
+										//$('.indicator-info').html('');
+									}*/
                                 }
                             }
                             else {
                                 if (useDenominator) {
                                     draw_graph(points, 1);
-                                    $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_2).toPrecision(4));
+                                    //$('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_2).toPrecision(4));
                                 }
                                 else {
                                     draw_graph_one_line(points, 1);
-                                    $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_3).toPrecision(4));
+                                    //$('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_3).toPrecision(4));
                                 }
                             }
 						}
@@ -1982,11 +1960,109 @@
                 function build_points_two(data_points) {
                     if (data_points && data_points.length > 0) {
                         var points = [];
+						var real_value_total = 0, target_value_total = 0, comparative_value_total = 0;
+                        var frequency = $frequency.val();
+						
+						switch (frequency_type) {
+							case 'monthly':
+                                switch (frequency) {
+                                    case '1':
+                                        csv_2 += " , , Enero " + $years_tab_2.val();
+                                        break;
+                                    case '2':
+                                        csv_2 += " , , Febrero " + $years_tab_2.val();
+                                        break;
+                                    case '3':
+                                        csv_2 += " , , Marzo " + $years_tab_2.val();
+                                        break;
+                                    case '4':
+                                        csv_2 += " , , Abril " + $years_tab_2.val();
+                                        break;
+                                    case '5':
+                                        csv_2 += " , , Mayo " + $years_tab_2.val();
+                                        break;
+                                    case '6':
+                                        csv_2 += " , , Junio " + $years_tab_2.val();
+                                        break;
+                                    case '7':
+                                        csv_2 += " , , Julio " + $years_tab_2.val();
+                                        break;
+                                    case '8':
+                                        csv_2 += " , , Agosto " + $years_tab_2.val();
+                                        break;
+                                    case '9':
+                                        csv_2 += " , , Septiembre " + $years_tab_2.val();
+                                        break;
+                                    case '10':
+                                        csv_2 += " , , Octubre " + $years_tab_2.val();
+                                        break;
+                                    case '11':
+                                        csv_2 += " , , Noviembre " + $years_tab_2.val();
+                                        break;
+                                    case '12':
+                                        csv_2 += " , , Diciembre " + $years_tab_2.val();
+                                        break;
+                                }
+                                break;
+                            case 'quarterly':
+                                switch (frequency) {
+                                    case '1':
+                                        csv_2 += " , , I Trimestre " + $years_tab_2.val();
+                                        break;
+                                    case '2':
+                                        csv_2 += " , , II Trimestre " + $years_tab_2.val();
+                                        break;
+                                    case '3':
+                                        csv_2 += " , , III Trimestre " + $years_tab_2.val();
+                                        break;
+                                    case '4':
+                                        csv_2 += " , , IV Trimestre " + $years_tab_2.val();
+                                        break;
+                                }
+                                break;
+                            case 'biannual':
+                                switch (frequency) {
+                                    case '1':
+                                        csv_2 += " , , I Semestre " + $years_tab_2.val();
+                                        break;
+                                    case '2':
+                                        csv_2 += " , , II Semestre " + $years_tab_2.val();
+                                        break;
+                                }
+                                break;
+							default:
+                                csv_2 += " , , " + $years_tab_2.val();
+                                break;
+						}
+						
+                        csv_2 += "\n";
+
+                        switch ($area_types.val()) {
+							case 'department':
+                                csv_2 += "Indicador, Región, " + realValueLabel + ", ";
+								break;
+                            case 'municipal':
+                                csv_2 += "Indicador, Municipio, " + realValueLabel + ", ";
+                                break;
+                            case 'community':
+                                csv_2 += "Indicador, Localidad, " + realValueLabel + ", ";
+                                break;
+						}
+						
+						if (useDenominator) {
+                            csv_2 += targetValueLabel + ", %";
+						}
+						else {
+                            csv_2 += "Comparativo, %";
+                        }
+
+                        csv_2 += "\n";
 
                         for (var i = 0; i < data_points.length; i++) {
                             var point = null;
 							var area = '';
-
+                            var percent = '';
+							
 							if (data_points[i].isDepartmentArea && data_points[i].departmentArea) {
 								area = data_points[i].departmentArea.name;
 							}
@@ -1996,8 +2072,13 @@
 							else if (data_points[i].isCommunityArea && data_points[i].communityArea) {
                                 area = data_points[i].communityArea.name;
                             }
-
+							
+							real_value_total += data_points[i].realValue;
+							
                             if (useDenominator) {
+								target_value_total += data_points[i].targetValue;
+								percent = data_points[i].targetValue !== 0 ? Number((data_points[i].realValue / data_points[i].targetValue) * 100).toPrecision(4) + "%" : "0";
+								
                                 point = {
                                     "area": area,
                                     "value": data_points[i].realValue,
@@ -2005,45 +2086,69 @@
                                     "value_3": data_points[i].comparativeValue ? data_points[i].comparativeValue : 0,
                                     "percent": data_points[i].targetValue !== 0 ? "<br />Representa: " + Number((data_points[i].realValue / data_points[i].targetValue) * 100).toPrecision(4) + "%" : ""
                                 };
+
+                                csv_2 += title + ", " + area + ", " + data_points[i].realValue + ", " + data_points[i].targetValue + ", " + percent;
                             }
                             else {
+								comparative_value_total += data_points[i].comparativeValue;
+                                percent = data_points[i].comparativeValue !== 0 ? Number((data_points[i].realValue / data_points[i].comparativeValue) * 100).toPrecision(4) + "%" : "0";
+
                                 point = {
                                     "area": area, 
 									"value": data_points[i].realValue,
                                     "value_3": data_points[i].comparativeValue ? data_points[i].comparativeValue : 0,
                                     "percent": data_points[i].targetValue !== 0 ? "<br />Representa: " + Number((data_points[i].realValue / data_points[i].targetValue) * 100).toPrecision(4) + "%" : ""
                                 };
+
+                                csv_2 += title + ", " + area + ", " + data_points[i].realValue + ", " + data_points[i].comparativeValue + ", " + percent;
                             }
 
                             points.push(point);
+							csv_2 += "\n";
                         }
 
+						if (useDenominator) {
+                            percent = target_value_total !== 0 ? Number((real_value_total / target_value_total) * 100).toPrecision(4) + "%" : "0";
+                            csv_2 += ", Total, " + real_value_total + ", " + target_value_total + ", " + percent;
+                            csv_2 += "\n";
+                        }
+						else {
+                            percent = comparative_value_total !== 0 ? Number((real_value_total / comparative_value_total) * 100).toPrecision(4) + "%" : "0";
+                            csv_2 += ", Total, " + real_value_total + ", " + comparative_value_total + ", " + percent;
+                            csv_2 += "\n";
+                        }
+
+                        if (source) {
+                            csv_2 += "\n";
+                            csv_2 += "Fuente: " + source;
+						}
+						
 						if (points && points.length) {
-                            $('.indicator-info').html('Retraso del Plan');
+                            //$('.indicator-info').html('Retraso del Plan');
 
                             if (metricsType === 'increasing') {
                                 if (useDenominator) {
                                     draw_graph(points, 2);
-                                    $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
+                                    //$('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
                                 }
                                 else {
                                     draw_graph_one_line(points, 2);
-                                    if (points[points.length - 1].value_3 != 0)
+                                    /*if (points[points.length - 1].value_3 != 0)
                                         $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(4));
                                     else {
                                         $('.indicator-value').html('');
-                                        $('.indicator-info').html('');
-                                    }
+                                        //$('.indicator-info').html('');
+                                    }*/
                                 }
                             }
                             else {
                                 if (useDenominator) {
                                     draw_graph(points, 2);
-                                    $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_2).toPrecision(4));
+                                    //$('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_2).toPrecision(4));
                                 }
                                 else {
                                     draw_graph_one_line(points, 2);
-                                    $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_3).toPrecision(4));
+                                    //$('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_3).toPrecision(4));
                                 }
                             }
 						}
@@ -2054,7 +2159,104 @@
                     if (data_points && data_points.length > 0 && parents && parents.length > 0) {
 						var global_array = [];
                         var points = [];
+                        var real_value_total = 0, target_value_total = 0, comparative_value_total = 0;
+                        var frequency = $frequency.val();
 
+                        switch (frequency_type) {
+                            case 'monthly':
+                                switch (frequency) {
+                                    case '1':
+                                        csv_2 += " , , Enero " + $years_tab_2.val();
+                                        break;
+                                    case '2':
+                                        csv_2 += " , , Febrero " + $years_tab_2.val();
+                                        break;
+                                    case '3':
+                                        csv_2 += " , , Marzo " + $years_tab_2.val();
+                                        break;
+                                    case '4':
+                                        csv_2 += " , , Abril " + $years_tab_2.val();
+                                        break;
+                                    case '5':
+                                        csv_2 += " , , Mayo " + $years_tab_2.val();
+                                        break;
+                                    case '6':
+                                        csv_2 += " , , Junio " + $years_tab_2.val();
+                                        break;
+                                    case '7':
+                                        csv_2 += " , , Julio " + $years_tab_2.val();
+                                        break;
+                                    case '8':
+                                        csv_2 += " , , Agosto " + $years_tab_2.val();
+                                        break;
+                                    case '9':
+                                        csv_2 += " , , Septiembre " + $years_tab_2.val();
+                                        break;
+                                    case '10':
+                                        csv_2 += " , , Octubre " + $years_tab_2.val();
+                                        break;
+                                    case '11':
+                                        csv_2 += " , , Noviembre " + $years_tab_2.val();
+                                        break;
+                                    case '12':
+                                        csv_2 += " , , Diciembre " + $years_tab_2.val();
+                                        break;
+                                }
+                                break;
+                            case 'quarterly':
+                                switch (frequency) {
+                                    case '1':
+                                        csv_2 += " , , I Trimestre " + $years_tab_2.val();
+                                        break;
+                                    case '2':
+                                        csv_2 += " , , II Trimestre " + $years_tab_2.val();
+                                        break;
+                                    case '3':
+                                        csv_2 += " , , III Trimestre " + $years_tab_2.val();
+                                        break;
+                                    case '4':
+                                        csv_2 += " , , IV Trimestre " + $years_tab_2.val();
+                                        break;
+                                }
+                                break;
+                            case 'biannual':
+                                switch (frequency) {
+                                    case '1':
+                                        csv_2 += " , , I Semestre " + $years_tab_2.val();
+                                        break;
+                                    case '2':
+                                        csv_2 += " , , II Semestre " + $years_tab_2.val();
+                                        break;
+                                }
+                                break;
+                            default:
+                                csv_2 += " , , " + $years_tab_2.val();
+                                break;
+                        }
+
+                        csv_2 += "\n";
+
+                        switch ($area_types.val()) {
+                            case 'department':
+                                csv_2 += "Indicador, Región, " + realValueLabel + ", ";
+                                break;
+                            case 'municipal':
+                                csv_2 += "Indicador, Municipio, " + realValueLabel + ", ";
+                                break;
+                            case 'community':
+                                csv_2 += "Indicador, Localidad, " + realValueLabel + ", ";
+                                break;
+                        }
+
+                        if (useDenominator) {
+                            csv_2 += targetValueLabel + ", %";
+                        }
+                        else {
+                            csv_2 += "Comparativo, %";
+                        }
+
+                        csv_2 += "\n";
+						
                         for (var k = 0; k < parents.length; k++) {
 							var parent = parents[k];
 							parent.points = [];
@@ -2069,7 +2271,6 @@
 							
 							global_array.push(parents[k]._id);
                             global_array[parents[k]._id] = parent;
-							//global_array[parents[k]._id] = parent;
 						}
 
                         for (var i = 0; i < data_points.length; i++) {
@@ -2106,16 +2307,18 @@
                         }
 
                         $.each(global_array, function(key, area) {
-							console.log('Area: ', area);
-                            console.log('Area object: ', global_array[area]);
-
                             var point;
+                            var percent = '';
                             var real_value = formula === 'sum' ? global_array[area].values.real_values : (global_array[area].values.real_values_count != 0 ? global_array[area].values.real_values / global_array[area].values.real_values_count : 0);
                             var comparative_value = formula === 'sum' ? global_array[area].values.comparative_values : (global_array[area].values.comparative_values_count != 0 ? global_array[area].values.comparative_values / global_array[area].values.comparative_values_count : 0);
 
+							real_value_total += real_value;
+							
                             if (useDenominator) {
                                 var target_value = formula === 'sum' ? global_array[area].values.target_values : (global_array[area].values.target_values_count != 0 ? global_array[area].values.target_values / global_array[area].values.target_values_count : 0);
-
+								target_value_total += target_value;
+								percent = target_value !== 0 ? Number((real_value / target_value) * 100).toPrecision(4) + "%" : "0";
+								
                                 point = { 
 									"area": global_array[area].name, 
 									"value": real_value, 
@@ -2123,8 +2326,13 @@
 									"value_3": comparative_value,
                                     "percent": target_value !== 0 ? "<br />Representa: " + Number((real_value / target_value) * 100).toPrecision(4) + "%" : "" 
 								};
+
+                                csv_2 += title + ", " + global_array[area].name + ", " + real_value + ", " + target_value + ", " + percent;
                             }
                             else {
+								comparative_value_total += comparative_value;
+                                percent = comparative_value !== 0 ? Number((real_value / comparative_value) * 100).toPrecision(4) + "%" : "0";
+
                                 point = { 
 									"area": global_array[area].name, 
 									"value": real_value,
@@ -2132,37 +2340,56 @@
                                     "value_3": comparative_value,
                                     "percent": comparative_value !== 0 ? "<br />Representa: " + Number((real_value / comparative_value) * 100).toPrecision(4) + "%" : ""
 								};
+
+                                csv_2 += title + ", " + global_array[area].name + ", " + real_value + ", " + comparative_value + ", " + percent;
                             }
 
                             points.push(point);
+                            csv_2 += "\n";
                         });
+
+                        if (useDenominator) {
+                            percent = target_value_total !== 0 ? Number((real_value_total / target_value_total) * 100).toPrecision(4) + "%" : "0";
+                            csv_2 += ", Total, " + real_value_total + ", " + target_value_total + ", " + percent;
+                            csv_2 += "\n";
+                        }
+                        else {
+                            percent = comparative_value_total !== 0 ? Number((real_value_total / comparative_value_total) * 100).toPrecision(4) + "%" : "0";
+                            csv_2 += ", Total, " + real_value_total + ", " + comparative_value_total + ", " + percent;
+                            csv_2 += "\n";
+                        }
+						
+                        if (source) {
+                            csv_2 += "\n";
+                            csv_2 += "Fuente: " + source;
+                        }
 						
 						if (points && points.length > 0) {
-                            $('.indicator-info').html('Retraso del Plan');
+                            //$('.indicator-info').html('Retraso del Plan');
 
                             if (metricsType === 'increasing') {
                                 if (useDenominator) {
                                     draw_graph(points, 2);
-                                    $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
+                                    //$('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
                                 }
                                 else {
                                     draw_graph_one_line(points, 2);
-                                    if (points[points.length - 1].value_3 != 0)
+                                    /*if (points[points.length - 1].value_3 != 0)
                                         $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(4));
                                     else {
                                         $('.indicator-value').html('');
-                                        $('.indicator-info').html('');
-                                    }
+                                        //$('.indicator-info').html('');
+                                    }*/
                                 }
                             }
                             else {
                                 if (useDenominator) {
                                     draw_graph(points, 2);
-                                    $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_2).toPrecision(4));
+                                    //$('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_2).toPrecision(4));
                                 }
                                 else {
                                     draw_graph_one_line(points, 2);
-                                    $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_3).toPrecision(4));
+                                    //$('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_3).toPrecision(4));
                                 }
                             }
 						}
@@ -2174,43 +2401,128 @@
                         var global_array = [];
 						var areas = [];
                         var points = [];
+                        var real_value_total = 0, target_value_total = 0, comparative_value_total = 0;
+                        var frequency = $frequency.val();
 
-                        for (var k = 0; k < parents.length; k++) {
-                            var parent = parents[k].parent;
-                            parent.values = {
-                                real_values: 0,
-                                real_values_count: 0,
-                                target_values: 0,
-                                target_values_count: 0,
-                                comparative_values: 0,
-                                comparative_values_count: 0
-                            };
-
-                            global_array.push(parents[k].parent._id);
-                            global_array[parents[k].parent._id] = parent;
-							
-							areas.push(parents[k]._id);
-                            areas[parents[k]._id] = parents[k].parent;
+                        switch (frequency_type) {
+                            case 'monthly':
+                                switch (frequency) {
+                                    case '1':
+                                        csv_2 += " , , Enero " + $years_tab_2.val();
+                                        break;
+                                    case '2':
+                                        csv_2 += " , , Febrero " + $years_tab_2.val();
+                                        break;
+                                    case '3':
+                                        csv_2 += " , , Marzo " + $years_tab_2.val();
+                                        break;
+                                    case '4':
+                                        csv_2 += " , , Abril " + $years_tab_2.val();
+                                        break;
+                                    case '5':
+                                        csv_2 += " , , Mayo " + $years_tab_2.val();
+                                        break;
+                                    case '6':
+                                        csv_2 += " , , Junio " + $years_tab_2.val();
+                                        break;
+                                    case '7':
+                                        csv_2 += " , , Julio " + $years_tab_2.val();
+                                        break;
+                                    case '8':
+                                        csv_2 += " , , Agosto " + $years_tab_2.val();
+                                        break;
+                                    case '9':
+                                        csv_2 += " , , Septiembre " + $years_tab_2.val();
+                                        break;
+                                    case '10':
+                                        csv_2 += " , , Octubre " + $years_tab_2.val();
+                                        break;
+                                    case '11':
+                                        csv_2 += " , , Noviembre " + $years_tab_2.val();
+                                        break;
+                                    case '12':
+                                        csv_2 += " , , Diciembre " + $years_tab_2.val();
+                                        break;
+                                }
+                                break;
+                            case 'quarterly':
+                                switch (frequency) {
+                                    case '1':
+                                        csv_2 += " , , I Trimestre " + $years_tab_2.val();
+                                        break;
+                                    case '2':
+                                        csv_2 += " , , II Trimestre " + $years_tab_2.val();
+                                        break;
+                                    case '3':
+                                        csv_2 += " , , III Trimestre " + $years_tab_2.val();
+                                        break;
+                                    case '4':
+                                        csv_2 += " , , IV Trimestre " + $years_tab_2.val();
+                                        break;
+                                }
+                                break;
+                            case 'biannual':
+                                switch (frequency) {
+                                    case '1':
+                                        csv_2 += " , , I Semestre " + $years_tab_2.val();
+                                        break;
+                                    case '2':
+                                        csv_2 += " , , II Semestre " + $years_tab_2.val();
+                                        break;
+                                }
+                                break;
+                            default:
+                                csv_2 += " , , " + $years_tab_2.val();
+                                break;
                         }
 
+                        csv_2 += "\n";
+
+                        switch ($area_types.val()) {
+                            case 'department':
+                                csv_2 += "Indicador, Región, " + realValueLabel + ", ";
+                                break;
+                            case 'municipal':
+                                csv_2 += "Indicador, Municipio, " + realValueLabel + ", ";
+                                break;
+                            case 'community':
+                                csv_2 += "Indicador, Localidad, " + realValueLabel + ", ";
+                                break;
+                        }
+
+                        if (useDenominator) {
+                            csv_2 += targetValueLabel + ", %";
+                        }
+                        else {
+                            csv_2 += "Comparativo, %";
+                        }
+
+                        csv_2 += "\n";
+
+                        for (var k = 0; k < parents.length; k++) {
+							if (global_array.indexOf(parents[k].parent._id) === -1) {
+                                var parent = parents[k].parent;
+                                parent.values = {
+                                    real_values: 0,
+                                    real_values_count: 0,
+                                    target_values: 0,
+                                    target_values_count: 0,
+                                    comparative_values: 0,
+                                    comparative_values_count: 0
+                                };
+
+                                global_array.push(parents[k].parent._id);
+                                global_array[parents[k].parent._id] = parent;
+							}
+
+                            if (areas.indexOf(parents[k]._id) === -1) {
+                                areas.push(parents[k]._id);
+                                areas[parents[k]._id] = parents[k].parent;
+                            }
+                        }
+						
                         for (var i = 0; i < data_points.length; i++) {
-                            if (data_points[i].isDepartmentArea && data_points[i].departmentArea) {
-                                global_array[areas[data_points[i].communityArea.parent]._id].values.real_values += data_points[i].realValue;
-                                global_array[areas[data_points[i].communityArea.parent]._id].values.real_values_count++;
-                                global_array[areas[data_points[i].communityArea.parent]._id].values.target_values += data_points[i].targetValue;
-                                global_array[areas[data_points[i].communityArea.parent]._id].values.target_values_count++;
-                                global_array[areas[data_points[i].communityArea.parent]._id].values.comparative_values += data_points[i].comparativeValue;
-                                global_array[areas[data_points[i].communityArea.parent]._id].values.comparative_values_count++;
-                            }
-                            else if (data_points[i].isMunicipalArea && data_points[i].municipalArea) {
-                                global_array[areas[data_points[i].communityArea.parent]._id].values.real_values += data_points[i].realValue;
-                                global_array[areas[data_points[i].communityArea.parent]._id].values.real_values_count++;
-                                global_array[areas[data_points[i].communityArea.parent]._id].values.target_values += data_points[i].targetValue;
-                                global_array[areas[data_points[i].communityArea.parent]._id].values.target_values_count++;
-                                global_array[areas[data_points[i].communityArea.parent]._id].values.comparative_values += data_points[i].comparativeValue;
-                                global_array[areas[data_points[i].communityArea.parent]._id].values.comparative_values_count++;
-                            }
-                            else if (data_points[i].isCommunityArea && data_points[i].communityArea) {
+                            if (data_points[i].isCommunityArea && data_points[i].communityArea) {
                                 global_array[areas[data_points[i].communityArea.parent]._id].values.real_values += data_points[i].realValue;
                                 global_array[areas[data_points[i].communityArea.parent]._id].values.real_values_count++;
                                 global_array[areas[data_points[i].communityArea.parent]._id].values.target_values += data_points[i].targetValue;
@@ -2221,16 +2533,18 @@
                         }
 
                         $.each(global_array, function(key, area) {
-                            console.log('Area: ', area);
-                            console.log('Area object: ', global_array[area]);
-
                             var point;
+                            var percent = '';
                             var real_value = formula === 'sum' ? global_array[area].values.real_values : (global_array[area].values.real_values_count != 0 ? global_array[area].values.real_values / global_array[area].values.real_values_count : 0);
                             var comparative_value = formula === 'sum' ? global_array[area].values.comparative_values : (global_array[area].values.comparative_values_count != 0 ? global_array[area].values.comparative_values / global_array[area].values.comparative_values_count : 0);
 
+							real_value_total += real_value;
+							
                             if (useDenominator) {
                                 var target_value = formula === 'sum' ? global_array[area].values.target_values : (global_array[area].values.target_values_count != 0 ? global_array[area].values.target_values / global_array[area].values.target_values_count : 0);
-
+                                target_value_total += target_value;
+                                percent = target_value !== 0 ? Number((real_value / target_value) * 100).toPrecision(4) + "%" : "0";
+								
                                 point = {
                                     "area": global_array[area].name,
                                     "value": real_value,
@@ -2238,45 +2552,69 @@
                                     "value_3": comparative_value,
                                     "percent": global_array[area].values.target_values !== 0 ? "<br />Representa: " + Number((global_array[area].values.real_values / global_array[area].values.target_values) * 100).toPrecision(4) + "%" : ""
                                 };
+
+                                csv_2 += title + ", " + global_array[area].name + ", " + real_value + ", " + target_value + ", " + percent;
                             }
                             else {
+                                comparative_value_total += comparative_value;
+                                percent = comparative_value !== 0 ? Number((real_value / comparative_value) * 100).toPrecision(4) + "%" : "0";
+								
                                 point = {
                                     "area": global_array[area].name,
                                     "value": real_value,
                                     "value_3": comparative_value,
                                     "percent": global_array[area].values.comparative_values !== 0 ? "<br />Representa: " + Number((global_array[area].values.real_values / global_array[area].values.comparative_values) * 100).toPrecision(4) + "%" : ""
                                 };
+
+                                csv_2 += title + ", " + global_array[area].name + ", " + real_value + ", " + comparative_value + ", " + percent;
                             }
 
                             points.push(point);
+                            csv_2 += "\n";
                         });
 
+                        if (useDenominator) {
+                            percent = target_value_total !== 0 ? Number((real_value_total / target_value_total) * 100).toPrecision(4) + "%" : "0";
+                            csv_2 += ", Total, " + real_value_total + ", " + target_value_total + ", " + percent;
+                            csv_2 += "\n";
+                        }
+                        else {
+                            percent = comparative_value_total !== 0 ? Number((real_value_total / comparative_value_total) * 100).toPrecision(4) + "%" : "0";
+                            csv_2 += ", Total, " + real_value_total + ", " + comparative_value_total + ", " + percent;
+                            csv_2 += "\n";
+                        }
+
+                        if (source) {
+                            csv_2 += "\n";
+                            csv_2 += "Fuente: " + source;
+                        }
+						
                         if (points && points.length > 0) {
-                            $('.indicator-info').html('Retraso del Plan');
+                            //$('.indicator-info').html('Retraso del Plan');
 
                             if (metricsType === 'increasing') {
                                 if (useDenominator) {
                                     draw_graph(points, 2);
-                                    $('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
+                                    //$('.indicator-value').html(Number(points[points.length - 1].value_2 - points[points.length - 1].value).toPrecision(4));
                                 }
                                 else {
                                     draw_graph_one_line(points, 2);
-                                    if (points[points.length - 1].value_3 != 0)
+                                    /*if (points[points.length - 1].value_3 != 0)
                                         $('.indicator-value').html(Number(points[points.length - 1].value_3 - points[points.length - 1].value).toPrecision(4));
                                     else {
                                         $('.indicator-value').html('');
-                                        $('.indicator-info').html('');
-                                    }
+                                        //$('.indicator-info').html('');
+                                    }*/
                                 }
                             }
                             else {
                                 if (useDenominator) {
                                     draw_graph(points, 2);
-                                    $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_2).toPrecision(4));
+                                    //$('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_2).toPrecision(4));
                                 }
                                 else {
                                     draw_graph_one_line(points, 2);
-                                    $('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_3).toPrecision(4));
+                                    //$('.indicator-value').html(Number(points[points.length - 1].value - points[points.length - 1].value_3).toPrecision(4));
                                 }
                             }
                         }
@@ -2297,6 +2635,7 @@
                     // AXES
                     // category
                     var categoryAxis = chart.categoryAxis;
+                    categoryAxis.labelRotation = 90;
                     categoryAxis.dashLength = 3;
                     categoryAxis.minorGridEnabled = true;
                     categoryAxis.minorGridAlpha = 0.1;
@@ -2375,6 +2714,7 @@
                     // AXES
                     // category
                     var categoryAxis = chart.categoryAxis;
+                    categoryAxis.labelRotation = 90;
                     categoryAxis.gridPosition = "start";
 
                     // value
@@ -2463,6 +2803,62 @@
                         .css('text-transform', 'uppercase');
 				
 				$('.grid-news .item-meta-info').find('span:first-child').css('text-transform', 'uppercase');
+            });
+		</script>
+	{{/if}}
+
+	{{#if isNewsDetailsSection}}
+		<script type="text/javascript">
+            $('#vote-positive-button').click(function(e) {
+                e.preventDefault();
+
+                var $item = $(this);
+                var id = $item.data('comment-id');
+
+                if (id) {
+                    var req = $.ajax({
+                        method: 'POST',
+                        url: '/post-comment/' + id + '/vote',
+                        data: {vote: 1}
+                    });
+
+                    req.done(function (res) {
+                        var value = parseInt($item.find('span:first-child').text()) + 1;
+                        $item.find('span:first-child').text(value);
+                        $item.unbind('click');
+                        console.log('Comment vote updated successfully', res);
+                    });
+
+                    req.fail(function (res) {
+                        console.log('Updating comment vote has failed', res);
+                    });
+                }
+            });
+
+            $('#vote-negative-button').click(function(e) {
+                e.preventDefault();
+
+                var $item = $(this);
+                var id = $item.data('comment-id');
+
+                if (id) {
+                    var req = $.ajax({
+                        method: 'POST',
+                        url: '/post-comment/' + id + '/vote',
+                        data: {vote: -1}
+                    });
+
+                    req.done(function (res) {
+                        var value = parseInt($item.find('span').text()) + 1;
+                        $item.find('span').text(value);
+                        $item.unbind('click');
+                        console.log('Comment vote updated successfully', res);
+                    });
+
+                    req.fail(function (res) {
+                        console.log('Updating comment vote has failed', res);
+                    });
+                }
             });
 		</script>
 	{{/if}}

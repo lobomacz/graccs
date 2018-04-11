@@ -15,8 +15,10 @@
                 </a>
             </div>
             <div class="set-bottom">
-				{{#substring 140 target}}{{/substring}}
-                <a href="/indicador/{{slug}}" style="color: #fff; font-size: 12px; text-decoration: underline;">Leer más</a>
+				<p>
+					{{#substring 140 target}}{{/substring}}
+                    <a class="read-more" href="/indicador/{{slug}}">Leer más</a>
+				</p>
                 <div class="item-meta-info">
                     <span>{{date startDate format='MMMYYYY'}} - {{date endDate format='MMMYYYY'}}</span>
                     <span class="meta-separator">|</span>

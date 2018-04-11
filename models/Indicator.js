@@ -1,3 +1,4 @@
+var async = require('async');
 var keystone = require('keystone');
 var Types = keystone.Field.Types;
 
@@ -13,16 +14,15 @@ var Indicator = new keystone.List('Indicator', {
 	label: 'Indicadores',
 	singular: 'Indicador',
 	plural: 'Indicadores',
-	defaultSort: '-title',
 	track: true
 });
 
 Indicator.add({
 		title: { label: 'Nombre', type: Types.Text, required: true },
+		infoRegisters: { label: 'Responsables de registrar la información', type: Types.Relationship, ref: 'User', many: true, index: true },
 		code: { label: 'Código', type: Types.Number, default: 1, min: 1, unique: true, required: true, initial: true },
-		sector: { label: 'Sector', type: Types.Relationship, ref: 'IndicatorSector', required: true, many: false, initial: true },
+		sector: { label: 'Sector', type: Types.Relationship, ref: 'IndicatorSector', required: true, many: false, initial: true, index: true },
 		version: { label: 'Versión', type: Types.Number, default: 1.0, min: 1.0, required: true },
-		createdAt: { label: 'Fecha de creación', type: Date, default: Date.now, noedit: true, hidden: true },
 		startDate: { label: 'Fecha de comienzo', type: Types.Date, default: Date.now, required: true },
 		endDate: { label: 'Fecha de culminación', type: Types.Date, default: Date.now, required: true },
 		state: {
@@ -36,6 +36,7 @@ Indicator.add({
 			],
 			default: 'draft',
 			required: true,
+			initial: true,
 			index: true
 		},
 		classification: { 
@@ -78,22 +79,23 @@ Indicator.add({
 			label: 'Etiqueta a mostrar para el valor planificado', type: Types.Text, trim: true, default: 'Valor planificado',
 			dependsOn: { useDenominator: true }, note: 'Depende del indicador: valor planificado, valor deseado, ...'
 		},
-		frequency: { label: 'Frecuencia de captura', type: Types.Select, required: true,
+		frequency: { label: 'Frecuencia de captura', type: Types.Select, required: true, index: true,
 					 options: [
 						 { value: 'monthly', label: 'Mensual' },
 						 { value: 'quarterly', label: 'Trimestral' },
 						 { value: 'biannual', label: 'Semestral' },
 						 { value: 'annual', label: 'Anual' },
+						 { value: 'thirdly', label: 'Trianual' },
 						 { value: 'fifthly', label: 'Quinquenal' },
 						 { value: 'decade', label: 'Década' }], 
 					 default: 'monthly' },
-		minAreaToApply: { label: 'Desagregación mínima a aplicar', type: Types.Select, required: true,
+		minAreaToApply: { label: 'Desagregación mínima a aplicar', type: Types.Select, required: true, index: true,
 						  options: [
 							  { value: 'department', label: 'Departamental (regional)' },
 							  { value: 'municipal', label: 'Municipal' },
 							  { value: 'community', label: 'Urbano-Rural (comunidad)' }], 
 						  default: 'community' },
-		formula: { label: 'Tipo de fórmula acumulativa', type: Types.Select, required: true,
+		formula: { label: 'Tipo de fórmula acumulativa', type: Types.Select, required: true, index: true,
 			options: [
 				{ value: 'sum', label: 'Sumatoria' },
 				{ value: 'avg', label: 'Promedio' }],
@@ -106,7 +108,8 @@ Indicator.add({
 				type: Types.Select,
 				options: [{ value: 'increasing', label: 'Creciente' }, { value: 'decreasing', label: 'Decreciente' }],
 				default: 'increasing',
-				required: true
+				required: true,
+				index: true
 			},
 			typeOfValues: { 
 				label: 'Tipo de Valores', type: Types.Text, trim: true, required: true, default: 'Unidades', 
@@ -122,9 +125,9 @@ Indicator.add({
 			publisher: { label: 'Publicar la información', type: Types.Text, default: '', trim: true }
 		}
 	},
-	'Apoyo legal', {
+	'Marco Jurídico', {
 		legalBackup: {
-			instance: { label: 'Instancia', type: Types.Relationship, ref: 'LegalBackup', many: false },
+			instance: { label: 'Instancia', type: Types.Relationship, ref: 'LegalBackup', many: false, index: true },
 			institutionalMark: { label: 'Marco Institucional', type: Types.Text, default: '', trim: true },
 			relatedFile: {
 				label: 'Archivo relacionado al Marco Institucional',
@@ -147,7 +150,59 @@ Indicator.add({
 	}
 );
 
+Indicator.schema.pre('save', function(done) {
+	if (this.indicator != null) {
+		this.addInfoRegisters(this, done);
+	}
+	else {
+		process.nextTick(done);
+	}
+});
+
 Indicator.schema.pre('remove', function(next) {
+	var q = keystone.list('IndicatorValue').model.find()
+		.where('indicator', this._id);
+
+	q.exec(function (err, values) {
+		if (err || values.length > 0) {
+			return next(new Error('No puede eliminar el indicador porque tiene valores asociados.'));
+		}
+		else {
+			return next();
+		}
+	});
+});
+
+Indicator.schema.methods.addInfoRegisters = function(target, done) {
+	if (this.indicator && this.infoRegisters) {
+		var q = keystone.list('IndicatorValue').model.find()
+			.where('indicator', this.indicator);
+
+		q.exec(function (err, indicator_values) {
+			if (!err && indicator_values) {
+				async.each(indicator_values,
+					function (value, callback) {
+						value.infoRegisters = this.infoRegisters;
+						value.save();
+
+						callback(err);
+					},
+					function(err) {
+						done(err);
+					}
+				);
+			}
+			else {
+				done(err);
+			}
+		});
+	}
+	else {
+		done();
+	}
+};
+
+/*Indicator.schema.pre('remove', function(next) {
 	var q = keystone.list('IndicatorValue').model.remove().where('indicator', this._id);
 
 	q.exec(function (err, results) {
@@ -163,7 +218,7 @@ Indicator.schema.pre('remove', function(next) {
 		if (!err) return next();
 		next (err);
 	});
-});
+});*/
 
 /* Relationships */
 Indicator.relationship({ ref: 'IndicatorComment', path: 'indicator-comments', refPath: 'indicator'});
@@ -178,6 +233,6 @@ Indicator.schema.index(
 /**
  * Registration
  **/
-Indicator.defaultColumns = 'title, state|15%';
-Indicator.defaultSort = 'title';
+Indicator.defaultColumns = 'title, sector|15%, state|15%';
+Indicator.defaultSort = 'sector title';
 Indicator.register();

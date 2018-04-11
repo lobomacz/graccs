@@ -22,6 +22,7 @@ exports = module.exports = function (req, res) {
 						.where('indicator', indicator_id)
 						.where('municipalArea', municipality._id)
 						.where('startYear', year)
+						.where('state', 'published')
 						.sort('monthlyFrequency quarterlyFrequency biannualFrequency');
 
 					q_municipality.exec(function(err, values) {

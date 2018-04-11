@@ -27,6 +27,7 @@ Post.add({
 				{ value: 'archived', label: 'Archivada' }],
 			default: 'draft',
 			required: true,
+			initial: true,
 			index: true
 		},
 		publishedDate: {
@@ -79,8 +80,6 @@ Post.schema.pre('remove', function(next) {
 	var q = keystone.list('PostComment').model.remove().where('post', this._id);
 
 	q.exec(function (err, results) {
-		console.log('EXEC: ', err, results);
-
 		if (!err) return next();
 		next (err);
 	});

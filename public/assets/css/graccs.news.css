@@ -6,6 +6,12 @@
     display: none;
 }
 
+.read-more-orange {
+	color: #D65B00; 
+	font-size: 12px; 
+	text-decoration: underline;
+}
+
 .menu-contact {
     border-top: 1px solid #8BCE2C;
     padding: 19px 0;

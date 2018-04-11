@@ -65,11 +65,12 @@ exports = module.exports = function (app) {
 	app.get('/get-municipality', routes.views.get_municipality);
 	app.get('/get-communities', routes.views.get_communities);
 	app.get('/get-initial-data', routes.views.get_initial_data);
-	
+	app.post('/save-new-monthly-value', routes.views.save_new_monthly_value);
+
 	// Generate documents
-	app.get('/generate-docx', routes.views.generate_docx);
-	app.get('/generate-xlsx', routes.views.generate_xlsx);
-	app.get('/generate-csv', routes.views.generate_csv);
+	//app.get('/generate-docx', routes.views.generate_docx);
+	//app.get('/generate-xlsx', routes.views.generate_xlsx);
+	//app.get('/generate-csv', routes.views.generate_csv);
 
 	// Contact
 	app.all('/contacto', routes.views.contact);

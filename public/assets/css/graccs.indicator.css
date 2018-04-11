@@ -2,6 +2,12 @@
     position: relative;
 }
 
+.read-more {
+	color: #fff; 
+	font-size: 12px; 
+	text-decoration: underline;
+}
+
 .indicator-info {
     margin-right: 10px;
 }

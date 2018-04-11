@@ -18,10 +18,25 @@ var CommunityArea = new keystone.List('CommunityArea', {
 CommunityArea.add({
 	name: { label: 'Nombre', type: Types.Text, required: true, unique: true, initial: true },
 	position: { label: 'Posición para ordenar', type: Types.Number, default: 0, min: 0, required: true, initial: true },
-	parent: { label: 'Desagregación a la que pertenece', type: Types.Relationship, ref: 'MunicipalArea', many: false, initial: true }
+	parent: { label: 'Desagregación a la que pertenece', type: Types.Relationship, ref: 'MunicipalArea', many: false, initial: true, index: true }
 });
 
-CommunityArea.relationship({ ref: 'IndicatorValue', path: 'indicator-values', refPath: 'indicator'});
+CommunityArea.relationship({ ref: 'IndicatorValue', path: 'indicator-values', refPath: 'communityArea'});
+
+CommunityArea.schema.pre('remove', function(next) {
+	var q = keystone.list('IndicatorValue').model.find()
+		.where('isCommunityArea', true)
+		.where('communityArea', this._id);
+
+	q.exec(function (err, values) {
+		if (err || values.length > 0) {
+			return next(new Error('No puede eliminar la comunidad porque tiene valores de indicadores asociados.'));
+		}
+		else {
+			return next();
+		}
+	});
+});
 
 /**
  * Registration
